@@ -12,7 +12,7 @@ module.exports = {
             username: "UO111111",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
                 .update("123456").digest('hex'),
-            rol: "student",
+            role: "student",
             name: "Daniel",
             lastName: "González"
         };
@@ -20,7 +20,7 @@ module.exports = {
             username: "UO222222",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
                 .update("123456").digest('hex'),
-            rol: "student",
+            role: "student",
             name: "Sara",
             lastName: "Carrión"
         };
@@ -28,7 +28,7 @@ module.exports = {
             username: "profesorEjemplo",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
                 .update("123456").digest('hex'),
-            rol: "professor",
+            role: "professor",
             name: "Ejemplo",
             lastName: "Profesor"
         };
@@ -36,7 +36,7 @@ module.exports = {
             username: "rolInexistente",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
                 .update("123456").digest('hex'),
-            rol: "noExiste",
+            role: "noExiste",
             name: "Rol",
             lastName: "Inexistente"
         };
