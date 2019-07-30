@@ -95,6 +95,7 @@ app.use('/api/prf/*', routerRoleUserProfessor);
 
 //Routes
 require("./routes/rusers.js")(app, bdManagement, logger);
+require("./routes/rstudentapi.js")(app, bdManagement, logger);
 require("./routes/rapp")(app, logger, bdManagement, initBD);
 
 
