@@ -22,7 +22,7 @@ module.exports = function (app, bdManagement, logger) {
         } else {
             var toStoreOnBBDD= {username: username,
                                 actionCode: "1139",
-                                urlDecoded: urlDecoded,
+                                moreInfo: urlDecoded,
                                 date: date.getTime(),
                                 ip: req.ip
                                 };
@@ -33,11 +33,13 @@ module.exports = function (app, bdManagement, logger) {
         }
     });
 
-    app.get("/api/std/notifyAction", function (req, res) {
+    app.post("/api/std/notifyAction", function (req, res) {
         var username= res.user;
-        var action= req.query.action_;
+        var action= req.body.action_;
+        var moreInfo= req.body.moreInfo_;
         var date= new Date();
-        //Check username, action code TODO
+        //Check username, action code and moreInfo TODO
+        var moreInfoDecoded= decodeURI(moreInfo);
         /*
         * cod. 1135 -> Extension uninstalled
         * cod. 1136 -> Extension disabled
@@ -47,10 +49,11 @@ module.exports = function (app, bdManagement, logger) {
         * */
         var toStoreOnBBDD= {username: username,
                             actionCode: action,
+                            moreInfo: moreInfoDecoded,
                             date: date.getTime(),
                             ip: req.ip};
         //Store on bbdd TODO
-        logger.info("Action notified about user " + res.user + ". Action: " + action + " - IP: " + req.ip);
+        logger.info("Action notified about user " + res.user + ". Action: " + action + ". More Info: " + moreInfoDecoded + " - IP: " + req.ip);
         res.status(200);
         res.json({access: true, message: 'Notification successfully'});
     });
