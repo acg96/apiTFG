@@ -25,7 +25,7 @@ module.exports = {
             lastName: "Carrión"
         };
         var user3 = {
-            username: "profesorEjemplo",
+            username: "PROFESOREJEMPLO",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
                 .update("123456").digest('hex'),
             role: "professor",
@@ -33,12 +33,39 @@ module.exports = {
             lastName: "Profesor"
         };
         var user4 = {
-            username: "rolInexistente",
+            username: "ROLINEXISTENTE",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
                 .update("123456").digest('hex'),
             role: "noExiste",
             name: "Rol",
             lastName: "Inexistente"
+        };
+
+        var user5 = {
+            username: "MARGA",
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+                .update("1318").digest('hex'),
+            role: "student",
+            name: "Margarita",
+            lastName: "García"
+        };
+
+        var user6 = {
+            username: "BELEN",
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+                .update("2201").digest('hex'),
+            role: "student",
+            name: "Belén",
+            lastName: "Casillas"
+        };
+
+        var user7 = {
+            username: "ALEX",
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+                .update("1234").digest('hex'),
+            role: "student",
+            name: "Alejandro",
+            lastName: "Puente"
         };
 
 
@@ -53,6 +80,15 @@ module.exports = {
         });
         this.logger.info("The user " + user4.username + " has been generated");
         this.bdManagement.addUser(user4, function (id) {
+        });
+        this.logger.info("The user " + user5.username + " has been generated");
+        this.bdManagement.addUser(user5, function (id) {
+        });
+        this.logger.info("The user " + user6.username + " has been generated");
+        this.bdManagement.addUser(user6, function (id) {
+        });
+        this.logger.info("The user " + user7.username + " has been generated");
+        this.bdManagement.addUser(user7, function (id) {
         });
     }
 }

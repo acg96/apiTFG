@@ -4,7 +4,8 @@ module.exports = function (app, bdManagement, logger) {
         var urlEncoded= req.query.url_;
         var urlDecoded= decodeURIComponent(urlEncoded);
         var response= {result: false};
-        if (username === "UO111111") {
+		var arrayValid= ["UO111111", "MARGA", "BELEN", "ALEX"];
+        if (arrayValid.includes(username)) {
             response.result= true;
         }
         if (response.result) {
