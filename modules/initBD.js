@@ -98,14 +98,14 @@ module.exports = {
         var group1 = {
             name: "SSI-grupo1",
             professors: ["PROFESOREJEMPLO", "PROFESOREJEMPLO2"],
-            students: ["BELEN", "UO111111", "MARGA", "ALEX"],
+            students: ["BELEN", "UO111111", "UO222222", "ALEX"],
             moduleDecription: "Seguridad de Sistemas Informáticos"
         };
 
         var group2 = {
             name: "SDI-grupo1",
             professors: ["PROFESOREJEMPLO3"],
-            students: ["UO222222"],
+            students: ["MARGA"],
             moduleDecription: "Sistemas Distribuidos e Internet"
         };
 

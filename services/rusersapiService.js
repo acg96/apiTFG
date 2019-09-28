@@ -14,13 +14,13 @@ module.exports = {
             if (groups != null && groups.length !== 0){
                 var groupsIds= [];
                 for (var i= 0; i < groups.length; ++i){
-                    groupsIds.push(groups[i]._id);
+                    groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
                 }
                 var msStartTime= Date.now();
                 var msEndTime= msStartTime + this.app.get('tokenTime');
                 var criteriaSlots= {
                     groupId: {$in: groupsIds},
-                    $and: [{startTime: {$gte: msStartTime}}, {startTime: {$lte: msEndTime}}]
+                    $and: [{startTime: {$lte: msStartTime}}, {endTime: {$gt: msStartTime}}]
                 };
                 this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
