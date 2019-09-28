@@ -14,6 +14,7 @@ module.exports = function (app, bdManagement, logger, userApiService) {
                             access: true,
                             token: token,
                             slots: slots,
+                            timeExpires: Date.now() + app.get('tokenTime'),
                             message: "Correct login"
                         });
                     });

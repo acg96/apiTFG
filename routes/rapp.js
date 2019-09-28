@@ -1,5 +1,5 @@
 module.exports = function (app, logger, bdManagement, initBD) {
-    app.get("/reset", function (req, res) {
+    app.get("/reset", function (req, res) { //TODO
         logger.info("BBDD reset - IP: " + req.ip);
         bdManagement.resetMongo(function (result) {
             if (result != null) {
