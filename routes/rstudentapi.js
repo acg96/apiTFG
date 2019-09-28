@@ -2,6 +2,7 @@ module.exports = function (app, bdManagement, logger) {
     app.get("/api/std/checkAccess", function (req, res) {
         var username= res.user;
         var urlEncoded= req.query.url_;
+        var date= new Date();
         var urlDecoded= decodeURIComponent(urlEncoded);
         //Check username and urlDecoded TODO
         var response= {result: false};
