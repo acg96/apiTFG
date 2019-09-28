@@ -1,17 +1,15 @@
 module.exports = {
     app: null,
     bdManagement: null,
-    logger: null,
-    init: function(app, bdManagement, logger){
+    init: function(app, bdManagement){
         this.app= app;
         this.bdManagement= bdManagement;
-        this.logger= logger;
     },
     getUrls: function(username, callback){
         var criteriaGroups= {
             students: username
         };
-        bdManagement.getClassGroup(criteriaGroups, function(groups){
+        this.bdManagement.getClassGroup(criteriaGroups, function(groups){
             var urls= [];
             if (groups != null && groups.length !== 0){
                 var groupsIds= [];
@@ -19,12 +17,12 @@ module.exports = {
                     groupsIds.push(groups[i]._id);
                 }
                 var msStartTime= Date.now();
-                var msEndTime= msStartTime + app.get('tokenTime');
+                var msEndTime= msStartTime + this.app.get('tokenTime');
                 var criteriaSlots= {
                     groupId: {$in: groupsIds},
                     $and: [{startTime: {$gte: msStartTime}}, {startTime: {$lte: msEndTime}}]
                 };
-                bdManagement.getSlot(criteriaSlots, function(slots){
+                this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
                         for (var i= 0; i < slots.length; ++i){
                             var arraySlotUrls= {
@@ -41,30 +39,30 @@ module.exports = {
                     } else{
                         callback(urls);
                     }
-                });
+                }.bind(this));
             } else{
                 callback(urls);
             }
-        });
+        }.bind(this));
     },
     getUserToken: function(username, password, callback){
-        var secure = app.get("crypto").createHmac('sha256', app.get('key'))
+        var secure = this.app.get("crypto").createHmac('sha256', this.app.get('key'))
             .update(password.trim()).digest('hex');
         var user = {
             username: username,
             password: secure
         };
-        bdManagement.getUser(user, function (users) {
+        this.bdManagement.getUser(user, function (users) {
             if (users == null || users.length === 0 || users[0].role !== "student") {
                 callback(null);
             } else {
-                var token = app.get('jwt').sign({
+                var token = this.app.get('jwt').sign({
                     user: user.username,
                     time: Date.now() / 1000,
                     role: users[0].role
-                }, app.get('key'));
+                }, this.app.get('key'));
                 callback(token);
             }
-        });
+        }.bind(this));
     }
 }

@@ -23,6 +23,12 @@ app.set('key', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('crypto', crypto);
 app.set('tokenTime', 2700000);
 
+//Services
+var userApiService= require("./services/rusersapiService.js");
+userApiService.init(app, bdManagement);
+var rAppService= require("./services/rappService.js");
+rAppService.init(app, bdManagement, initBD);
+
 // router actions
 var routerActions = express.Router();
 routerActions.use(function(req, res, next) {
@@ -44,27 +50,24 @@ routerUserToken.use(function (req, res, next) { // get the token
                 res.status(403); // Forbidden
                 res.json({access: false, error: 'Invalid or expired token'});
             } else {
-                res.user = infoToken.user;
-                res.role = infoToken.role;
-                logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                //check role is valid
+                if (infoToken.role !== "student") {
+                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    res.status(403); // Forbidden
+                    res.json({access: false, message: 'Token role invalid'});
+                }
+
                 //check user exists
-                var userCheck = {
-                    username: infoToken.user
-                };
-                bdManagement.getUser(userCheck, function (users) {
-                    if (users == null || users.length === 0 || users[0].role !== "student") {
+                rAppService.checkUserExists(infoToken.user, infoToken.role, result => {
+                    if (result){
+                        res.user = infoToken.user;
+                        res.role = infoToken.role;
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        next();
+                    } else{
                         logger.info("Token provided manipulated - IP address: " + req.ip);
                         res.status(403); // Forbidden
                         res.json({access: false, message: 'Token manipulated'});
-                    } else{
-                        //check role is valid
-                        if (infoToken.role !== "student") {
-                            logger.info("Token role provided invalid - IP address: " + req.ip);
-                            res.status(403); // Forbidden
-                            res.json({access: false, message: 'Token role invalid'});
-                        } else {
-                            next();
-                        }
                     }
                 });
             }
@@ -91,9 +94,6 @@ routerRoleUserProfessor.use(function(req, res, next) {
 });
 app.use('/prf/*', routerRoleUserProfessor);
 
-//Services
-var userApiService= require("./services/rusersapiService.js")(app, bdManagement, logger);
-
 //Routes
 require("./routes/rusersapi.js")(app, bdManagement, logger, userApiService);
 require("./routes/rstudentapi.js")(app, bdManagement, logger);
@@ -117,10 +117,6 @@ app.use(function (err, req, res, next) {
 
 // Run server
 app.listen(app.get('port'), function () {
-    bdManagement.resetMongo(function (result){ //Temporal TODO
-        if (result != null) {
-            initBD.generateData();
-        }
-    });
+    rAppService.resetBBDD(); //TODO
     logger.info("Server active on port " + app.get('port'));
 });
