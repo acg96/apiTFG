@@ -129,13 +129,13 @@ module.exports = {
         };
 
         //startTime-> 28/09/2019 9:30:00
-        //endTime-> 07/10/2019 9:00:00
+        //endTime-> 25/10/2019 9:00:00
         var slot2 = {
             description: "practica 1 de sdi",
             startTime: 1569655800000,
-            endTime: 1570431600000,
+            endTime: 1571986800000,
             listMode: "blacklist",
-            urls: ["https://es.yahoo.com/", "https://elpais.com/"],
+            urls: ["https://es.yahoo.com/"],
             groupName: group2.name,
             groupId: ""
         };
