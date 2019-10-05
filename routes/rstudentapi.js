@@ -14,46 +14,47 @@ module.exports = function (app, rStudentApiService, logger) {
         var username= res.user;
         var ipRequest= req.ip;
         var internalIps= res.ips;
-
-        var action= req.body.action_;
-        if (action != null && typeof action !== "undefined"){
+        var jsonAction= req.body.action_;
+        if (jsonAction != null && typeof jsonAction !== "undefined"){
             try{
-                var jsonAction= JSON.parse(action);
                 var arrayToStoreOnBBDD= [];
                 for (var i= 0; i < jsonAction.length; ++i) {
-                    var externalIp = jsonAction[i].extIp;
                     var internalIpsNot = jsonAction[i].intIp;
                     var idUser = jsonAction[i].idUser;
                     var timeOfAction = jsonAction[i].actTime;
                     var actionCode = jsonAction[i].actCode;
                     var moreInfo = jsonAction[i].moreInfo;
+                    var tofCache = jsonAction[i].cacheTof;
                     var currentHour = Date.now();
                     var infoCorrect = true;
-                    if (username !== "NoTokenProvided" && (externalIp !== ipRequest || internalIpsNot.every((value, index, array) => {
+
+                    if (username !== "NoTokenProvided" && tofCache !== true && !internalIpsNot.every((value, index, array) => {
                         return internalIps.includes(value) && array.length === internalIps.length
-                    }))) {
+                    })) {
                         infoCorrect = false;
                         logger.info("Action notified about user " + res.user + " with incorrect ips. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
-                    }
-                    if (username === "NoTokenProvided") {
-                        logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
-                    }
-                    if (username !== "NoTokenProvided" && username !== idUser) {
+                    } else if (username !== "NoTokenProvided" && username !== idUser && tofCache !== true) {
                         infoCorrect = false;
                         logger.info("Action notified about user " + idUser + " with user token " +
                             res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                    } else if (username === "NoTokenProvided") {
+                        logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                    } else {
+                        logger.info("Action notified about user " +
+                            res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
                     }
+
                     var toStoreOnBBDD = {
                         requestUsername: username,
                         requestExtIp: ipRequest,
                         requestIntIps: internalIps,
-                        extIp: externalIp,
                         intIps: internalIpsNot,
                         idUser: idUser,
                         actionTime: timeOfAction,
                         actionCode: actionCode,
                         moreInfo: moreInfo,
                         uploadTime: currentHour,
+                        tofCache: tofCache,
                         infoCorrect: infoCorrect
                     };
                     arrayToStoreOnBBDD.push(toStoreOnBBDD);

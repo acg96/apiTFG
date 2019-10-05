@@ -29,7 +29,7 @@ userApiService.init(app, bdManagement);
 var rAppService= require("./services/rappService.js");
 rAppService.init(app, bdManagement, initBD);
 var rStudentApiService= require("./services/rstudentapiService.js");
-rStudentApiService(app, bdManagement);
+rStudentApiService.init(app, bdManagement);
 
 // router actions
 var routerActions = express.Router();

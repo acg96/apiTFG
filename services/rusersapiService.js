@@ -20,7 +20,8 @@ module.exports = {
                 var msEndTime= msStartTime + this.app.get('tokenTime');
                 var criteriaSlots= {
                     groupId: {$in: groupsIds},
-                    $and: [{startTime: {$lte: msStartTime}}, {endTime: {$gt: msStartTime}}]
+                    $or: [{$and: [{startTime: {$lte: msStartTime}}, {endTime: {$gt: msStartTime}}]},
+                        {$and: [{startTime: {$gte: msStartTime}}, {startTime: {$lt: msEndTime}}]}]
                 };
                 this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
@@ -60,7 +61,7 @@ module.exports = {
                     user: user.username,
                     time: Date.now() / 1000,
                     role: users[0].role,
-                    ips: JSON.parse(ips)
+                    ips: ips
                 }, this.app.get('key'));
                 callback(token);
             }
