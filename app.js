@@ -64,6 +64,7 @@ routerUserToken.use(function (req, res, next) { // get the token
                     if (result){
                         res.user = infoToken.user;
                         res.role = infoToken.role;
+                        res.ips = infoToken.ips;
                         logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
                         next();
                     } else{
@@ -107,6 +108,7 @@ routerNotificationToken.use(function (req, res, next) { // get the token
                     if (result){
                         res.user = infoToken.user;
                         res.role = infoToken.role;
+                        res.ips = infoToken.ips;
                         logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
                         next();
                     } else{

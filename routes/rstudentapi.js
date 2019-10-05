@@ -10,7 +10,7 @@ module.exports = function (app, rStudentApiService, logger) {
         * cod. 1141 -> Own extension disabled
         * cod. 1142 -> Pivot extension disabled
         * cod. 1143 -> Pivot extension uninstalled
-        * */
+        */
         var username= res.user;
         var ipRequest= req.ip;
         var internalIps= res.ips;
@@ -34,7 +34,8 @@ module.exports = function (app, rStudentApiService, logger) {
                     }))) {
                         infoCorrect = false;
                         logger.info("Action notified about user " + res.user + " with incorrect ips. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
-                    } else {
+                    }
+                    if (username === "NoTokenProvided") {
                         logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
                     }
                     if (username !== "NoTokenProvided" && username !== idUser) {
@@ -57,9 +58,17 @@ module.exports = function (app, rStudentApiService, logger) {
                     };
                     arrayToStoreOnBBDD.push(toStoreOnBBDD);
                 }
-                rStudentApiService.storeNotification(arrayToStoreOnBBDD, () => {
-                    res.status(200);
-                    res.json({access: true, message: 'Notification successfully'});
+                rStudentApiService.storeNotifications(arrayToStoreOnBBDD, (result) => {
+                    if (result != null) {
+                        res.status(200);
+                        res.json({
+                            access: true,
+                            message: 'Notifications successfully'
+                        });
+                    } else{
+                        res.status(500);
+                        res.json({access: true, message: "A problem occurred while trying to store the data"});
+                    }
                 });
             }catch(error){
                 res.status(400);

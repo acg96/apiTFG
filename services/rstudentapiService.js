@@ -5,7 +5,7 @@ module.exports = {
         this.app= app;
         this.bdManagement= bdManagement;
     },
-    storeNotification: function(info, callback){
-        //Store on BBDD TODO
+    storeNotifications: function(notifications, callback){
+        this.bdManagement.addNotifications(notifications, callback);
     }
 }

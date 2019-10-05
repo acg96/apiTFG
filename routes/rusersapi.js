@@ -1,7 +1,7 @@
 module.exports = function (app, logger, userApiService) {
     app.post("/api/login", function (req, res) {
-        if (req.body.password && req.body.username) {
-            userApiService.getUserToken(req.body.username, req.body.password, token => {
+        if (req.body.password && req.body.username && req.body.ips) {
+            userApiService.getUserToken(req.body.username, req.body.password, req.body.ips, token => {
                 if (token == null){
                     logger.info("Incorrect login. Username: " + req.body.username + " - IP: " + req.ip);
                     res.status(401);

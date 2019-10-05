@@ -45,7 +45,7 @@ module.exports = {
             }
         }.bind(this));
     },
-    getUserToken: function(username, password, callback){
+    getUserToken: function(username, password, ips, callback){
         var secure = this.app.get("crypto").createHmac('sha256', this.app.get('key'))
             .update(password.trim()).digest('hex');
         var user = {
@@ -59,7 +59,8 @@ module.exports = {
                 var token = this.app.get('jwt').sign({
                     user: user.username,
                     time: Date.now() / 1000,
-                    role: users[0].role
+                    role: users[0].role,
+                    ips: JSON.parse(ips)
                 }, this.app.get('key'));
                 callback(token);
             }
