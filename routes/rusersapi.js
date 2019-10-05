@@ -1,4 +1,4 @@
-module.exports = function (app, bdManagement, logger, userApiService) {
+module.exports = function (app, logger, userApiService) {
     app.post("/api/login", function (req, res) {
         if (req.body.password && req.body.username) {
             userApiService.getUserToken(req.body.username, req.body.password, token => {

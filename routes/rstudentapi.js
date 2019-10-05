@@ -1,61 +1,73 @@
-module.exports = function (app, bdManagement, logger) {
-    app.get("/api/std/checkAccess", function (req, res) {
-        var username= res.user;
-        var urlEncoded= req.query.url_;
-        var date= new Date();
-        var urlDecoded= decodeURIComponent(urlEncoded);
-        //Check username and urlDecoded TODO
-        var response= {result: false};
-		var arrayValid= ["UO111111", "MARGA", "BELEN", "ALEX"];
-        if (arrayValid.includes(username)) {
-            if (username === "MARGA"){
-                if (urlDecoded.includes("yahoo.com") === false){
-                    response.result= true;
-                }
-            } else {
-                response.result= true;
-            }
-        }
-        if (response.result) {
-            logger.info("Access granted to user " + res.user + ". URL: " + urlDecoded + " - IP: " + req.ip);
-            res.status(200);
-            res.json({access: true, message: 'Access granted', privileges: true});
-        } else {
-            var toStoreOnBBDD= {username: username,
-                                actionCode: "1139",
-                                moreInfo: urlDecoded,
-                                date: date.getTime(),
-                                ip: req.ip
-                                };
-            //Store on bbdd TODO
-            logger.info("Access denied to user " + res.user + ". URL: " + urlDecoded + " - IP: " + req.ip);
-            res.status(403);
-            res.json({access: true, message: 'Access denied', privileges: false});
-        }
-    });
-
-    app.post("/api/std/notifyAction", function (req, res) {
-        var username= res.user;
-        var action= req.body.action_;
-        var moreInfo= req.body.moreInfo_;
-        var date= new Date();
-        //Check username, action code and moreInfo TODO
-        var moreInfoDecoded= decodeURI(moreInfo);
+module.exports = function (app, rStudentApiService, logger) {
+    app.post("/api/notification", function (req, res) {
         /*
         * cod. 1135 -> Extension uninstalled
         * cod. 1136 -> Extension disabled
         * cod. 1137 -> Extension installed
         * cod. 1138 -> Extension enabled
         * cod. 1139 -> Visit disallowed page
+        * cod. 1140 -> Own extension uninstalled
+        * cod. 1141 -> Own extension disabled
+        * cod. 1142 -> Pivot extension disabled
+        * cod. 1143 -> Pivot extension uninstalled
         * */
-        var toStoreOnBBDD= {username: username,
-                            actionCode: action,
-                            moreInfo: moreInfoDecoded,
-                            date: date.getTime(),
-                            ip: req.ip};
-        //Store on bbdd TODO
-        logger.info("Action notified about user " + res.user + ". Action: " + action + ". More Info: " + moreInfoDecoded + " - IP: " + req.ip);
-        res.status(200);
-        res.json({access: true, message: 'Notification successfully'});
+        var username= res.user;
+        var ipRequest= req.ip;
+        var internalIps= res.ips;
+
+        var action= req.body.action_;
+        if (action != null && typeof action !== "undefined"){
+            try{
+                var jsonAction= JSON.parse(action);
+                var arrayToStoreOnBBDD= [];
+                for (var i= 0; i < jsonAction.length; ++i) {
+                    var externalIp = jsonAction[i].extIp;
+                    var internalIpsNot = jsonAction[i].intIp;
+                    var idUser = jsonAction[i].idUser;
+                    var timeOfAction = jsonAction[i].actTime;
+                    var actionCode = jsonAction[i].actCode;
+                    var moreInfo = jsonAction[i].moreInfo;
+                    var currentHour = Date.now();
+                    var infoCorrect = true;
+                    if (username !== "NoTokenProvided" && (externalIp !== ipRequest || internalIpsNot.every((value, index, array) => {
+                        return internalIps.includes(value) && array.length === internalIps.length
+                    }))) {
+                        infoCorrect = false;
+                        logger.info("Action notified about user " + res.user + " with incorrect ips. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                    } else {
+                        logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                    }
+                    if (username !== "NoTokenProvided" && username !== idUser) {
+                        infoCorrect = false;
+                        logger.info("Action notified about user " + idUser + " with user token " +
+                            res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                    }
+                    var toStoreOnBBDD = {
+                        requestUsername: username,
+                        requestExtIp: ipRequest,
+                        requestIntIps: internalIps,
+                        extIp: externalIp,
+                        intIps: internalIpsNot,
+                        idUser: idUser,
+                        actionTime: timeOfAction,
+                        actionCode: actionCode,
+                        moreInfo: moreInfo,
+                        uploadTime: currentHour,
+                        infoCorrect: infoCorrect
+                    };
+                    arrayToStoreOnBBDD.push(toStoreOnBBDD);
+                }
+                rStudentApiService.storeNotification(arrayToStoreOnBBDD, () => {
+                    res.status(200);
+                    res.json({access: true, message: 'Notification successfully'});
+                });
+            }catch(error){
+                res.status(400);
+                res.json({access: true, message: "The client need to provide a correct param"});
+            }
+        } else{
+            res.status(400);
+            res.json({access: true, message: "The client need to provide actions to be stored"});
+        }
     });
 };

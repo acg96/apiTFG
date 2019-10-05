@@ -28,6 +28,8 @@ var userApiService= require("./services/rusersapiService.js");
 userApiService.init(app, bdManagement);
 var rAppService= require("./services/rappService.js");
 rAppService.init(app, bdManagement, initBD);
+var rStudentApiService= require("./services/rstudentapiService.js");
+rStudentApiService(app, bdManagement);
 
 // router actions
 var routerActions = express.Router();
@@ -80,6 +82,50 @@ routerUserToken.use(function (req, res, next) { // get the token
 });
 app.use('/api/std/*', routerUserToken);
 
+// routerNotificationToken
+var routerNotificationToken = express.Router();
+routerNotificationToken.use(function (req, res, next) { // get the token
+    var token = req.get('uInfo') || req.body.uInfo || req.query.uInfo;
+    if (token != null) {// verify token
+        jwt.verify(token, app.get("key"), function (err, infoToken) {
+            if (err) {
+                logger.info("Token provided invalid or expired - IP address: " + req.ip);
+                res.user = "NoTokenProvided";
+                res.ips = [];
+                next();
+            } else {
+                //check role is valid
+                if (infoToken.role !== "student") {
+                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    res.user = "NoTokenProvided";
+                    res.ips = [];
+                    next();
+                }
+
+                //check user exists
+                rAppService.checkUserExists(infoToken.user, infoToken.role, result => {
+                    if (result){
+                        res.user = infoToken.user;
+                        res.role = infoToken.role;
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        next();
+                    } else{
+                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        res.user = "NoTokenProvided";
+                        res.ips = [];
+                        next();
+                    }
+                });
+            }
+        });
+    } else {
+        res.user = "NoTokenProvided";
+        res.ips = [];
+        next();
+    }
+});
+app.use('/api/notification', routerNotificationToken);
+
 //Router which depends on roles allowing just the corresponding urls for professors
 var routerRoleUserProfessor = express.Router();
 routerRoleUserProfessor.use(function(req, res, next) {
@@ -95,8 +141,8 @@ routerRoleUserProfessor.use(function(req, res, next) {
 app.use('/prf/*', routerRoleUserProfessor);
 
 //Routes
-require("./routes/rusersapi.js")(app, bdManagement, logger, userApiService);
-require("./routes/rstudentapi.js")(app, bdManagement, logger);
+require("./routes/rusersapi.js")(app, logger, userApiService);
+require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp")(app, logger, bdManagement, initBD);
 
 // When a url not exists
