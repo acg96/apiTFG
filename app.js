@@ -19,8 +19,19 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('db', 'mongodb://admin:sdi@tiendamusica-shard-00-00-s0nh9.mongodb.net:27017,tiendamusica-shard-00-01-s0nh9.mongodb.net:27017,tiendamusica-shard-00-02-s0nh9.mongodb.net:27017/tfg?ssl=true&replicaSet=tiendamusica-shard-0&authSource=admin&retryWrites=true');
 app.set('port', 7991);
-app.set('key', 'lfr.;LS24$-pO23(1Smn,#');
+const currentDate= new Date();
+currentDate.setHours(2, 0, 0, 0); //To balance the UTC offset is necessary the 2
+app.set('key', 'lfr.;LS24$-pO23(1Smn,#' + currentDate.getTime());
 app.set('crypto', crypto);
+app.set('tokenTime', 2700000);
+
+//Services
+var userApiService= require("./services/rusersapiService.js");
+userApiService.init(app, bdManagement);
+var rAppService= require("./services/rappService.js");
+rAppService.init(app, bdManagement, initBD);
+var rStudentApiService= require("./services/rstudentapiService.js");
+rStudentApiService.init(app, bdManagement);
 
 // router actions
 var routerActions = express.Router();
@@ -38,23 +49,32 @@ routerUserToken.use(function (req, res, next) { // get the token
     var token = req.get('uInfo') || req.body.uInfo || req.query.uInfo;
     if (token != null) {// verify token
         jwt.verify(token, app.get("key"), function (err, infoToken) {
-            if (err || (Date.now() / 1000 - infoToken.time) > 2700) { //45min token expiration time
+            if (err || (Date.now() / 1000 - infoToken.time) > app.get('tokenTime')/1000) { //45min token expiration time
                 logger.info("Token provided invalid or expired - IP address: " + req.ip);
                 res.status(403); // Forbidden
                 res.json({access: false, error: 'Invalid or expired token'});
             } else {
-                res.user = infoToken.user;
-                res.role = infoToken.role;
-                logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
-                //check user exists TODO
                 //check role is valid
-                if (infoToken.role !== "student" && infoToken.role !== "professor") {
+                if (infoToken.role !== "student") {
                     logger.info("Token role provided invalid - IP address: " + req.ip);
                     res.status(403); // Forbidden
                     res.json({access: false, message: 'Token role invalid'});
-                } else {
-                    next();
                 }
+
+                //check user exists
+                rAppService.checkUserExists(infoToken.user, infoToken.role, result => {
+                    if (result){
+                        res.user = infoToken.user;
+                        res.role = infoToken.role;
+                        res.ips = infoToken.ips;
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        next();
+                    } else{
+                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        res.status(403); // Forbidden
+                        res.json({access: false, message: 'Token manipulated'});
+                    }
+                });
             }
         });
     } else {
@@ -63,21 +83,52 @@ routerUserToken.use(function (req, res, next) { // get the token
         res.json({access: false, message: 'Token invalid'});
     }
 });
-app.use('/api/*', routerUserToken);
+app.use('/api/std/*', routerUserToken);
 
-//Router which depends on roles allowing just the corresponding urls for students
-var routerRoleUserStudent = express.Router();
-routerRoleUserStudent.use(function(req, res, next) {
-    var role = res.role;
-    if (role === "student") {
-        next();
+// routerNotificationToken
+var routerNotificationToken = express.Router();
+routerNotificationToken.use(function (req, res, next) { // get the token
+    var token = req.get('uInfo') || req.body.uInfo || req.query.uInfo;
+    if (token != null) {// verify token
+        jwt.verify(token, app.get("key"), function (err, infoToken) {
+            if (err) {
+                logger.info("Token provided invalid or expired - IP address: " + req.ip);
+                res.user = "NoTokenProvided";
+                res.ips = [];
+                next();
+            } else {
+                //check role is valid
+                if (infoToken.role !== "student") {
+                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    res.user = "NoTokenProvided";
+                    res.ips = [];
+                    next();
+                }
+
+                //check user exists
+                rAppService.checkUserExists(infoToken.user, infoToken.role, result => {
+                    if (result){
+                        res.user = infoToken.user;
+                        res.role = infoToken.role;
+                        res.ips = infoToken.ips;
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        next();
+                    } else{
+                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        res.user = "NoTokenProvided";
+                        res.ips = [];
+                        next();
+                    }
+                });
+            }
+        });
     } else {
-        logger.info("The user " + res.user + " has requested access to a restricted area - IP address: " + req.ip);
-        res.status(403); // Forbidden
-        res.json({access: false, message: 'Access forbidden'});
+        res.user = "NoTokenProvided";
+        res.ips = [];
+        next();
     }
 });
-app.use('/api/std/*', routerRoleUserStudent);
+app.use('/api/notification', routerNotificationToken);
 
 //Router which depends on roles allowing just the corresponding urls for professors
 var routerRoleUserProfessor = express.Router();
@@ -91,14 +142,12 @@ routerRoleUserProfessor.use(function(req, res, next) {
         res.json({access: false, message: 'Access forbidden'});
     }
 });
-app.use('/api/prf/*', routerRoleUserProfessor);
+app.use('/prf/*', routerRoleUserProfessor);
 
 //Routes
-require("./routes/rusers.js")(app, bdManagement, logger);
-require("./routes/rstudentapi.js")(app, bdManagement, logger);
+require("./routes/rusersapi.js")(app, logger, userApiService);
+require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp")(app, logger, bdManagement, initBD);
-
-
 
 // When a url not exists
 app.use(function(req, res) {
@@ -118,10 +167,6 @@ app.use(function (err, req, res, next) {
 
 // Run server
 app.listen(app.get('port'), function () {
-    bdManagement.resetMongo(function (result){ //Temporal TODO
-        if (result != null) {
-            initBD.generateData();
-        }
-    });
+    rAppService.resetBBDD(); //TODO
     logger.info("Server active on port " + app.get('port'));
 });
