@@ -19,7 +19,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('db', 'mongodb://admin:sdi@tiendamusica-shard-00-00-s0nh9.mongodb.net:27017,tiendamusica-shard-00-01-s0nh9.mongodb.net:27017,tiendamusica-shard-00-02-s0nh9.mongodb.net:27017/tfg?ssl=true&replicaSet=tiendamusica-shard-0&authSource=admin&retryWrites=true');
 app.set('port', 7991);
-app.set('key', 'lfr.;LS24$-pO23(1Smn,#');
+const currentDate= new Date();
+currentDate.setHours(2, 0, 0, 0); //To balance the UTC offset is necessary the 2
+app.set('key', 'lfr.;LS24$-pO23(1Smn,#' + currentDate.getTime());
 app.set('crypto', crypto);
 app.set('tokenTime', 2700000);
 
