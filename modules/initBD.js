@@ -98,14 +98,14 @@ module.exports = {
         var group1 = {
             name: "SSI-grupo1",
             professors: ["PROFESOREJEMPLO", "PROFESOREJEMPLO2"],
-            students: ["BELEN", "UO111111", "MARGA", "ALEX"],
+            students: ["BELEN", "UO111111", "UO222222", "ALEX"],
             moduleDecription: "Seguridad de Sistemas Informáticos"
         };
 
         var group2 = {
             name: "SDI-grupo1",
             professors: ["PROFESOREJEMPLO3"],
-            students: ["UO222222"],
+            students: ["MARGA"],
             moduleDecription: "Sistemas Distribuidos e Internet"
         };
 
@@ -117,11 +117,11 @@ module.exports = {
         };
 
         //startTime-> 28/09/2019 9:30:00
-        //endTime-> 02/10/2019 9:30:00
+        //endTime-> 05/10/2019 21:04:00
         var slot1 = {
             description: "examen 1 de ssi",
             startTime: 1569655800000,
-            endTime: 1570001400000,
+            endTime: 1570302240000,
             listMode: "whitelist",
             urls: ["https://www.google.com/", "http://www.uniovi.es/", "https://es.wikipedia.org"],
             groupName: group1.name,
@@ -129,14 +129,26 @@ module.exports = {
         };
 
         //startTime-> 28/09/2019 9:30:00
-        //endTime-> 02/10/2019 9:30:00
+        //endTime-> 25/10/2019 9:00:00
         var slot2 = {
             description: "practica 1 de sdi",
             startTime: 1569655800000,
-            endTime: 1570001400000,
+            endTime: 1571986800000,
             listMode: "blacklist",
-            urls: ["https://es.yahoo.com/", "https://elpais.com/"],
+            urls: ["https://es.yahoo.com/"],
             groupName: group2.name,
+            groupId: ""
+        };
+
+        //startTime-> 05/10/2019 21:08:00
+        //endTime-> 06/10/2019 19:59:20
+        var slot3 = {
+            description: "examen 2 de ssi",
+            startTime: 1570302480000,
+            endTime: 1570383380000,
+            listMode: "whitelist",
+            urls: ["https://www.google.com/", "https://twitter.com/"],
+            groupName: group1.name,
             groupId: ""
         };
 
@@ -175,8 +187,12 @@ module.exports = {
         this.bdManagement.addClassGroup(group1, function (id) {
             if (id != null){
                 this.logger.info("The slot [" + slot1.description + "] has been generated");
+                this.logger.info("The slot [" + slot3.description + "] has been generated");
                 slot1.groupId= id;
+                slot3.groupId= id;
                 this.bdManagement.addSlot(slot1, function (id) {
+                });
+                this.bdManagement.addSlot(slot3, function (id) {
                 });
             }
         }.bind(this));
