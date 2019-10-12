@@ -5,6 +5,27 @@ var loggerLib = require('log4js');
 var logger = loggerLib.getLogger("apiTFG");
 logger.level = 'all';
 var bodyParser = require('body-parser');
+const currentDate= new Date(); //Used to change daily the secret of the token and the web session
+currentDate.setHours(2, 0, 0, 0); //To balance the UTC offset is necessary the 2
+app.set('tokenTime', 2700000); //Used to force the session or token expires at 45min after the beginning
+
+//***Start administration web****
+var swig = require('swig');
+var expressSession = require('express-session');
+//when https will be activated set property secure: true TODO
+app.use(expressSession({
+    secret: currentDate.getTime() + 'lp#2S-9)8e.$u(PL#7.-.$O)y23$-.8Nmp9$-,Po#U2;K)Sn.',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: false,
+        maxAge: app.get('tokenTime'),
+        secure: false
+    }
+}));
+app.use(express.static('public'));
+//****End administration web****
+
 var crypto = require('crypto');
 var mongo = require('mongodb');
 var moment = require('moment');
@@ -19,11 +40,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('db', 'mongodb://admin:sdi@tiendamusica-shard-00-00-s0nh9.mongodb.net:27017,tiendamusica-shard-00-01-s0nh9.mongodb.net:27017,tiendamusica-shard-00-02-s0nh9.mongodb.net:27017/tfg?ssl=true&replicaSet=tiendamusica-shard-0&authSource=admin&retryWrites=true');
 app.set('port', 7991);
-const currentDate= new Date();
-currentDate.setHours(2, 0, 0, 0); //To balance the UTC offset is necessary the 2
 app.set('key', 'lfr.;LS24$-pO23(1Smn,#' + currentDate.getTime());
 app.set('crypto', crypto);
-app.set('tokenTime', 2700000);
 
 //Services
 var userApiService= require("./services/rusersapiService.js");
@@ -130,19 +148,55 @@ routerNotificationToken.use(function (req, res, next) { // get the token
 });
 app.use('/api/notification', routerNotificationToken);
 
-//Router which depends on roles allowing just the corresponding urls for professors
+//Router which depends on roles managing the administration web
 var routerRoleUserProfessor = express.Router();
 routerRoleUserProfessor.use(function(req, res, next) {
-    var role = res.role;
-    if (role === "professor") {
+    var user= req.session.username;
+    var role= req.session.role;
+    if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
-    } else {
-        logger.info("The user " + res.user + " has requested access to a restricted area - IP address: " + req.ip);
-        res.status(403); // Forbidden
-        res.json({access: false, message: 'Access forbidden'});
+    } else{
+        if (role === "professor" && user.trim() !== "") {
+            next();
+        } else {
+            logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + req.ip);
+            req.session.username= null;
+            req.session.role= null;
+            res.redirect("/");
+        }
     }
 });
-app.use('/prf/*', routerRoleUserProfessor);
+app.use('/*', routerRoleUserProfessor);
+
+//Router which depends on roles managing when the user is not logged in
+var routerWebAdminNotLoggedIn = express.Router();
+routerWebAdminNotLoggedIn.use(function(req, res, next) {
+    var user= req.session.username;
+    var role= req.session.role;
+    if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
+        next();
+    } else{
+        logger.info("The user " + user + " being logged in has requested access to login or sign in page - IP address: " + req.ip);
+        res.redirect("/");
+    }
+});
+app.use('/signin', routerWebAdminNotLoggedIn);
+app.use('/login', routerWebAdminNotLoggedIn);
+
+//Router controlling the access to restricted areas of the administration web
+var routerWebAdminBeingLoggedIn = express.Router();
+routerWebAdminBeingLoggedIn.use(function(req, res, next) {
+    var user= req.session.username;
+    var role= req.session.role;
+    if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
+        logger.info("The user " + user + " not being logged in has requested access to restricted areas - IP address: " + req.ip);
+        res.redirect("/login");
+    } else{
+        next();
+    }
+});
+app.use('/prf/*', routerWebAdminBeingLoggedIn);
+app.use('/logout', routerWebAdminBeingLoggedIn);
 
 //Routes
 require("./routes/rusersapi.js")(app, logger, userApiService);
