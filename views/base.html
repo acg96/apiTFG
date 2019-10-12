@@ -18,7 +18,7 @@
 
     </script>
    <link rel="stylesheet"
-          href="./css/bootstrap.min.css" />
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
     {% block css %}<link rel="stylesheet" href="./css/custom.css" /> {% endblock %}
 </head>
 
@@ -26,14 +26,20 @@
 <nav class="navbar navbar-inverse">
     <div class="container-fluid">
         <div class="navbar-header">
-            {% block img %}<img src="./img/icon48.png" alt="logo" /> {% endblock %}
+            <button type="button" class="navbar-toggle" data-toggle="collapse"
+                    data-target="#myNavbar">
+                <span class="icon-bar"></span> <span class="icon-bar"></span> <span
+                    class="icon-bar"></span>
+            </button>
+            {% block img %}<img src="./img/icon48.png" alt="logo" />{% endblock %}
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
-            {% if username != null %}
             <ul class="nav navbar-nav">
-                <li><a style="color: #FFFFFF" id="navUsername">{{username}}</a></li>
-                <li><a style="color: #FFFFFF">|</a></li>
+                {% if username != null %}
+                    <li><a style="color: #FFFFFF; text-align: center;" id="navUsername">{{username}}</a></li>
+                {% endif %}
                 <li><a href="/">Inicio</a></li>
+            {% if username != null %}
                 <li id="slots-menu" class="dropdown"><a
                         class="dropdown-toggle" data-toggle="dropdown" href="#"
                         id="btnSlotsManagement"><span
@@ -50,16 +56,16 @@
                     <ul class="dropdown-menu" id="reportsDropdownMenuButton">
                         <li><a href="/prf/report/list">Ver listado</a></li>
                     </ul></li>
-            </ul>
             {% endif %}
+            </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if username == null %}
                 <li><a href="/login" id="navSignup"> <span
-                        class="glyphicon glyphicon-log-in">Iniciar sesión</span>
+                        class="glyphicon glyphicon-log-in"></span><span class="logInLogOutButtons">Iniciar sesión</span>
                 </a></li>
                 {% else %}
                 <li><a href="/logout" id="navLogout"> <span
-                        class="glyphicon glyphicon-log-out">Cerrar sesión</span>
+                        class="glyphicon glyphicon-log-out"></span><span class="logInLogOutButtons">Cerrar sesión</span>
                 </a></li>
                 {% endif %}
             </ul>
@@ -73,7 +79,7 @@
 
 <footer class="footer">
     <div class="container">
-        <span class="text-muted">EyeSecure</span>
+        <span class="text-muted">EyeSecure v1.0.0</span>
     </div>
 </footer>
 

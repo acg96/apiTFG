@@ -8,6 +8,10 @@ body {
     margin-bottom: 60px;
 }
 
+.logInLogOutButtons{
+    margin-left: 0.7em;
+}
+
 footer {
     position: absolute;
     bottom: 0;
