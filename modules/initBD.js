@@ -10,7 +10,7 @@ module.exports = {
     generateData: function () {
         var user1 = {
             username: "UO111111",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "student",
             name: "Daniel",
@@ -18,7 +18,7 @@ module.exports = {
         };
         var user2 = {
             username: "UO222222",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "student",
             name: "Sara",
@@ -26,7 +26,7 @@ module.exports = {
         };
         var user3 = {
             username: "PROFESOREJEMPLO",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "professor",
             name: "Ejemplo",
@@ -34,7 +34,7 @@ module.exports = {
         };
         var user4 = {
             username: "ROLINEXISTENTE",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "noExiste",
             name: "Rol",
@@ -43,7 +43,7 @@ module.exports = {
 
         var user5 = {
             username: "MARGA",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("1318").digest('hex'),
             role: "student",
             name: "Margarita",
@@ -52,7 +52,7 @@ module.exports = {
 
         var user6 = {
             username: "BELEN",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("2201").digest('hex'),
             role: "student",
             name: "Belén",
@@ -61,7 +61,7 @@ module.exports = {
 
         var user7 = {
             username: "ALEX",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("1234").digest('hex'),
             role: "student",
             name: "Alejandro",
@@ -70,7 +70,7 @@ module.exports = {
 
         var user8 = {
             username: "PROFESOREJEMPLO2",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "professor",
             name: "Paco",
@@ -79,7 +79,7 @@ module.exports = {
 
         var user9 = {
             username: "PROFESOREJEMPLO3",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "professor",
             name: "Lucía",
@@ -88,11 +88,29 @@ module.exports = {
 
         var user10 = {
             username: "UO333333",
-            password: this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
             role: "student",
             name: "Laura",
             lastName: "Méndez"
+        };
+
+        var user11 = {
+            username: "maria.prada@uniovi.es",
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
+                .update("123456").digest('hex'),
+            role: "professor",
+            name: "María",
+            lastName: "Prada"
+        };
+
+        var user12 = {
+            username: "claudio@uniovi.es",
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
+                .update("123456").digest('hex'),
+            role: "professor",
+            name: "Claudio",
+            lastName: "Rodríguez"
         };
 
         var group1 = {
@@ -181,6 +199,12 @@ module.exports = {
         });
         this.logger.info("The user " + user10.username + " has been generated");
         this.bdManagement.addUser(user10, function (id) {
+        });
+        this.logger.info("The user " + user11.username + " has been generated");
+        this.bdManagement.addUser(user11, function (id) {
+        });
+        this.logger.info("The user " + user12.username + " has been generated");
+        this.bdManagement.addUser(user12, function (id) {
         });
 
         this.logger.info("The group " + group1.name + " has been generated");
