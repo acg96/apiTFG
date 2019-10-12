@@ -201,6 +201,7 @@ app.use('/logout', routerWebAdminBeingLoggedIn);
 require("./routes/rusersapi.js")(app, logger, userApiService);
 require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp")(app, logger, bdManagement, initBD, swig);
+require("./routes/ruser")(app, logger, bdManagement, swig);
 
 // When a url not exists
 app.use(function(req, res) {
