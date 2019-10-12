@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Administration Web Page - EyeSecure</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="./img/icon48.png" sizes="48x48">
+    <link rel="icon" type="image/png" href="./img/icon16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="./img/icon32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="./img/icon128.png" sizes="128x128">
+    <script
+            src="./js/jquery-3.2.1.slim.min.js">
+
+    </script>
+    <script
+            src="./js/bootstrap.min.js">
+
+    </script>
+   <link rel="stylesheet"
+          href="./css/bootstrap.min.css" />
+    {% block css %}<link rel="stylesheet" href="./css/custom.css" /> {% endblock %}
+</head>
+
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            {% block img %}<img src="./img/icon48.png" alt="logo" /> {% endblock %}
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            {% if username != null %}
+            <ul class="nav navbar-nav">
+                <li><a style="color: #FFFFFF" id="navUsername">{{username}}</a></li>
+                <li><a style="color: #FFFFFF">|</a></li>
+                <li><a href="/">Inicio</a></li>
+                <li id="slots-menu" class="dropdown"><a
+                        class="dropdown-toggle" data-toggle="dropdown" href="#"
+                        id="btnSlotsManagement"><span
+                        class="caret"></span> Gestión de Slots </a>
+                    <ul class="dropdown-menu" id="slotsDropdownMenuButton">
+                        <li><a href="/prf/slot/add">Nuevo slot</a></li>
+                        <li><a href="/prf/slot/list">Ver slots</a></li>
+                        <li><a href="/prf/slot/edit">Modificar slots</a></li>
+                    </ul></li>
+                <li id="reports-menu" class="dropdown"><a
+                        class="dropdown-toggle" data-toggle="dropdown" href="#"
+                        id="btnReportsManagement"><span
+                        class="caret"></span> Gestión de Informes </a>
+                    <ul class="dropdown-menu" id="reportsDropdownMenuButton">
+                        <li><a href="/prf/report/list">Ver listado</a></li>
+                    </ul></li>
+            </ul>
+            {% endif %}
+            <ul class="nav navbar-nav navbar-right">
+                {% if username == null %}
+                <li><a href="/login" id="navSignup"> <span
+                        class="glyphicon glyphicon-log-in">Iniciar sesión</span>
+                </a></li>
+                {% else %}
+                <li><a href="/logout" id="navLogout"> <span
+                        class="glyphicon glyphicon-log-out">Cerrar sesión</span>
+                </a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+{% block body %}
+{% endblock %}
+
+
+<footer class="footer">
+    <div class="container">
+        <span class="text-muted">EyeSecure</span>
+    </div>
+</footer>
+
+
+</body>
+</html>

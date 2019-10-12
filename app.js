@@ -176,11 +176,10 @@ routerWebAdminNotLoggedIn.use(function(req, res, next) {
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
     } else{
-        logger.info("The user " + user + " being logged in has requested access to login or sign in page - IP address: " + req.ip);
+        logger.info("The user " + user + " being logged in has requested access to login page - IP address: " + req.ip);
         res.redirect("/");
     }
 });
-app.use('/signin', routerWebAdminNotLoggedIn);
 app.use('/login', routerWebAdminNotLoggedIn);
 
 //Router controlling the access to restricted areas of the administration web
@@ -201,7 +200,7 @@ app.use('/logout', routerWebAdminBeingLoggedIn);
 //Routes
 require("./routes/rusersapi.js")(app, logger, userApiService);
 require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
-require("./routes/rapp")(app, logger, bdManagement, initBD);
+require("./routes/rapp")(app, logger, bdManagement, initBD, swig);
 
 // When a url not exists
 app.use(function(req, res) {
