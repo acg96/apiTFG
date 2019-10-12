@@ -47,7 +47,7 @@ module.exports = {
         }.bind(this));
     },
     getUserToken: function(username, password, ips, callback){
-        var secure = this.app.get("crypto").createHmac('sha256', this.app.get('key'))
+        var secure = this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
             .update(password.trim()).digest('hex');
         var user = {
             username: username,
@@ -62,7 +62,7 @@ module.exports = {
                     time: Date.now() / 1000,
                     role: users[0].role,
                     ips: ips
-                }, this.app.get('key'));
+                }, this.app.get('tokenKey')());
                 callback(token);
             }
         }.bind(this));

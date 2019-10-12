@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Iniciar sesión</h2>
+    <form class="form-horizontal" method="post" action="/login">
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="username">Usuario:</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="username"
+                       placeholder="example@uniovi.es" required="true"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-sm-2" for="password">Contraseña:</label>
+            <div class="col-sm-10">
+                <input type="password" class="form-control" name="password"
+                       placeholder="" required="true"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+                {% if error === 1 %}
+                <p class="text-danger" id="loginError">Los datos introducidos son incorrectos</p>
+                {% endif %}
+                <button type="submit" class="btn btn-primary">Acceder</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

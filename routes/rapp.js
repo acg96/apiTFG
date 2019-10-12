@@ -1,4 +1,8 @@
-module.exports = function (app, logger, bdManagement, initBD) {
+module.exports = function (app, logger, bdManagement, initBD, swig) {
+    app.get('/', function (req, res) {
+        var response = swig.renderFile('views/index.html', {username: req.session.username});
+        res.send(response);
+    });
     app.get("/reset", function (req, res) { //TODO
         logger.info("BBDD reset - IP: " + req.ip);
         bdManagement.resetMongo(function (result) {
