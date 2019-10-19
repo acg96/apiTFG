@@ -51,7 +51,8 @@ module.exports = {
             .update(password.trim()).digest('hex');
         var user = {
             username: username,
-            password: secure
+            password: secure,
+            role: "student"
         };
         this.bdManagement.getUser(user, function (users) {
             if (users == null || users.length === 0 || users[0].role !== "student") {

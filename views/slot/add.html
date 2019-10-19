@@ -1,0 +1,87 @@
+{% extends "../base.html" %}
+{% block body %}
+<script src="/js/addSlots.js"></script>
+<div class="container">
+    <h2>Nuevo slot</h2>
+    <form method="post" action="/prf/slot/add">
+        <div class="form-row">
+            <div class="form-group col-sm-6">
+                <label for="initDate">Fecha inicio</label>
+                <input type="date" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" id="initDate" required />
+            </div>
+            <div class="form-group col-sm-6">
+                <label for="initTime">Hora inicio</label>
+                <input type="time" class="form-control" id="initTime" step="60" value="{{date.hour}}:{{date.minutes}}" required />
+            </div>
+
+            <div class="form-group col-sm-6">
+                <label for="endDate">Fecha fin</label>
+                <input type="date" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" id="endDate" required />
+            </div>
+            <div class="form-group col-sm-6">
+                <label for="endTime">Hora fin</label>
+                <input type="time" class="form-control" id="endTime" step="60" value="{{date.hour}}:{{date.minutes}}" required />
+            </div>
+
+
+            <div class="form-group col-sm-12">
+                <label for="description">Descripción:</label>
+                <input type="text" class="form-control" id="description" required />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="groupSelect">Grupo</label>
+                <select class="form-control" id="groupSelect" onchange="showStudents(this.options[this.selectedIndex])">
+                    {% if groups.length > 0 %}
+                        <option disabled selected value> -- Escoge una opción -- </option>
+                    {% else %}
+                        <option disabled selected value> -- No tienes grupos asignados -- </option>
+                    {% endif %}
+                    {% for group in groups %}
+                        <option value="{{group.id}}%%65&4-%.43%%{{group.students}}">{{group.name}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <div class="form-check col-sm-3">
+                    <input class="form-check-input" type="radio" name="listRadio" id="whitelistRadio" value="whitelist" checked>
+                    <label class="form-check-label" for="whitelistRadio">Lista blanca</label>
+                </div>
+
+                <div class="form-check col-sm-3">
+                    <input class="form-check-input" type="radio" name="listRadio" id="blacklistRadio" value="blacklist">
+                    <label class="form-check-label" for="blacklistRadio">Lista negra</label>
+                </div>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label class="form-check-label" for="newUrl">Nueva url:</label>
+                <input type="text" class="form-control" placeholder="http(s)://(www.)dominio.ext" id="newUrl" />
+                <button class="btn btn-primary col-xs-5" type="button" onclick="addUrl()" style="float:right; margin-bottom: 1em;">Añadir url</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="urlsGroup">Lista de Urls</label>
+                <select multiple class="form-control" id="urlsGroup"></select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeUrls()" style="float:right; margin-bottom: 1em;">Borrar seleccionadas</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="studentsGroup">Estudiantes incluidos</label>
+                <select multiple class="form-control" id="studentsGroup"></select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeStudents()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="excludedGroup">Estudiantes excluidos</label>
+                <select multiple class="form-control" id="excludedGroup"></select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeExcluded()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+            </div>
+
+            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Añadir Slot</button>
+
+        </div>
+    </form>
+</div>
+{% endblock %}

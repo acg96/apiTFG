@@ -5,21 +5,21 @@
     <title>Administration Web Page - EyeSecure</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="./img/icon48.png" sizes="48x48">
-    <link rel="icon" type="image/png" href="./img/icon16.png" sizes="16x16">
-    <link rel="icon" type="image/png" href="./img/icon32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="./img/icon128.png" sizes="128x128">
+    <link rel="icon" type="image/png" href="/img/icon48.png" sizes="48x48">
+    <link rel="icon" type="image/png" href="/img/icon16.png" sizes="16x16">
+    <link rel="icon" type="image/png" href="/img/icon32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/img/icon128.png" sizes="128x128">
     <script
-            src="./js/jquery-3.2.1.slim.min.js">
+            src="/js/jquery-3.2.1.slim.min.js">
 
     </script>
     <script
-            src="./js/bootstrap.min.js">
+            src="/js/bootstrap.min.js">
 
     </script>
    <link rel="stylesheet"
           href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-    {% block css %}<link rel="stylesheet" href="./css/custom.css" /> {% endblock %}
+    {% block css %}<link rel="stylesheet" href="/css/custom.css" /> {% endblock %}
 </head>
 
 <body>
@@ -27,13 +27,13 @@
     <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle" data-toggle="collapse"
-                    data-target="#myNavbar">
+                    data-target="#navigationBar">
                 <span class="icon-bar"></span> <span class="icon-bar"></span> <span
                     class="icon-bar"></span>
             </button>
-            {% block img %}<img src="./img/icon48.png" alt="logo" />{% endblock %}
+            {% block img %}<img src="/img/icon48.png" alt="logo" />{% endblock %}
         </div>
-        <div class="collapse navbar-collapse" id="myNavbar">
+        <div class="collapse navbar-collapse" id="navigationBar">
             <ul class="nav navbar-nav">
                 {% if username != null %}
                     <li><a style="color: #FFFFFF; text-align: center;" id="navUsername">{{username}}</a></li>

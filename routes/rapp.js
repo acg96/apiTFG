@@ -1,6 +1,6 @@
 module.exports = function (app, logger, bdManagement, initBD, swig) {
     app.get('/', function (req, res) {
-        var response = swig.renderFile('views/index.html', {username: req.session.username});
+        const response = swig.renderFile('views/main/index.html', {username: req.session.username});
         res.send(response);
     });
     app.get("/reset", function (req, res) { //TODO
