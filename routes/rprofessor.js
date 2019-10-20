@@ -1,4 +1,5 @@
 module.exports = function (app, logger, bdManagement, swig) {
+    /*
     app.get('/prf/slot/add', function (req, res) {
         const date= new Date();
         const dateObject= {
@@ -31,10 +32,23 @@ module.exports = function (app, logger, bdManagement, swig) {
             res.send(response);
         });
     });
-
-    app.post("/prf/slot/add", function (req, res) {
-        const postInfo= req.body;
-
-        res.redirect("/prf/slot/add");
+    */
+    app.get("/prf/slot/add", function (req, res) {
+        //const postInfo= req.body;
+        const slotValidator = require("../validators/slotValidator.js");
+        const postInfo = {
+            initDate: "2019-10-21",
+            initTime: "14:09",
+            endDate: "2021-05-20",
+            endTime: "14:14",
+            description: "Prueba de slot",
+            groupSelect: "5dac3f023bd6a12c5408a8a5%%65&4-%.43%%UO333333",
+            listRadio: "blacklist",
+            urls: "",
+            studentsExcluded: ""
+        };
+        slotValidator.validateAddSlot(app, postInfo, bdManagement, req.session.username, () => {});
+        //res.redirect("/prf/slot/add");
+        res.redirect("/");
     });
 };
