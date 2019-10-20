@@ -17,7 +17,7 @@ module.exports = function (app, logger, swig, professorService) {
                 //res.redirect("/prf/slot/list"); TODO with a message with collisions or successful action
                 res.redirect("/"); //TODO meanwhile
             } else {
-                logger.info("Error al añadir el slot. User: " + req.session.username + " - IP: " + req.ip);
+                logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
                 const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
                 res.send(response);
             }
