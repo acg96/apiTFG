@@ -76,7 +76,7 @@ module.exports = {
                 }
                 const initDate = moment(postInfo.initDate.trim() + " " + postInfo.initTime.trim(), 'YYYY-MM-DD HH:mm', true);
                 if (!initDate.isBefore(endDate)) {
-                    errors.errEndDate = 'La fecha final no puede ser anterior o igual a la fecha inicial';
+                    errors.errEndDate = 'La fecha final no puede ser anterior o igual a la fecha inicial teniendo en cuenta la hora';
                     errors.anyError = 1;
                 }
                 if (errors.errEndDate === "") {
@@ -159,11 +159,13 @@ module.exports = {
             if (postInfo.groupSelect.trim() === "") {
                 errors.errGroupSelect = "Se debe seleccionar un grupo";
                 errors.anyError = 1;
+                callback(errors, processedResult);
             } else {
                 const groupId = postInfo.groupSelect.trim().split("%%65&4-%.43%%")[0].trim();
                 if (groupId.length !== 24) {
                     errors.errGroupSelect = "El id del grupo seleccionado es incorrecto";
                     errors.anyError = 1;
+                    callback(errors, processedResult);
                 } else if (errors.errStudentsExcluded === "") {
                     const criteriaGroup = {
                         _id: bdManagement.mongo.ObjectID(groupId),
@@ -197,11 +199,11 @@ module.exports = {
                                 processedResult.groupId = group._id;
                                 processedResult.studentsExcluded = arrayStudentsExcluded;
                             }
-                            callback(errors, processedResult);
                         }
+                        callback(errors, processedResult);
                     });
                 }
             }
         }
     }
-}
+};

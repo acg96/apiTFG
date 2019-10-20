@@ -60,6 +60,8 @@ const rStudentApiService= require("./services/rstudentapiService.js");
 rStudentApiService.init(app, bdManagement);
 const rUserService= require("./services/ruserService.js");
 rUserService.init(app, bdManagement);
+const rProfessorService= require("./services/rprofessorService.js");
+rProfessorService.init(app, bdManagement);
 
 // router actions
 const routerActions = express.Router();
@@ -212,7 +214,7 @@ require("./routes/rusersapi.js")(app, logger, userApiService);
 require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp.js")(app, logger, bdManagement, initBD, swig);
 require("./routes/ruser.js")(app, logger, rUserService, swig);
-require("./routes/rprofessor.js")(app, logger, bdManagement, swig);
+require("./routes/rprofessor.js")(app, logger, swig, rProfessorService);
 
 // When a url not exists
 app.use(function(req, res) {
@@ -232,6 +234,6 @@ app.use(function (err, req, res, next) {
 
 // Run server
 app.listen(app.get('port'), function () {
-    rAppService.resetBBDD(); //TODO
+    //rAppService.resetBBDD(); //TODO
     logger.info("Server active on port " + app.get('port'));
 });

@@ -143,7 +143,8 @@ module.exports = {
             listMode: "whitelist",
             urls: ["https://www.google.com/", "http://www.uniovi.es/", "https://es.wikipedia.org"],
             groupName: group1.name,
-            groupId: ""
+            groupId: "",
+            studentsExcluded: []
         };
 
         //startTime-> 28/09/2019 9:30:00
@@ -155,7 +156,8 @@ module.exports = {
             listMode: "blacklist",
             urls: ["https://es.yahoo.com/"],
             groupName: group2.name,
-            groupId: ""
+            groupId: "",
+            studentsExcluded: []
         };
 
         //startTime-> 05/10/2019 21:08:00
@@ -167,7 +169,8 @@ module.exports = {
             listMode: "whitelist",
             urls: ["https://www.google.com/", "https://twitter.com/"],
             groupName: group1.name,
-            groupId: ""
+            groupId: "",
+            studentsExcluded: ["BELEN"]
         };
 
         this.logger.info("The user " + user1.username + " has been generated");
