@@ -7,31 +7,31 @@
         <div class="form-row">
             <div class="form-group col-sm-6">
                 <label for="initDate">Fecha inicio</label>
-                <input type="date" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" id="initDate" required />
+                <input type="date" name="initDate" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" id="initDate" required />
             </div>
             <div class="form-group col-sm-6">
                 <label for="initTime">Hora inicio</label>
-                <input type="time" class="form-control" id="initTime" step="60" value="{{date.hour}}:{{date.minutes}}" required />
+                <input type="time" name="initTime" class="form-control" id="initTime" step="60" value="{{date.hour}}:{{date.minutes}}" required />
             </div>
 
             <div class="form-group col-sm-6">
                 <label for="endDate">Fecha fin</label>
-                <input type="date" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" id="endDate" required />
+                <input type="date" name="endDate" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" id="endDate" required />
             </div>
             <div class="form-group col-sm-6">
                 <label for="endTime">Hora fin</label>
-                <input type="time" class="form-control" id="endTime" step="60" value="{{date.hour}}:{{date.minutes}}" required />
+                <input type="time" name="endTime" class="form-control" id="endTime" step="60" value="{{date.hour}}:{{date.minutes}}" required />
             </div>
 
 
             <div class="form-group col-sm-12">
                 <label for="description">Descripción:</label>
-                <input type="text" class="form-control" id="description" required />
+                <input type="text" name="description" maxlength="100" class="form-control" id="description" required />
             </div>
 
             <div class="form-group col-sm-12">
                 <label for="groupSelect">Grupo</label>
-                <select class="form-control" id="groupSelect" onchange="showStudents(this.options[this.selectedIndex])">
+                <select class="form-control" name="groupSelect" id="groupSelect" onchange="showStudents(this.options[this.selectedIndex])">
                     {% if groups.length > 0 %}
                         <option disabled selected value> -- Escoge una opción -- </option>
                     {% else %}
@@ -68,9 +68,17 @@
             </div>
 
             <div class="form-group col-sm-12">
+                <input type="text" name="urls" id="urlsText" value=" " hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
                 <label for="studentsGroup">Estudiantes incluidos</label>
                 <select multiple class="form-control" id="studentsGroup"></select>
                 <button class="btn btn-primary col-xs-5" type="button" onclick="removeStudents()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="studentsExcluded" id="studentsExcludedText" value=" " hidden />
             </div>
 
             <div class="form-group col-sm-12">

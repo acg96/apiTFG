@@ -33,6 +33,8 @@ module.exports = function (app, logger, bdManagement, swig) {
     });
 
     app.post("/prf/slot/add", function (req, res) {
+        const postInfo= req.body;
 
+        res.redirect("/prf/slot/add");
     });
 };
