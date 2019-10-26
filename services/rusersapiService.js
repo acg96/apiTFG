@@ -6,19 +6,19 @@ module.exports = {
         this.bdManagement= bdManagement;
     },
     getUrls: function(username, callback){
-        var criteriaGroups= {
+        const criteriaGroups= {
             students: username
         };
         this.bdManagement.getClassGroup(criteriaGroups, function(groups){
-            var urls= [];
+            const urls= [];
             if (groups != null && groups.length !== 0){
-                var groupsIds= [];
-                for (var i= 0; i < groups.length; ++i){
+                const groupsIds= [];
+                for (let i= 0; i < groups.length; ++i){
                     groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
                 }
 
-                var msStartTime= this.app.get('currentTime')().valueOf();
-                var msEndTime= msStartTime + this.app.get('tokenTime');
+                const msStartTime= this.app.get('currentTime')().valueOf();
+                const msEndTime= msStartTime + this.app.get('tokenTime');
                 const criteriaSlots= {
                     groupId: {$in: groupsIds},
                     $or: [{$and: [{startTime: {$lte: msStartTime}}, {endTime: {$gt: msStartTime}}]},
@@ -27,8 +27,8 @@ module.exports = {
                 };
                 this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
-                        for (var i= 0; i < slots.length; ++i){
-                            var arraySlotUrls= {
+                        for (let i= 0; i < slots.length; ++i){
+                            const arraySlotUrls= {
                                 description: slots[i].description,
                                 startTime: slots[i].startTime,
                                 endTime: slots[i].endTime,
@@ -49,9 +49,9 @@ module.exports = {
         }.bind(this));
     },
     getUserToken: function(username, password, ips, callback){
-        var secure = this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
+        const secure = this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
             .update(password.trim()).digest('hex');
-        var user = {
+        const user = {
             username: username,
             password: secure,
             role: "student"
@@ -60,7 +60,7 @@ module.exports = {
             if (users == null || users.length === 0 || users[0].role !== "student") {
                 callback(null);
             } else {
-                var token = this.app.get('jwt').sign({
+                const token = this.app.get('jwt').sign({
                     user: user.username,
                     time: this.app.get('currentTime')().valueOf() / 1000,
                     role: users[0].role,
@@ -70,4 +70,4 @@ module.exports = {
             }
         }.bind(this));
     }
-}
+};

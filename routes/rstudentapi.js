@@ -11,22 +11,22 @@ module.exports = function (app, rStudentApiService, logger) {
         * cod. 1142 -> Pivot extension disabled
         * cod. 1143 -> Pivot extension uninstalled
         */
-        var username= res.user;
-        var ipRequest= req.ip;
-        var internalIps= res.ips;
-        var jsonAction= req.body.action_;
+        const username= res.user;
+        const ipRequest= req.ip;
+        const internalIps= res.ips;
+        const jsonAction= req.body.action_;
         if (jsonAction != null && typeof jsonAction !== "undefined"){
             try{
-                var arrayToStoreOnBBDD= [];
-                for (var i= 0; i < jsonAction.length; ++i) {
-                    var internalIpsNot = jsonAction[i].intIp;
-                    var idUser = jsonAction[i].idUser;
-                    var timeOfAction = jsonAction[i].actTime;
-                    var actionCode = jsonAction[i].actCode;
-                    var moreInfo = jsonAction[i].moreInfo;
-                    var tofCache = jsonAction[i].cacheTof;
-                    var currentHour = app.get('currentTimeWithSeconds')().valueOf();
-                    var infoCorrect = true;
+                const arrayToStoreOnBBDD= [];
+                for (let i= 0; i < jsonAction.length; ++i) {
+                    const internalIpsNot = jsonAction[i].intIp;
+                    const idUser = jsonAction[i].idUser;
+                    const timeOfAction = jsonAction[i].actTime;
+                    const actionCode = jsonAction[i].actCode;
+                    const moreInfo = jsonAction[i].moreInfo;
+                    const tofCache = jsonAction[i].cacheTof;
+                    const currentHour = app.get('currentTimeWithSeconds')().valueOf();
+                    let infoCorrect = true;
 
                     if (username !== "NoTokenProvided" && tofCache !== true && !internalIpsNot.every((value, index, array) => {
                         return internalIps.includes(value) && array.length === internalIps.length
@@ -44,7 +44,7 @@ module.exports = function (app, rStudentApiService, logger) {
                             res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
                     }
 
-                    var toStoreOnBBDD = {
+                    const toStoreOnBBDD = {
                         requestUsername: username,
                         requestExtIp: ipRequest,
                         requestIntIps: internalIps,

@@ -8,7 +8,7 @@ module.exports = {
         this.logger = logger;
     },
     generateData: function () {
-        var user1 = {
+        const user1 = {
             username: "UO111111",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -16,7 +16,7 @@ module.exports = {
             name: "Daniel",
             lastName: "González"
         };
-        var user2 = {
+        const user2 = {
             username: "UO222222",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -24,7 +24,7 @@ module.exports = {
             name: "Sara",
             lastName: "Carrión"
         };
-        var user3 = {
+        const user3 = {
             username: "PROFESOREJEMPLO",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -32,7 +32,7 @@ module.exports = {
             name: "Ejemplo",
             lastName: "Profesor"
         };
-        var user4 = {
+        const user4 = {
             username: "ROLINEXISTENTE",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -41,7 +41,7 @@ module.exports = {
             lastName: "Inexistente"
         };
 
-        var user5 = {
+        const user5 = {
             username: "MARGA",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("1318").digest('hex'),
@@ -50,7 +50,7 @@ module.exports = {
             lastName: "García"
         };
 
-        var user6 = {
+        const user6 = {
             username: "BELEN",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("2201").digest('hex'),
@@ -59,7 +59,7 @@ module.exports = {
             lastName: "Casillas"
         };
 
-        var user7 = {
+        const user7 = {
             username: "ALEX",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("1234").digest('hex'),
@@ -68,7 +68,7 @@ module.exports = {
             lastName: "Puente"
         };
 
-        var user8 = {
+        const user8 = {
             username: "PROFESOREJEMPLO2",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -77,7 +77,7 @@ module.exports = {
             lastName: "Rodríguez"
         };
 
-        var user9 = {
+        const user9 = {
             username: "PROFESOREJEMPLO3",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -86,7 +86,7 @@ module.exports = {
             lastName: "Vázquez"
         };
 
-        var user10 = {
+        const user10 = {
             username: "UO333333",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -95,7 +95,7 @@ module.exports = {
             lastName: "Méndez"
         };
 
-        var user11 = {
+        const user11 = {
             username: "maria.prada@uniovi.es",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -104,7 +104,7 @@ module.exports = {
             lastName: "Prada"
         };
 
-        var user12 = {
+        const user12 = {
             username: "claudio@uniovi.es",
             password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
                 .update("123456").digest('hex'),
@@ -113,21 +113,21 @@ module.exports = {
             lastName: "Rodríguez"
         };
 
-        var group1 = {
+        const group1 = {
             name: "SSI-grupo1",
             professors: ["PROFESOREJEMPLO", "PROFESOREJEMPLO2"],
             students: ["BELEN", "UO111111", "UO222222", "ALEX"],
             moduleDecription: "Seguridad de Sistemas Informáticos"
         };
 
-        var group2 = {
+        const group2 = {
             name: "SDI-grupo1",
             professors: ["PROFESOREJEMPLO3"],
             students: ["MARGA"],
             moduleDecription: "Sistemas Distribuidos e Internet"
         };
 
-        var group3 = {
+        const group3 = {
             name: "DLP-grupo1",
             professors: ["PROFESOREJEMPLO"],
             students: ["UO333333", "BELEN"],
@@ -136,7 +136,7 @@ module.exports = {
 
         //startTime-> 28/09/2019 9:30:00
         //endTime-> 05/10/2019 21:04:00
-        var slot1 = {
+        let slot1 = {
             description: "examen 1 de ssi",
             startTime: 1569655800000,
             endTime: 1570302240000,
@@ -149,7 +149,7 @@ module.exports = {
 
         //startTime-> 28/09/2019 9:30:00
         //endTime-> 25/10/2019 9:00:00
-        var slot2 = {
+        let slot2 = {
             description: "practica 1 de sdi",
             startTime: 1569655800000,
             endTime: 1571986800000,
@@ -162,7 +162,7 @@ module.exports = {
 
         //startTime-> 05/10/2019 21:08:00
         //endTime-> 06/10/2019 19:59:20
-        var slot3 = {
+        let slot3 = {
             description: "examen 2 de ssi",
             startTime: 1570302480000,
             endTime: 1570383380000,
@@ -236,4 +236,4 @@ module.exports = {
         this.bdManagement.addClassGroup(group3, function (id) {
         });
     }
-}
+};
