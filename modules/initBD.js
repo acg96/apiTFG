@@ -130,7 +130,7 @@ module.exports = {
         var group3 = {
             name: "DLP-grupo1",
             professors: ["PROFESOREJEMPLO"],
-            students: ["UO333333"],
+            students: ["UO333333", "BELEN"],
             moduleDecription: "Diseño de Lenguajes de Programación"
         };
 

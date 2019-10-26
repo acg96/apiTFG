@@ -48,6 +48,8 @@ app.set('tokenKey', function(){
 });
 //End of token key
 
+app.set('millisecondsDelayStartSlot', 10000); //To avoid race hazards on the start time of slots
+
 app.set('passKey', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('crypto', crypto);
 
