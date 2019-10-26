@@ -144,7 +144,8 @@ module.exports = {
             urls: ["https://www.google.com/", "http://www.uniovi.es/", "https://es.wikipedia.org"],
             groupName: group1.name,
             groupId: "",
-            studentsExcluded: []
+            studentsExcluded: [],
+            author: "PROFESOREJEMPLO"
         };
 
         //startTime-> 28/09/2019 9:30:00
@@ -157,7 +158,8 @@ module.exports = {
             urls: ["https://es.yahoo.com/"],
             groupName: group2.name,
             groupId: "",
-            studentsExcluded: []
+            studentsExcluded: [],
+            author: "PROFESOREJEMPLO3"
         };
 
         //startTime-> 05/10/2019 21:08:00
@@ -170,7 +172,8 @@ module.exports = {
             urls: ["https://www.google.com/", "https://twitter.com/"],
             groupName: group1.name,
             groupId: "",
-            studentsExcluded: ["BELEN"]
+            studentsExcluded: ["BELEN"],
+            author: "PROFESOREJEMPLO"
         };
 
         this.logger.info("The user " + user1.username + " has been generated");

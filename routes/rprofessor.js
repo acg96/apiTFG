@@ -1,4 +1,67 @@
 module.exports = function (app, logger, swig, professorService) {
+    app.get('/prf/slot/list', function (req, res) {
+        const date= app.get('currentTime')();
+        const moment = app.get("moment");
+        professorService.getSlots(req.session.username, slots => {
+            const adaptedSlots= [];
+            for (let i= 0; i < slots.length; ++i){
+                const stringSlot = {
+                    groupName: slots[i].groupName,
+                    description: slots[i].description,
+                    startTime: moment(slots[i].startTime).format("DD MMM YYYY HH:mm"),
+                    endTime: moment(slots[i].endTime).format("DD MMM YYYY HH:mm"),
+                    listMode: slots[i].listMode === "whitelist" ? "Lista blanca" : "Lista negra",
+                    author: slots[i].author,
+                    urls: slots[i].urls,
+                    studentsExcluded: slots[i].studentsExcluded,
+                    studentsIncluded: slots[i].studentsIncluded
+                };
+                const tempSlot = {
+                    groupName: slots[i].groupName,
+                    description: slots[i].description,
+                    startTime: moment(slots[i].startTime).format("DD MMM YYYY HH:mm"),
+                    endTime: moment(slots[i].endTime).format("DD MMM YYYY HH:mm"),
+                    listMode: slots[i].listMode === "whitelist" ? "Lista blanca" : "Lista negra",
+                    author: slots[i].author,
+                    _id: slots[i]._id.toString(),
+                    startTimeMS: slots[i].startTime,
+                    future: date.valueOf() < slots[i].startTime,
+                    stringSlot: JSON.stringify(stringSlot)
+                };
+                adaptedSlots.push(tempSlot);
+            }
+            adaptedSlots.sort((a, b) => {
+                if (a.startTimeMS > b.startTimeMS){
+                    return -1;
+                } else if (a.startTimeMS < b.startTimeMS){
+                    return 1;
+                } else{
+                    return 0;
+                }
+            });
+            let newSlot = 0;
+            const stringCollisionsArray= [];
+            const collisions= req.session.collisions;
+            const noAdded= req.session.noAdded;
+            if (collisions != null && collisions.length > 0){
+                for (let i= 0; i < collisions.length; ++i) {
+                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para el grupo " + collisions[i].groupName;
+                    stringCollisionsArray.push(tempString);
+                }
+            }
+            if (req.session.collisions != null){
+                newSlot = 1;
+            }
+            if (noAdded === true){
+                newSlot = -1;
+            }
+            req.session.collisions = null;
+            req.session.noAdded = null;
+            const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray});
+            res.send(response);
+        });
+    });
+
     app.get('/prf/slot/add', function (req, res) {
         const date= app.get('currentTime')();
         const dateObject= {
@@ -20,11 +83,16 @@ module.exports = function (app, logger, swig, professorService) {
             postInfo["groupSelect"]= "";
         }
 
-        professorService.validateSlot(req.session.username, postInfo, (adaptedGroups, errors, collisions, messages) => {
+        professorService.validateSlot(req.session.username, postInfo, (adaptedGroups, errors, collisions, noAdded) => {
             if (adaptedGroups == null && errors == null){
-                logger.info("Slot created by user " + req.session.username + " - IP: " + req.ip);
-                //res.redirect("/prf/slot/list"); TODO with a message with collisions or successful action
-                res.redirect("/"); //TODO meanwhile
+                if (!noAdded) {
+                    logger.info("Slot created by user " + req.session.username + " - IP: " + req.ip);
+                } else{
+                    logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
+                }
+                req.session.collisions = collisions;
+                req.session.noAdded = noAdded;
+                res.redirect("/prf/slot/list");
             } else {
                 const date= app.get('currentTime')();
                 const dateObject= {

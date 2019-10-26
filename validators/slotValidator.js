@@ -27,7 +27,8 @@ module.exports = {
                 urls: [],
                 groupName: '',
                 groupId: '',
-                studentsExcluded: []
+                studentsExcluded: [],
+                author: ""
             };
 
             if (postInfo.initDate.trim() === '') {
@@ -198,6 +199,7 @@ module.exports = {
                                 processedResult.groupName = group.name;
                                 processedResult.groupId = group._id;
                                 processedResult.studentsExcluded = arrayStudentsExcluded;
+                                processedResult.author = username;
                             }
                         }
                         callback(errors, processedResult);

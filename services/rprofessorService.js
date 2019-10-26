@@ -5,6 +5,40 @@ module.exports = {
         this.app= app;
         this.bdManagement= bdManagement;
     },
+    getSlots: function(username, callback){
+        this.bdManagement.getClassGroup({professors: username}, function(groups) {
+            if (groups != null && groups.length > 0){
+                const groupsIds= [];
+                for (let i= 0; i < groups.length; ++i){
+                    groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
+                }
+                this.bdManagement.getSlot({groupId: {$in: groupsIds}}, slots => {
+                    if (slots != null){
+                        for (let i= 0; i < slots.length; ++i){
+                            for (let e= 0; e < groups.length; ++e){
+                                if (groups[e]._id.toString() === slots[i].groupId.toString()){
+                                    const studentsIncluded = [];
+                                    for (let f= 0; f < groups[e].students.length; ++f){
+                                        if (!slots[i].studentsExcluded.includes(groups[e].students[f])){
+                                            studentsIncluded.push(groups[e].students[f]);
+                                        }
+                                    }
+                                    slots[i]["studentsIncluded"] = studentsIncluded;
+                                    break;
+                                }
+                            }
+                        }
+                        callback(slots);
+                    } else {
+                        callback([]);
+                    }
+                });
+            } else {
+                callback([]);
+            }
+        }.bind(this));
+    }
+    ,
     getSlotGroups: function(username, callback){
         this.bdManagement.getClassGroup({professors: username}, groups => {
             const adaptedGroups= [];
@@ -35,7 +69,10 @@ module.exports = {
                 //Analyze student collisions
                 this.bdManagement.getClassGroup({_id: this.bdManagement.mongo.ObjectID(processedResult.groupId)}, function (groups){
                     if (groups == null || groups.length !== 1){
-                        callback(null, null, null, "error");
+                        this.getSlotGroups(username, function (adaptedGroups){
+                            errors.anyError = 1;
+                            callback(adaptedGroups, errors, null, true);
+                        });
                     } else {
                         const group = groups[0];
                         const studentsToAnalyze = [];
@@ -53,20 +90,24 @@ module.exports = {
                                     }
                                 }
                                 processedResult.startTime += this.app.get('millisecondsDelayStartSlot'); //To avoid race hazards
-                                this.bdManagement.addSlot(processedResult, function (result){
-                                    if (result != null){
-                                        callback(null, null, studentCollisions, "success");
-                                    } else {
-                                        this.getSlotGroups(username, function (adaptedGroups){
-                                            errors.anyError = 1;
-                                            callback(adaptedGroups, errors, null, "");
-                                        });
-                                    }
-                                }.bind(this));
+                                if (processedResult.studentsExcluded.length >= group.students.length){ //If all the students have a collision
+                                    callback(null, null, studentCollisions, true);
+                                } else {
+                                    this.bdManagement.addSlot(processedResult, function (result) {
+                                        if (result != null) {
+                                            callback(null, null, studentCollisions, false);
+                                        } else {
+                                            this.getSlotGroups(username, function (adaptedGroups) {
+                                                errors.anyError = 1;
+                                                callback(adaptedGroups, errors, null, true);
+                                            });
+                                        }
+                                    }.bind(this));
+                                }
                             } else {
                                 this.getSlotGroups(username, function (adaptedGroups){
                                     errors.anyError = 1;
-                                    callback(adaptedGroups, errors, null, "");
+                                    callback(adaptedGroups, errors, null, true);
                                 });
                             }
                         }.bind(this));
@@ -74,7 +115,7 @@ module.exports = {
                 }.bind(this));
             } else {
                 this.getSlotGroups(username, function (adaptedGroups){
-                    callback(adaptedGroups, errors, null, "");
+                    callback(adaptedGroups, errors, null, true);
                 });
             }
         }.bind(this));
@@ -102,7 +143,8 @@ module.exports = {
                             const jsonCollision = {
                                 student: students[index],
                                 description: slots[i].description,
-                                groupName: slots[i].groupName
+                                groupName: slots[i].groupName,
+                                author: slots[i].author
                             };
                             collisions.push(jsonCollision);
                         }
