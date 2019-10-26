@@ -14,7 +14,7 @@ module.exports = function (app, logger, userApiService) {
                             access: true,
                             token: token,
                             slots: slots,
-                            timeExpires: Date.now() + app.get('tokenTime'),
+                            timeExpires: app.get('currentTime')().valueOf() + app.get('tokenTime'),
                             message: "Correct login"
                         });
                     });

@@ -5,7 +5,7 @@ module.exports = {
             callback(null, null);
         } else {
             const moment = app.get('moment');
-            const currentTimeDate = new Date();
+            const currentTimeDate = app.get('currentTime')();
             const errors = {
                 errInitDate: '',
                 errInitTime: '',
@@ -38,7 +38,7 @@ module.exports = {
                 errors.anyError = 1;
             } else {
                 const initDate = moment(postInfo.initDate.trim(), 'YYYY-MM-DD', true);
-                const currentDate = moment([currentTimeDate.getFullYear(), currentTimeDate.getMonth(), currentTimeDate.getDate()]);
+                const currentDate = moment([currentTimeDate.year(), currentTimeDate.month(), currentTimeDate.date()]);
                 if (!currentDate.isSameOrBefore(initDate)) {
                     errors.errInitDate = 'La fecha inicial no puede ser anterior a la fecha de hoy';
                     errors.anyError = 1;
@@ -68,7 +68,7 @@ module.exports = {
                 errors.errEndDate = 'La fecha final no tiene el formato adecuado o es inválida';
                 errors.anyError = 1;
             } else if (errors.errEndTime === "" && errors.errInitDate === "" && errors.errInitTime === "") {
-                const currentDate = moment([currentTimeDate.getFullYear(), currentTimeDate.getMonth(), currentTimeDate.getDate(), currentTimeDate.getHours(), currentTimeDate.getMinutes()]);
+                const currentDate = moment([currentTimeDate.year(), currentTimeDate.month(), currentTimeDate.date(), currentTimeDate.hour(), currentTimeDate.minute()]);
                 const endDate = moment(postInfo.endDate.trim() + " " + postInfo.endTime.trim(), 'YYYY-MM-DD HH:mm', true);
                 if (!currentDate.isBefore(endDate)) {
                     errors.errEndDate = 'La fecha final no puede ser anterior o igual a la fecha de hoy';

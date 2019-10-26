@@ -25,7 +25,7 @@ module.exports = function (app, rStudentApiService, logger) {
                     var actionCode = jsonAction[i].actCode;
                     var moreInfo = jsonAction[i].moreInfo;
                     var tofCache = jsonAction[i].cacheTof;
-                    var currentHour = Date.now();
+                    var currentHour = app.get('currentTimeWithSeconds')().valueOf();
                     var infoCorrect = true;
 
                     if (username !== "NoTokenProvided" && tofCache !== true && !internalIpsNot.every((value, index, array) => {

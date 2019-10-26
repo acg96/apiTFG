@@ -16,12 +16,14 @@ module.exports = {
                 for (var i= 0; i < groups.length; ++i){
                     groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
                 }
-                var msStartTime= Date.now();
+
+                var msStartTime= this.app.get('currentTime')().valueOf();
                 var msEndTime= msStartTime + this.app.get('tokenTime');
-                var criteriaSlots= {
+                const criteriaSlots= {
                     groupId: {$in: groupsIds},
                     $or: [{$and: [{startTime: {$lte: msStartTime}}, {endTime: {$gt: msStartTime}}]},
-                        {$and: [{startTime: {$gte: msStartTime}}, {startTime: {$lt: msEndTime}}]}]
+                        {$and: [{startTime: {$gte: msStartTime}}, {startTime: {$lt: msEndTime}}]}],
+                    studentsExcluded: {$nin: [username]}
                 };
                 this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
@@ -60,7 +62,7 @@ module.exports = {
             } else {
                 var token = this.app.get('jwt').sign({
                     user: user.username,
-                    time: Date.now() / 1000,
+                    time: this.app.get('currentTime')().valueOf() / 1000,
                     role: users[0].role,
                     ips: ips
                 }, this.app.get('tokenKey')());

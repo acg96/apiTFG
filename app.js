@@ -39,12 +39,25 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set('db', 'mongodb://admin:sdi@tiendamusica-shard-00-00-s0nh9.mongodb.net:27017,tiendamusica-shard-00-01-s0nh9.mongodb.net:27017,tiendamusica-shard-00-02-s0nh9.mongodb.net:27017/tfg?ssl=true&replicaSet=tiendamusica-shard-0&authSource=admin&retryWrites=true');
 app.set('port', 7991);
 
+//Get current time without ms and s using moment library
+app.set('currentTime', function(){
+    const currentTimeDate= new Date();
+    return moment([currentTimeDate.getFullYear(), currentTimeDate.getMonth(), currentTimeDate.getDate(), currentTimeDate.getHours(), currentTimeDate.getMinutes()]);
+});
+
+//Get current time without ms using moment library
+app.set('currentTimeWithSeconds', function(){
+    const currentTimeDate= new Date();
+    return moment([currentTimeDate.getFullYear(), currentTimeDate.getMonth(), currentTimeDate.getDate(), currentTimeDate.getHours(), currentTimeDate.getMinutes(), currentTimeDate.getSeconds()]);
+});
+
 //Beginning of token key
 app.set('basedTokenKey', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('tokenKey', function(){
-    const currentDate= new Date(); //Used to change daily the secret of the token
-    currentDate.setHours(2, 0, 0, 0); //To balance the UTC offset is necessary the 2
-    return app.get('basedTokenKey') + currentDate.getTime();
+    const currentTime= app.get('currentTime')(); //Used to change daily the secret of the token
+    currentTime.hour(0);
+    currentTime.minute(0);
+    return app.get('basedTokenKey') + currentTime.valueOf();
 });
 //End of token key
 
@@ -81,7 +94,7 @@ routerUserToken.use(function (req, res, next) { // get the token
     const token = req.get('uInfo') || req.body.uInfo || req.query.uInfo;
     if (token != null) {// verify token
         jwt.verify(token, app.get("tokenKey")(), function (err, infoToken) {
-            if (err || (Date.now() / 1000 - infoToken.time) > app.get('tokenTime')/1000) { //45min token expiration time
+            if (err || (app.get('currentTime')().valueOf() / 1000 - infoToken.time) > app.get('tokenTime')/1000) { //45min token expiration time
                 logger.info("Token provided invalid or expired - IP address: " + req.ip);
                 res.status(403); // Forbidden
                 res.json({access: false, error: 'Invalid or expired token'});
@@ -236,6 +249,5 @@ app.use(function (err, req, res, next) {
 
 // Run server
 app.listen(app.get('port'), function () {
-    //rAppService.resetBBDD(); //TODO
     logger.info("Server active on port " + app.get('port'));
 });

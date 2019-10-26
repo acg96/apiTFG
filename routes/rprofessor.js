@@ -1,12 +1,12 @@
 module.exports = function (app, logger, swig, professorService) {
     app.get('/prf/slot/add', function (req, res) {
-        const date= new Date();
+        const date= app.get('currentTime')();
         const dateObject= {
-            month: (date.getMonth() + 1).toString().length === 2 ? (date.getMonth() + 1).toString() : "0" + (date.getMonth() + 1).toString(),
-            day: date.getDate().toString().length === 2 ? date.getDate().toString() : "0" + date.getDate().toString(),
-            year: date.getFullYear().toString(),
-            hour: date.getHours().toString().length === 2 ? date.getHours().toString() : "0" + date.getHours().toString(),
-            minutes: date.getMinutes().toString().length === 2 ? date.getMinutes().toString() : "0" + date.getMinutes().toString()
+            month: (date.month() + 1).toString().length === 2 ? (date.month() + 1).toString() : "0" + (date.month() + 1).toString(),
+            day: date.date().toString().length === 2 ? date.date().toString() : "0" + date.date().toString(),
+            year: date.year().toString(),
+            hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
+            minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
         };
         professorService.getSlotGroups(req.session.username, (adaptedGroups) => {
             const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
@@ -26,13 +26,13 @@ module.exports = function (app, logger, swig, professorService) {
                 //res.redirect("/prf/slot/list"); TODO with a message with collisions or successful action
                 res.redirect("/"); //TODO meanwhile
             } else {
-                const date= new Date();
+                const date= app.get('currentTime')();
                 const dateObject= {
-                    month: (date.getMonth() + 1).toString().length === 2 ? (date.getMonth() + 1).toString() : "0" + (date.getMonth() + 1).toString(),
-                    day: date.getDate().toString().length === 2 ? date.getDate().toString() : "0" + date.getDate().toString(),
-                    year: date.getFullYear().toString(),
-                    hour: date.getHours().toString().length === 2 ? date.getHours().toString() : "0" + date.getHours().toString(),
-                    minutes: date.getMinutes().toString().length === 2 ? date.getMinutes().toString() : "0" + date.getMinutes().toString()
+                    month: (date.month() + 1).toString().length === 2 ? (date.month() + 1).toString() : "0" + (date.month() + 1).toString(),
+                    day: date.date().toString().length === 2 ? date.date().toString() : "0" + date.date().toString(),
+                    year: date.year().toString(),
+                    hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
+                    minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                 };
                 logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
                 const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
