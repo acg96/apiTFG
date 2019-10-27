@@ -8,7 +8,7 @@ module.exports = {
         this.initBD= initBD; //TODO
     },
     checkUserExists: function(username, role, callback){
-        var userCheck = {
+        const userCheck = {
             username: username,
             role: role
         };
@@ -27,4 +27,4 @@ module.exports = {
             }
         }.bind(this));
     }
-}
+};

@@ -8,4 +8,4 @@ module.exports = {
     storeNotifications: function(notifications, callback){
         this.bdManagement.addNotifications(notifications, callback);
     }
-}
+};

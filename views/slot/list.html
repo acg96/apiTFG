@@ -1,0 +1,76 @@
+{% extends "../base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Listado Slots</h2>
+    <div id="modalView" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">x</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    <script src="/js/modifySlots.js"></script>
+    <div class="table-responsive">
+        {% if newSlot === 1 %}
+        <span class="text-danger">Slot añadido correctamente</span>
+        {% elseif newSlot === -1 %}
+        <span class="text-danger">El slot no se ha añadido porque todos los alumnos del mismo ya tienen una restricción en ese horario</span>
+        {% endif %}
+        {% if collisions != null && collisions.length > 0 %}
+        <br/>
+        <br/>
+        <span class="text-danger">Se han producido las siguientes colisiones:</span>
+        {% for collision in collisions %}
+        <ul>
+            <li class="text-danger">{{collision}}</li>
+        </ul>
+        {% endfor %}
+        {% if newSlot !== -1 %}
+        <span class="text-danger">Nota: L@s alumn@s se han excluido automáticamente, póngase en contacto con l@s profesores y modifique el slot si desea incluirl@s</span>
+        {% else %}
+        <span class="text-danger">Nota: Póngase en contacto con l@s profesores para que los excluyan en sus slots y vuelva a intentar crearlo</span>
+        {% endif %}
+        <br/>
+        <br/>
+        {% endif %}
+
+        <table class="table table-hover" id="tableSlots">
+            <thead>
+            <tr>
+                <th>Grupo</th>
+                <th>Descripción</th>
+                <th>Comienzo</th>
+                <th>Fin</th>
+                <th>Modo de restricción</th>
+                <th>Autor</th>
+                <th class="col-md-1"></th>
+                <th class="col-md-1"></th>
+                <th class="col-md-1"></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for slot in slotList %}
+            <tr>
+                <td>{{slot.groupName}}</td>
+                <td>{{slot.description}}</td>
+                <td>{{slot.startTime}}</td>
+                <td>{{slot.endTime}}</td>
+                <td>{{slot.listMode}}</td>
+                <td>{{slot.author}}</td>
+                <td><a href="#" onclick="openModal('details-{{slot._id}}')">Ver detalles</a>
+                    <input type="text" id="input-{{slot._id}}" value="{{slot.stringSlot}}" hidden/>
+                </td>
+                {% if slot.future %}
+                <td><a href="/prf/slot/edit/{{slot._id}}">Modificar</a></td>
+                <td><a href="#" onclick="openModal('delete-{{slot._id}}')">Eliminar</a></td>
+                {% else %}
+                <td></td>
+                <td></td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

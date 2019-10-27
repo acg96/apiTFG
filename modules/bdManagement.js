@@ -9,7 +9,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('users');
+                const collection = db.collection('users');
                 collection.find(criteria).toArray(function (err, users) {
                     if (err) {
                         callbackFunction(null);
@@ -25,13 +25,13 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collectionUsers = db.collection('users');
+                const collectionUsers = db.collection('users');
                 collectionUsers.drop().then(res => {
                 }, err => {});
-                var collectionSlots = db.collection('slots');
+                const collectionSlots = db.collection('slots');
                 collectionSlots.drop().then(res => {
                 }, err => {});
-                var collectionGroups = db.collection('groups');
+                const collectionGroups = db.collection('groups');
                 collectionGroups.drop().then(res => {
                 }, err => {});
 
@@ -44,7 +44,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('users');
+                const collection = db.collection('users');
                 collection.insertOne(user, function (err, result) {
                     if (err) {
                         callbackFunction(null);
@@ -60,7 +60,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('slots');
+                const collection = db.collection('slots');
                 collection.insertOne(slot, function (err, result) {
                     if (err) {
                         callbackFunction(null);
@@ -76,7 +76,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('slots');
+                const collection = db.collection('slots');
                 collection.find(criteria).toArray(function (err, slots) {
                     if (err) {
                         callbackFunction(null);
@@ -92,7 +92,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('groups');
+                const collection = db.collection('groups');
                 collection.insertOne(group, function (err, result) {
                     if (err) {
                         callbackFunction(null);
@@ -108,7 +108,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('groups');
+                const collection = db.collection('groups');
                 collection.find(criteria).toArray(function (err, groups) {
                     if (err) {
                         callbackFunction(null);
@@ -124,7 +124,7 @@ module.exports = {
             if (err) {
                 callbackFunction(null);
             } else {
-                var collection = db.collection('notifications');
+                const collection = db.collection('notifications');
                 collection.insertMany(notifications, function (err, result) {
                     if (err) {
                         callbackFunction(null);
