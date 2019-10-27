@@ -71,6 +71,22 @@ module.exports = {
                 });
             }
         });
+    }, deleteSlot: function (slotCriteria, callbackFunction) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = db.collection('slots');
+                collection.deleteOne(slotCriteria, function (err, result) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(result.result.n);
+                    }
+                    db.close();
+                });
+            }
+        });
     }, getSlot: function (criteria, callbackFunction) {
         this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
             if (err) {

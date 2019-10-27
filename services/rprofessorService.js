@@ -5,6 +5,44 @@ module.exports = {
         this.app= app;
         this.bdManagement= bdManagement;
     },
+    deleteSlot: function(username, slotId, callback){
+        //Check if the slot exists
+        try {
+            this.bdManagement.getSlot({_id: this.bdManagement.mongo.ObjectID(slotId)}, function (slots) {
+                if (slots != null && slots.length === 1) {
+                    const slot = slots[0];
+                    //Check if the slot it's a future one
+                    if (slot.startTime > this.app.get("currentTimeWithSeconds")().valueOf()) {
+                        //Check if the slot belongs to the professor
+                        this.bdManagement.getClassGroup({
+                            professors: username,
+                            _id: this.bdManagement.mongo.ObjectID(slot.groupId)
+                        }, function (groups) {
+                            if (groups != null && groups.length === 1) {
+                                //The slotId is valid
+                                this.bdManagement.deleteSlot({_id: this.bdManagement.mongo.ObjectID(slotId)}, numberOfDeletions => {
+                                    if (numberOfDeletions != null && numberOfDeletions > 0) {
+                                        callback("Se ha borrado correctamente el slot");
+                                    } else {
+                                        callback("Ha ocurrido un error cuando se trataba de borrar el slot");
+                                    }
+                                });
+                            } else {
+                                callback("No existe ningún slot con ese id");
+                            }
+                        }.bind(this));
+                    } else {
+                        callback("Solo se pueden eliminar slots futuros");
+                    }
+
+                } else {
+                    callback("No existe ningún slot con ese id");
+                }
+            }.bind(this));
+        }catch(e){
+            callback("No existe ningún slot con ese id");
+        }
+    },
     getSlots: function(username, callback){
         this.bdManagement.getClassGroup({professors: username}, function(groups) {
             if (groups != null && groups.length > 0){
