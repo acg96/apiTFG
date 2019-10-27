@@ -1,6 +1,6 @@
 module.exports = function (app, logger, swig, professorService) {
     app.get('/prf/slot/list', function (req, res) {
-        const date= app.get('currentTime')();
+        const date= app.get('currentTimeWithSeconds')(); //Use seconds because the startTime has a delay of 10 seconds
         const moment = app.get("moment");
         professorService.getSlots(req.session.username, slots => {
             const adaptedSlots= [];
@@ -43,6 +43,7 @@ module.exports = function (app, logger, swig, professorService) {
             const stringCollisionsArray= [];
             const collisions= req.session.collisions;
             const noAdded= req.session.noAdded;
+            const slotDeletions= req.session.slotDeletions;
             if (collisions != null && collisions.length > 0){
                 for (let i= 0; i < collisions.length; ++i) {
                     const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para el grupo " + collisions[i].groupName;
@@ -55,9 +56,13 @@ module.exports = function (app, logger, swig, professorService) {
             if (noAdded === true){
                 newSlot = -1;
             }
+            if (slotDeletions != null){
+                newSlot = -2;
+            }
             req.session.collisions = null;
             req.session.noAdded = null;
-            const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray});
+            req.session.slotDeletions = null;
+            const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
             res.send(response);
         });
     });
@@ -75,6 +80,18 @@ module.exports = function (app, logger, swig, professorService) {
             const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
             res.send(response);
         });
+    });
+
+    app.get("/prf/slot/del/:id", function (req, res) {
+        const id= req.params.id;
+        if (id != null){
+            professorService.deleteSlot(req.session.username, id, result => {
+                req.session.slotDeletions= result;
+                res.redirect("/prf/slot/list");
+            });
+        } else{
+            res.redirect("/prf/slot/list");
+        }
     });
 
     app.post("/prf/slot/add", function (req, res) {
