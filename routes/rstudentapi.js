@@ -1,6 +1,7 @@
 module.exports = function (app, rStudentApiService, logger) {
     app.post("/api/notification", function (req, res) {
         /*
+        * cod. 1134 -> The user logged in
         * cod. 1135 -> Extension uninstalled
         * cod. 1136 -> Extension disabled
         * cod. 1137 -> Extension installed
@@ -25,6 +26,7 @@ module.exports = function (app, rStudentApiService, logger) {
                     const actionCode = jsonAction[i].actCode;
                     const moreInfo = jsonAction[i].moreInfo;
                     const tofCache = jsonAction[i].cacheTof;
+                    const slotId = jsonAction[i].slotId == null ? "" : jsonAction[i].slotId;
                     const currentHour = app.get('currentTimeWithSeconds')().valueOf();
                     let infoCorrect = true;
 
@@ -49,6 +51,7 @@ module.exports = function (app, rStudentApiService, logger) {
                         requestExtIp: ipRequest,
                         requestIntIps: internalIps,
                         intIps: internalIpsNot,
+                        slotId: slotId,
                         idUser: idUser,
                         actionTime: timeOfAction,
                         actionCode: actionCode,
