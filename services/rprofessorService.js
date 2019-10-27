@@ -12,7 +12,7 @@ module.exports = {
                 if (slots != null && slots.length === 1) {
                     const slot = slots[0];
                     //Check if the slot it's a future one
-                    if (slot.startTime > this.app.get("currentTimeWithSeconds")().valueOf()) {
+                    if (slot.endTime > this.app.get("currentTimeWithSeconds")().valueOf()) {
                         //Check if the slot belongs to the professor
                         this.bdManagement.getClassGroup({
                             professors: username,

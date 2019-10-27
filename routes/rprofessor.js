@@ -25,7 +25,7 @@ module.exports = function (app, logger, swig, professorService) {
                     author: slots[i].author,
                     _id: slots[i]._id.toString(),
                     startTimeMS: slots[i].startTime,
-                    future: date.valueOf() < slots[i].startTime,
+                    future: date.valueOf() < slots[i].endTime,
                     stringSlot: JSON.stringify(stringSlot)
                 };
                 adaptedSlots.push(tempSlot);

@@ -40,7 +40,7 @@ function showDetails(slotId){
     initHtml+= "<li>"+ "<b>Detalles:</b> " + valueJson.description +"</li>";
     initHtml+= "<li>"+ "<b>Comienzo:</b> " + valueJson.startTime +"</li>";
     initHtml+= "<li>"+ "<b>Fin:</b> " + valueJson.endTime +"</li>";
-    initHtml+= "<li>"+ "<b>Modo:</b> " + (valueJson.listMode === "whitelist" ? "Lista blanca" : "Lista negra") +"</li>";
+    initHtml+= "<li>"+ "<b>Modo:</b> " + valueJson.listMode +"</li>";
     initHtml+= "<li>"+ "<b>Autor:</b> " + valueJson.author +"</li>";
     initHtml+= "</ul>";
     modalContent.append(initHtml);

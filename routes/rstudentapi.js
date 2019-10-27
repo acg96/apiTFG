@@ -26,20 +26,41 @@ module.exports = function (app, rStudentApiService, logger) {
                     const actionCode = jsonAction[i].actCode;
                     const moreInfo = jsonAction[i].moreInfo;
                     const tofCache = jsonAction[i].cacheTof;
-                    const slotId = jsonAction[i].slotId == null ? "" : jsonAction[i].slotId;
+                    const slotId = jsonAction[i].slotId == null ? "-1" : jsonAction[i].slotId;
                     const currentHour = app.get('currentTimeWithSeconds')().valueOf();
+                    const correctTime = jsonAction[i].correctTime;
                     let infoCorrect = true;
+                    let whyInfoNoCorrect = ""; //Used to store why the info is no correct
 
                     if (username !== "NoTokenProvided" && tofCache !== true && !internalIpsNot.every((value, index, array) => {
                         return internalIps.includes(value) && array.length === internalIps.length
                     })) {
                         infoCorrect = false;
-                        logger.info("Action notified about user " + res.user + " with incorrect ips. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
-                    } else if (username !== "NoTokenProvided" && username !== idUser && tofCache !== true) {
+                        let intIpsNotifyString = "";
+                        for (let i= 0; i < internalIpsNot.length; ++i){
+                            if (i === 0) {
+                                intIpsNotifyString += internalIpsNot[i];
+                            } else{
+                                intIpsNotifyString += " - " + internalIpsNot[i];
+                            }
+                        }
+                        whyInfoNoCorrect += "\n" + "IPs internas de la acción no coinciden con las que notifican. " + intIpsNotifyString;
+                    }
+
+                    if (tofCache !== true && (currentHour - timeOfAction) > 120000 && username === idUser){ //If it's notified more than 2 minutes later since the action occurred
                         infoCorrect = false;
-                        logger.info("Action notified about user " + idUser + " with user token " +
-                            res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
-                    } else if (username === "NoTokenProvided") {
+                        whyInfoNoCorrect += "\n" + "Posible hora de pc cambiada.";
+                    }
+
+                    if (username !== "NoTokenProvided" && username !== idUser && tofCache !== true) {
+                        infoCorrect = false;
+                        whyInfoNoCorrect += "\n" + "El usuario que notifica es diferente al que hace la acción. Notifica " + res.user;
+                    }
+                    if (!correctTime){
+                        infoCorrect = false;
+                        whyInfoNoCorrect += "\n" + "Se utiliza la hora del pc destino porque la información de tiempo almacenada allí no era correcta. Si el usuario ha cambiado la hora del pc puede que los datos de tiempo no sean ciertos.";
+                    }
+                    if (username === "NoTokenProvided") {
                         logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
                     } else {
                         logger.info("Action notified about user " +
@@ -58,7 +79,8 @@ module.exports = function (app, rStudentApiService, logger) {
                         moreInfo: moreInfo,
                         uploadTime: currentHour,
                         tofCache: tofCache,
-                        infoCorrect: infoCorrect
+                        infoCorrect: infoCorrect,
+                        whyInfoNoCorrect: whyInfoNoCorrect.trim()
                     };
                     arrayToStoreOnBBDD.push(toStoreOnBBDD);
                 }
