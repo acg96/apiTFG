@@ -75,8 +75,27 @@ module.exports = {
                 callback([]);
             }
         }.bind(this));
-    }
-    ,
+    },
+    getNotificationsBySlotIds: function(slotIds, callback){
+        this.bdManagement.getNotifications({slotId: {$in: slotIds}}, notifications => {
+            const adaptedNotifications= [];
+            for (let i= 0; i < notifications.length; ++i){
+                const adaptedNotification= {
+                    intIps: notifications[i].intIps,
+                    slotId: notifications[i].slotId,
+                    idUser: notifications[i].idUser,
+                    actionTime: notifications[i].actionTime,
+                    actionCode: notifications[i].actionCode,
+                    moreInfo: notifications[i].moreInfo,
+                    somethingWrong: notifications[i].whyInfoNoCorrect,
+                    tofCache: notifications[i].tofCache,
+                    extIp: notifications[i].requestExtIp
+                };
+                adaptedNotifications.push(adaptedNotification);
+            }
+            callback(adaptedNotifications);
+        });
+    },
     getSlotGroups: function(username, callback){
         this.bdManagement.getClassGroup({professors: username}, groups => {
             const adaptedGroups= [];

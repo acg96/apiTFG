@@ -67,6 +67,78 @@ module.exports = function (app, logger, swig, professorService) {
         });
     });
 
+    app.get('/prf/report/list', function (req, res) {
+        const moment = app.get("moment");
+        professorService.getSlots(req.session.username, slots => {
+            const adaptedGroups= [];
+            for (let i= 0; i < slots.length; ++i){
+                const tempSlot = {
+                    groupName: slots[i].groupName,
+                    groupId: slots[i].groupId.toString(),
+                    _id: slots[i]._id.toString(),
+                    slotDescription: slots[i].description,
+                    studentsIncluded: JSON.stringify(slots[i].studentsIncluded)
+                };
+                adaptedGroups.push(tempSlot);
+            }
+            const slotsIds = [];
+            for (let i= 0; i < adaptedGroups.length; ++i){
+                if (!slotsIds.includes(adaptedGroups[i]._id)){
+                    slotsIds.push(adaptedGroups[i]._id);
+                }
+            }
+            adaptedGroups.sort((a, b) => {
+                if (a < b){
+                    return -1;
+                } else if (a > b){
+                    return 1;
+                } else{
+                    return 0;
+                }
+            });
+            professorService.getNotificationsBySlotIds(slotsIds, notifications => {
+                const notificationsHashMap = [];
+                const usernameArray = [];
+                for (let i= 0; i < notifications.length; ++i){
+                    let intIps= "";
+                    for (let e= 0; e < notifications[i].intIps.length; ++e){
+                        if (e === 0){
+                            intIps+= notifications[i].intIps[e];
+                        } else{
+                            intIps+= ", " + notifications[i].intIps[e];
+                        }
+                    }
+                    let slotDescription= "";
+                    for (let e= 0; e < adaptedGroups.length; ++e){
+                        if (adaptedGroups[e]._id === notifications[i].slotId){
+                            slotDescription = adaptedGroups[e].slotDescription;
+                            break;
+                        }
+                    }
+                    const adaptedNotification = {
+                        intIps: intIps,
+                        slotDescription: slotDescription,
+                        actionTime: moment(notifications[i].actionTime).format("DD MMM YYYY HH:mm:ss"),
+                        actionName: app.get('actionCodeTranslation')[notifications[i].actionCode],
+                        moreInfo: notifications[i].moreInfo,
+                        somethingWrong: notifications[i].somethingWrong,
+                        tofCache: notifications[i].tofCache ? "Activado" : "Desactivado",
+                        extIp: notifications[i].extIp === "::1" ? "localhost" : notifications[i].extIp
+                    };
+                    if (usernameArray.includes(notifications[i].idUser)){
+                        notificationsHashMap[notifications[i].idUser].push(adaptedNotification);
+                    } else{
+                        usernameArray.push(notifications[i].idUser);
+                        notificationsHashMap[notifications[i].idUser]= [];
+                        notificationsHashMap[notifications[i].idUser].push(adaptedNotification);
+                    }
+                }
+                const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: adaptedGroups, notificationsHashMap: notificationsHashMap});
+                res.send(response);
+            });
+        });
+    });
+
     app.get('/prf/slot/add', function (req, res) {
         const date= app.get('currentTime')();
         const dateObject= {

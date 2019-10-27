@@ -1,5 +1,5 @@
 module.exports = function (app, rStudentApiService, logger) {
-    app.post("/api/notification", function (req, res) {
+    app.post("/api/notification", function (req, res){
         /*
         * cod. 1134 -> The user logged in
         * cod. 1135 -> Extension uninstalled
@@ -37,11 +37,11 @@ module.exports = function (app, rStudentApiService, logger) {
                     })) {
                         infoCorrect = false;
                         let intIpsNotifyString = "";
-                        for (let i= 0; i < internalIpsNot.length; ++i){
+                        for (let i= 0; i < internalIps.length; ++i){
                             if (i === 0) {
-                                intIpsNotifyString += internalIpsNot[i];
+                                intIpsNotifyString += internalIps[i];
                             } else{
-                                intIpsNotifyString += " - " + internalIpsNot[i];
+                                intIpsNotifyString += " - " + internalIps[i];
                             }
                         }
                         whyInfoNoCorrect += "\n" + "IPs internas de la acción no coinciden con las que notifican. " + intIpsNotifyString;

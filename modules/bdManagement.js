@@ -151,5 +151,21 @@ module.exports = {
                 });
             }
         });
+    }, getNotifications: function (criteria, callbackFunction) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = db.collection('notifications');
+                collection.find(criteria).toArray(function (err, notifications) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(notifications);
+                    }
+                    db.close();
+                });
+            }
+        });
     }
 };
