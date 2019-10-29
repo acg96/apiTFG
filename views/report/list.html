@@ -1,0 +1,27 @@
+{% extends "../base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Ver notificaciones</h2>
+    <script src="/js/loadNotifications.js"></script>
+    <div class="table-responsive">
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label for="groupSelect">Seleccionar grupo</label>
+                <select class="form-control" name="groupSelect" id="groupSelect" onchange="showNotifications(this.options[this.selectedIndex])">
+                    {% if groupIds.length > 0 %}
+                    <option disabled selected value> -- Escoge una opción -- </option>
+                    {% else %}
+                    <option disabled selected value> -- No tienes grupos con notificaciones -- </option>
+                    {% endif %}
+                    {% for groupId in groupIds %}
+                        <option value="{{groupId}}">{{groupList[groupId]}}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="studentsJson" id="studentsJson" value="{{notificationsHashMap}}" hidden />
+            </div>
+        </div>
+        <table class="table table-hover" id="tableNotifications">
+        </table>
+    </div>
+</div>
+{% endblock %}

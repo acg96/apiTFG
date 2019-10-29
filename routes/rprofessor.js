@@ -112,9 +112,9 @@ module.exports = function (app, logger, swig, professorService) {
                 }
             });
             professorService.getNotificationsBySlotIds(slotsIds, notifications => {
-                const finalHashmap = []; //HashMap with group ids as keys and some HashMaps inside with the students name as keys which contains the notifications classified
+                const finalHashmap = {}; //HashMap with group ids as keys and some HashMaps inside with the students name as keys which contains the notifications classified
                 for (let k= 0; k < groupIdArray.length; ++k){
-                    const notificationsHashMap = [];
+                    const notificationsHashMap = {};
                     const usernameArray = [];
                     for (let i= 0; i < notifications.length; ++i) {
                         for (let f= 0; f < groupsHashMap[groupIdArray[k]].length; ++f) {
@@ -159,14 +159,7 @@ module.exports = function (app, logger, swig, professorService) {
                     }
                     finalHashmap[groupIdArray[k]]= notificationsHashMap;
                 }
-                console.log("groups ids - > " + groupIdArray.length);
-
-                const groupIdsMap= Object.keys(finalHashmap);
-                for (let i= 0; i < groupIdsMap.length; ++i){
-                    console.log(finalHashmap[groupIdsMap[i]]);
-                }
-                console.log(groupsWithName);
-                const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: groupsWithName, notificationsHashMap: JSON.stringify(finalHashmap)});
+                const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
                 res.send(response);
             });
         });
