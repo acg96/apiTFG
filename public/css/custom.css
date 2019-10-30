@@ -21,6 +21,12 @@ footer {
     line-height: 60px
 }
 
+.notificationHeader{
+    position: sticky;
+    top: 0;
+    background: white;
+}
+
 /* modal background */
 .modal {
     display: none;

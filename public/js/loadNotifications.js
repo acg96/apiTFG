@@ -14,11 +14,14 @@ function showNotifications(optionSelected){
 
 function loadStudent(notifications, student){
     let rowCode = "";
+    let correctControl =  true; //Used to know if some notification is not normal
+    let firstRow = "";
     for (let i= 0; i < notifications.length; ++i){
-        rowCode += "<tr>";
-        if (i === 0) {
-            rowCode += "<td rowspan='" + notifications.length + "'>" + student + "</td>";
+        if (!(notifications[i].actionName === "Inicio de sesión" || notifications[i].actionName === "Comienzo de slot")){
+            correctControl = false;
         }
+        if (i!== 0) rowCode += "<tr>";
+        rowCode += "<td>" + notifications[i].slotDescription + "</td>";
         rowCode += "<td>" + notifications[i].actionName + "</td>";
         rowCode += "<td>" + notifications[i].actionTime + "</td>";
         rowCode += "<td>" + notifications[i].moreInfo + "</td>";
@@ -26,13 +29,23 @@ function loadStudent(notifications, student){
         rowCode += "<td>" + notifications[i].extIp + "</td>";
         rowCode += "<td>" + notifications[i].intIps + "</td>";
         rowCode += "<td>" + notifications[i].somethingWrong + "</td>";
-        rowCode += "</tr>";
+        if (i!== 0) rowCode += "</tr>";
+        if (i === 0){
+            firstRow = rowCode;
+            rowCode = "";
+        }
     }
+    let firstCell = "<tr> <td ";
+    if (!correctControl){
+        firstCell += "style='color:#EA4335;' ";
+    }
+    firstRow = firstCell + "rowspan='" + notifications.length + "'>" + student + "</td>" + firstRow + "</tr>";
+    rowCode = firstRow + rowCode;
     $('#tableBody').append(rowCode);
 }
 
 function loadTableHeaders(){
-    const headers= "<thead><tr><th>Alumno</th><th>Acción</th><th>Fecha</th><th>Más información</th>" +
-        "<th>Tiempo de vuelo</th><th>IP externa</th><th>IPs internas</th><th>¿Algo raro?</th></tr></thead><tbody id='tableBody'></tbody>";
+    const headers= "<thead><tr><th class='notificationHeader'>Alumno</th><th class='notificationHeader'>Slot</th><th class='notificationHeader'>Acción</th><th class='notificationHeader'>Fecha</th><th class='notificationHeader'>Más información</th>" +
+        "<th class='notificationHeader'>Tiempo de vuelo</th><th class='notificationHeader'>IP externa</th><th class='notificationHeader'>IPs internas</th><th class='notificationHeader'>¿Algo raro?</th></tr></thead><tbody id='tableBody'></tbody>";
     $('#tableNotifications').append(headers);
 }

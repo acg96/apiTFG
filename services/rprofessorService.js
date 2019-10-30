@@ -220,5 +220,112 @@ module.exports = {
                 }
             }
         }.bind(this));
+    },
+    getReportList: function(username, callback){
+        const moment = this.app.get("moment");
+        this.getSlots(username, function(slots){
+            const adaptedGroups= [];
+            for (let i= 0; i < slots.length; ++i){
+                const tempSlot = {
+                    groupName: slots[i].groupName,
+                    groupId: slots[i].groupId.toString(),
+                    _id: slots[i]._id.toString(),
+                    slotDescription: slots[i].description,
+                    studentsIncluded: JSON.stringify(slots[i].studentsIncluded)
+                };
+                adaptedGroups.push(tempSlot);
+            }
+
+            const groupsHashMap = []; //Used to classify the slots by groupIds
+            const groupIdArray = [];
+            const groupsWithName = []; //Used to the html list
+            for (let e= 0; e < adaptedGroups.length; ++e){
+                if (groupIdArray.includes(adaptedGroups[e].groupId)){
+                    groupsHashMap[adaptedGroups[e].groupId].push(adaptedGroups[e]);
+                } else{
+                    groupsWithName[adaptedGroups[e].groupId]= adaptedGroups[e].groupName;
+                    groupIdArray.push(adaptedGroups[e].groupId);
+                    groupsHashMap[adaptedGroups[e].groupId]= [];
+                    groupsHashMap[adaptedGroups[e].groupId].push(adaptedGroups[e]);
+                }
+            }
+
+            const slotsIds = []; //Used to get the notifications
+            for (let i= 0; i < adaptedGroups.length; ++i){
+                if (!slotsIds.includes(adaptedGroups[i]._id)){
+                    slotsIds.push(adaptedGroups[i]._id);
+                }
+            }
+            this.getNotificationsBySlotIds(slotsIds, function(notifications){
+                const finalHashmap = {}; //HashMap with group ids as keys and some HashMaps inside with the students name as keys which contains the notifications classified
+                notifications.sort((a, b) => {
+                    if (a.idUser > b.idUser) {
+                        return 1;
+                    } else if (a.idUser < b.idUser) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                });
+                for (let k= 0; k < groupIdArray.length; ++k){
+                    const notificationsHashMap = {};
+                    const usernameArray = [];
+                    for (let i= 0; i < notifications.length; ++i) {
+                        for (let f= 0; f < groupsHashMap[groupIdArray[k]].length; ++f) {
+                            if (notifications[i].slotId === groupsHashMap[groupIdArray[k]][f]._id) {
+                                const includedStudents = JSON.parse(groupsHashMap[groupIdArray[k]][f].studentsIncluded);
+                                for (let e= 0; e < includedStudents.length; ++e) {
+                                    if (notifications[i].idUser === includedStudents[e]){
+                                        let intIps= "";
+                                        for (let e= 0; e < notifications[i].intIps.length; ++e){
+                                            if (e === 0){
+                                                intIps+= notifications[i].intIps[e];
+                                            } else{
+                                                intIps+= ", " + notifications[i].intIps[e];
+                                            }
+                                        }
+                                        let slotDescription= groupsHashMap[groupIdArray[k]][f].slotDescription.trim();
+                                        const adaptedNotification = {
+                                            intIps: intIps,
+                                            slotDescription: slotDescription,
+                                            actionTime: moment(notifications[i].actionTime).format("DD MMM YYYY HH:mm:ss"),
+                                            actionName: this.app.get('actionCodeTranslation')[notifications[i].actionCode],
+                                            moreInfo: notifications[i].moreInfo,
+                                            somethingWrong: notifications[i].somethingWrong,
+                                            tofCache: notifications[i].tofCache ? "Activado" : "Desactivado",
+                                            extIp: notifications[i].extIp === "::1" ? "localhost" : notifications[i].extIp,
+                                            idUser: notifications[i].idUser
+                                        };
+
+                                        if (usernameArray.includes(notifications[i].idUser)){
+                                            notificationsHashMap[notifications[i].idUser].push(adaptedNotification);
+                                        } else{
+                                            usernameArray.push(notifications[i].idUser);
+                                            notificationsHashMap[notifications[i].idUser]= [];
+                                            notificationsHashMap[notifications[i].idUser].push(adaptedNotification);
+                                        }
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                        if (notificationsHashMap[notifications[i].idUser] != null) {
+                            notificationsHashMap[notifications[i].idUser].sort((a, b) => {
+                                if (a.actionTime < b.actionTime) {
+                                    return 1;
+                                } else if (a.actionTime > b.actionTime) {
+                                    return -1;
+                                } else {
+                                    return 0;
+                                }
+                            });
+                        }
+                    }
+                    finalHashmap[groupIdArray[k]]= notificationsHashMap;
+                }
+                callback(groupsWithName, groupIdArray, finalHashmap);
+            }.bind(this));
+        }.bind(this));
     }
 };
