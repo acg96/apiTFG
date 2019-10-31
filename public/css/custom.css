@@ -21,7 +21,7 @@ footer {
     line-height: 60px
 }
 
-.notificationHeader{
+.tableHeaders{
     position: sticky;
     top: 0;
     background: white;

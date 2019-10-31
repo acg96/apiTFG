@@ -45,7 +45,7 @@ function loadStudent(notifications, student){
 }
 
 function loadTableHeaders(){
-    const headers= "<thead><tr><th class='notificationHeader'>Alumno</th><th class='notificationHeader'>Slot</th><th class='notificationHeader'>Acción</th><th class='notificationHeader'>Fecha</th><th class='notificationHeader'>Más información</th>" +
-        "<th class='notificationHeader'>Tiempo de vuelo</th><th class='notificationHeader'>IP externa</th><th class='notificationHeader'>IPs internas</th><th class='notificationHeader'>¿Algo raro?</th></tr></thead><tbody id='tableBody'></tbody>";
+    const headers= "<thead><tr><th class='tableHeaders' style='width: 10%;'>Alumno</th><th class='tableHeaders' style='width: 9%;'>Slot</th><th class='tableHeaders' style='width: 10%;'>Acción</th><th class='tableHeaders' style='width: 12%;'>Fecha</th><th class='tableHeaders' style='width: 19%;'>Más información</th>" +
+        "<th class='tableHeaders' style='width: 9%;'>Tiempo de vuelo</th><th class='tableHeaders' style='width: 9%;'>IP externa</th><th class='tableHeaders' style='width: 9%;'>IPs internas</th><th class='tableHeaders' style='width: 13%;'>¿Algo raro?</th></tr></thead><tbody id='tableBody'></tbody>";
     $('#tableNotifications').append(headers);
 }
