@@ -1,5 +1,44 @@
 const modal = document.getElementById("modalView");
 const closeButton = document.getElementsByClassName("close")[0];
+const featuresDataTable = {
+    "language": {
+        "emptyTable": "No hay registros para mostrar",
+        "lengthMenu": "Mostrar _MENU_ registros por página",
+        "loadingRecords": "Cargando...",
+        "processing": "Procesando...",
+        "search": "Búsqueda",
+        "zeroRecords": "No se han encontrado coincidencias",
+        "paginate": {
+            "first":      "Primera",
+            "last":       "Última",
+            "next":       "Siguiente",
+            "previous":   "Anterior"
+        },
+        "info": "Mostrando página _PAGE_ de _PAGES_",
+        "infoEmpty": "No hay registros disponibles",
+        "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+        "aria": {
+            "sortAscending":  ": activar para ordenar de forma ascendente",
+            "sortDescending": ": activar para ordenar de forma descendente"
+        }
+    },
+    "columns": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        { "orderable": false, "searchable": false },
+        { "orderable": false, "searchable": false },
+        { "orderable": false, "searchable": false }
+    ]
+};
+
+window.onload = function (){
+    $("#tableSlots").DataTable(featuresDataTable);
+};
+
 function openModal(option) {
     const optSelected = option.split("-")[0];
     const idSelected = option.split("-")[1];
@@ -22,7 +61,7 @@ window.onclick = function(event) {
     if (event.target === modal) {
         hideModal();
     }
-}
+};
 
 function confirmDelete(slotId){
     const modalContent= $('#modalContent');
