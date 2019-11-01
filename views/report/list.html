@@ -2,6 +2,13 @@
 {% block body %}
 <div class="container">
     <h2>Ver notificaciones</h2>
+    <div id="modalView" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">x</span>
+            <div id="modalContent" style="overflow-y: auto; height: 600px; width:100%;"></div>
+        </div>
+    </div>
     <script src="/js/loadNotifications.js"></script>
     <div class="table-responsive">
         <div class="form-row">
