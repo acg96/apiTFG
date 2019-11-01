@@ -2,20 +2,51 @@ const tableHeadersDetail = loadTableDetailsHeaders();
 let rowNotificationsObject = [];
 const modal = document.getElementById("modalView");
 const closeButton = document.getElementsByClassName("close")[0];
+const featuresDataTableLong = { //Used on details table
+    "language": {
+        "emptyTable": "No hay registros para mostrar",
+        "lengthMenu": "Mostrar _MENU_ registros por página",
+        "loadingRecords": "Cargando...",
+        "processing": "Procesando...",
+        "search": "Búsqueda",
+        "zeroRecords": "No se han encontrado coincidencias",
+        "paginate": {
+            "first":      "Primera",
+            "last":       "Última",
+            "next":       "Siguiente",
+            "previous":   "Anterior"
+        },
+        "info": "Mostrando página _PAGE_ de _PAGES_",
+        "infoEmpty": "No hay registros disponibles",
+        "infoFiltered": "(filtrado de un total de _MAX_ registros)",
+        "aria": {
+            "sortAscending":  ": activar para ordenar de forma ascendente",
+            "sortDescending": ": activar para ordenar de forma descendente"
+        }
+    }
+};
+const featuresDataTableShort = {...featuresDataTableLong}; //copy object no reference
+featuresDataTableShort["columnDefs"] = [
+        { "orderable": false, "targets": 3 },
+        { "searchable": false, "targets": 3 }
+    ];
 
 function openModal(option) {
     const modalContent= $('#modalContent');
     const studentSelected = option;
+    $("#modalHeaderTitle").text(studentSelected);
     let htmlToLoad = "<table class='table table-hover' id='tableNotificationsDetails'>";
     htmlToLoad += tableHeadersDetail;
+    htmlToLoad += "</table>";
+    modalContent.append(htmlToLoad);
+
     for  (let i= 0; i < rowNotificationsObject.length; ++i){
         if (rowNotificationsObject[i].student === studentSelected){
-            htmlToLoad += rowNotificationsObject[i].rowCodeLong;
+            $("#tableBodyDetails").append(rowNotificationsObject[i].rowCodeLong);
             break;
         }
     }
-    htmlToLoad += "</table>";
-    modalContent.append(htmlToLoad);
+    $('#tableNotificationsDetails').DataTable(featuresDataTableLong);
     modal.style.display = "block";
 }
 
@@ -32,9 +63,21 @@ window.onclick = function(event) {
     }
 }
 
+function manageRedCheckbox(){
+    showFirstList($("#redCheckBox").is(":checked"));
+}
+
+function showFirstList(justReds){
+    $('#tableNotifications').empty();
+    $('#tableNotifications').append("<table class='table table-hover' id='tableNotificationsT'></table>");
+    loadTableMainHeaders();
+    loadTableMainRows(justReds);
+    $('#tableNotificationsT').DataTable(featuresDataTableShort);
+}
+
 function showNotifications(optionSelected){
     if (optionSelected != null) {
-        $('#tableNotifications').empty();
+        $('#redCheckBox').removeAttr("disabled");
         const groupIdSelected = optionSelected.value;
         const jsonNotifications = $("#studentsJson").val();
         const parseJson = JSON.parse(jsonNotifications);
@@ -43,14 +86,14 @@ function showNotifications(optionSelected){
         for (let i= 0; i < students.length; ++i){
             rowNotificationsObject.push(loadStudent(parseJson[groupIdSelected][students[i]], students[i]));
         }
-        loadTableMainHeaders();
-        loadTableMainRows();
+        showFirstList($("#redCheckBox").is(":checked"));
     }
 }
 
-function loadTableMainRows(){
+function loadTableMainRows(justReds){
     let rowCode = "";
     for (let i = 0; i < rowNotificationsObject.length; ++i){
+        if (justReds && rowNotificationsObject[i].noProblems) continue;
         rowCode += "<tr>";
         rowCode += "<td " + (rowNotificationsObject[i].noProblems ? "" :  "style='color:#EA4335;'") + ">" + rowNotificationsObject[i].student + "</td>";
         rowCode += "<td>" + rowNotificationsObject[i].numberNotifications + "</td>";
@@ -62,21 +105,20 @@ function loadTableMainRows(){
 }
 
 function loadTableMainHeaders(){
-    const headers= "<thead><tr><th class='tableHeaders' style=\"width: 40%;\">Alumno</th><th class='tableHeaders' style=\"width: 30%;\">Número de notificaciones</th><th class='tableHeaders' style=\"width: 15%;\">¿Acciones prohibidas?</th><th class='tableHeaders' style=\"width: 15%;\"></th></tr></thead><tbody id='tableBody'></tbody>";
-    $('#tableNotifications').append(headers);
+    const headers= "<thead><tr><th style=\"width: 40%;\">Alumno</th><th style=\"width: 30%;\">Número de notificaciones</th><th style=\"width: 15%;\">¿Acciones prohibidas?</th><th style=\"width: 13%;\"></th></tr></thead><tbody id='tableBody'></tbody>";
+    $('#tableNotificationsT').append(headers);
 }
 
 function loadStudent(notifications, student){
     let rowCode = "";
     let correctControl =  true; //Used to know if some notification is not normal
-    let firstRow = "";
     for (let i= 0; i < notifications.length; ++i){
         let currentControl = true;
         if (!(notifications[i].actionName === "Inicio de sesión" || notifications[i].actionName === "Comienzo de slot")){
             correctControl = false;
             currentControl = false;
         }
-        if (i!== 0) rowCode += "<tr>";
+        rowCode += "<tr>";
         rowCode += "<td>" + notifications[i].slotDescription + "</td>";
         rowCode += "<td " + (currentControl ? "" : "style='color:#EA4335;'") + ">" + notifications[i].actionName + "</td>";
         rowCode += "<td>" + notifications[i].actionTime + "</td>";
@@ -85,18 +127,8 @@ function loadStudent(notifications, student){
         rowCode += "<td>" + notifications[i].extIp + "</td>";
         rowCode += "<td>" + notifications[i].intIps + "</td>";
         rowCode += "<td>" + notifications[i].somethingWrong + "</td>";
-        if (i!== 0) rowCode += "</tr>";
-        if (i === 0){
-            firstRow = rowCode;
-            rowCode = "";
-        }
+        rowCode += "</tr>";
     }
-    let firstCell = "<tr> <td ";
-    if (!correctControl){
-        firstCell += "style='color:#EA4335;' ";
-    }
-    firstRow = firstCell + "rowspan='" + notifications.length + "'>" + student + "</td>" + firstRow + "</tr>";
-    rowCode = firstRow + rowCode;
     const returnObject = {
       rowCodeLong: rowCode,
       student: student.trim(),
@@ -107,7 +139,7 @@ function loadStudent(notifications, student){
 }
 
 function loadTableDetailsHeaders(){
-    const headers= "<thead><tr><th class='tableHeaders' style=\"width: 10%;\">Alumno</th><th class='tableHeaders' style=\"width: 10%;\">Slot</th><th class='tableHeaders' style=\"width: 10%;\">Acción</th><th class='tableHeaders' style=\"width: 10%;\">Fecha</th><th class='tableHeaders' style=\"width: 15%;\">Más información</th>" +
-        "<th class='tableHeaders' style=\"width: 10%;\">Tiempo de vuelo</th><th class='tableHeaders' style=\"width: 10%;\">IP externa</th><th class='tableHeaders' style=\"width: 10%;\">IPs internas</th><th class='tableHeaders' style=\"width: 15%;\">¿Algo raro?</th></tr></thead><tbody id='tableBody'></tbody>";
+    const headers= "<thead><tr><th>Slot</th><th>Acción</th><th>Fecha</th><th>Más información</th>" +
+        "<th>Tiempo de vuelo</th><th>IP externa</th><th>IPs internas</th><th>¿Algo raro?</th></tr></thead><tbody id='tableBodyDetails'></tbody>";
     return headers;
 }
