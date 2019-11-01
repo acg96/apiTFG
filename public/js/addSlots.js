@@ -41,6 +41,15 @@ function showStudents(optionSelected){
         $('#studentsExcludedText').val("");
         const arraySelected = optionSelected.value.split("%%65&4-%.43%%");
         const students = arraySelected[1].split("-;%;&&-%;-");
+        students.sort((a, b) => {
+            if (a > b) {
+                return 1;
+            } else if (a < b) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
         for (let i = 0; i < students.length; ++i) {
             $('#studentsGroup').append(`<option value="${students[i]}">
                                        ${students[i]}
