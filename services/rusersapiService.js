@@ -34,7 +34,8 @@ module.exports = {
                                 endTime: slots[i].endTime,
                                 listMode: slots[i].listMode,
                                 urls: slots[i].urls,
-                                groupName: slots[i].groupName
+                                groupName: slots[i].groupName,
+                                slotId: slots[i]._id.toString()
                             };
                             urls.push(arraySlotUrls);
                         }

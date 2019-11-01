@@ -25,7 +25,7 @@ module.exports = function (app, logger, swig, professorService) {
                     author: slots[i].author,
                     _id: slots[i]._id.toString(),
                     startTimeMS: slots[i].startTime,
-                    future: date.valueOf() < slots[i].startTime,
+                    future: date.valueOf() < slots[i].endTime,
                     stringSlot: JSON.stringify(stringSlot)
                 };
                 adaptedSlots.push(tempSlot);
@@ -63,6 +63,13 @@ module.exports = function (app, logger, swig, professorService) {
             req.session.noAdded = null;
             req.session.slotDeletions = null;
             const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
+            res.send(response);
+        });
+    });
+
+    app.get('/prf/report/list', function (req, res) {
+        professorService.getReportList(req.session.username, (groupsWithName, groupIdArray, finalHashmap) => {
+            const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
             res.send(response);
         });
     });

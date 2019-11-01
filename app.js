@@ -24,6 +24,21 @@ app.use(expressSession({
 app.use(express.static('public'));
 //****End administration web****
 
+const actionCodeTranslation={
+    "1133": "Comienzo de slot",
+    "1134": "Inicio de sesión",
+    "1135": "Extensión desinstalada",
+    "1136": "Extensión deshabilitada",
+    "1137": "Extensión instalada",
+    "1138": "Extensión habilitada",
+    "1139": "Página no permitida",
+    "1140": "EyeSecure desinstalada",
+    "1141": "EyeSecure deshabilitada",
+    "1142": "Extensión pivote deshabilitada",
+    "1143": "Extensión pivote desinstalada",
+};
+app.set('actionCodeTranslation', actionCodeTranslation);
+
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');

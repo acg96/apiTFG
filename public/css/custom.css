@@ -21,6 +21,16 @@ footer {
     line-height: 60px
 }
 
+.pagination>.active>a{
+    z-index: 0 !important;
+}
+
+.tableHeaders{
+    position: sticky;
+    top: 0;
+    background: white;
+}
+
 /* modal background */
 .modal {
     display: none;

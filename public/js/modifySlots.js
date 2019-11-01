@@ -40,7 +40,7 @@ function showDetails(slotId){
     initHtml+= "<li>"+ "<b>Detalles:</b> " + valueJson.description +"</li>";
     initHtml+= "<li>"+ "<b>Comienzo:</b> " + valueJson.startTime +"</li>";
     initHtml+= "<li>"+ "<b>Fin:</b> " + valueJson.endTime +"</li>";
-    initHtml+= "<li>"+ "<b>Modo:</b> " + (valueJson.listMode === "whitelist" ? "Lista blanca" : "Lista negra") +"</li>";
+    initHtml+= "<li>"+ "<b>Modo:</b> " + valueJson.listMode +"</li>";
     initHtml+= "<li>"+ "<b>Autor:</b> " + valueJson.author +"</li>";
     initHtml+= "</ul>";
     modalContent.append(initHtml);
@@ -53,6 +53,15 @@ function showDetails(slotId){
     modalContent.append(urlsHtml);
     modalContent.append("<div class='modal-header2'><h3>Estudiantes incluidos:</h3></div>");
     let includedStudentsHtml = "<ul>";
+    valueJson.studentsIncluded.sort((a, b) => {
+        if (a > b) {
+            return 1;
+        } else if (a < b) {
+            return -1;
+        } else {
+            return 0;
+        }
+    });
     for (let i= 0; i < valueJson.studentsIncluded.length; ++i){
         includedStudentsHtml+= "<li>"+ valueJson.studentsIncluded[i] +"</li>";
     }
@@ -60,6 +69,15 @@ function showDetails(slotId){
     modalContent.append(includedStudentsHtml);
     modalContent.append("<div class='modal-header2'><h3>Estudiantes excluidos:</h3></div>");
     let excludedStudentsHtml = "<ul>";
+    valueJson.studentsExcluded.sort((a, b) => {
+        if (a > b) {
+            return 1;
+        } else if (a < b) {
+            return -1;
+        } else {
+            return 0;
+        }
+    });
     for (let i= 0; i < valueJson.studentsExcluded.length; ++i){
         excludedStudentsHtml+= "<li>"+ valueJson.studentsExcluded[i] +"</li>";
     }

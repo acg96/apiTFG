@@ -36,43 +36,45 @@
         <br/>
         {% endif %}
 
-        <table class="table table-hover" id="tableSlots">
-            <thead>
-            <tr>
-                <th>Grupo</th>
-                <th>Descripción</th>
-                <th>Comienzo</th>
-                <th>Fin</th>
-                <th>Modo de restricción</th>
-                <th>Autor</th>
-                <th class="col-md-1"></th>
-                <th class="col-md-1"></th>
-                <th class="col-md-1"></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for slot in slotList %}
-            <tr>
-                <td>{{slot.groupName}}</td>
-                <td>{{slot.description}}</td>
-                <td>{{slot.startTime}}</td>
-                <td>{{slot.endTime}}</td>
-                <td>{{slot.listMode}}</td>
-                <td>{{slot.author}}</td>
-                <td><a href="#" onclick="openModal('details-{{slot._id}}')">Ver detalles</a>
-                    <input type="text" id="input-{{slot._id}}" value="{{slot.stringSlot}}" hidden/>
-                </td>
-                {% if slot.future %}
-                <td><a href="/prf/slot/edit/{{slot._id}}">Modificar</a></td>
-                <td><a href="#" onclick="openModal('delete-{{slot._id}}')">Eliminar</a></td>
-                {% else %}
-                <td></td>
-                <td></td>
-                {% endif %}
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <div style="overflow-y: auto; height: 600px; width:100%;">
+            <table class="table table-hover" id="tableSlots">
+                <thead>
+                <tr>
+                    <th class="tableHeaders" style="width: 10%;">Grupo</th>
+                    <th class="tableHeaders" style="width: 23%;">Descripción</th>
+                    <th class="tableHeaders" style="width: 13%;">Comienzo</th>
+                    <th class="tableHeaders" style="width: 13%;">Fin</th>
+                    <th class="tableHeaders" style="width: 9%;">Modo de restricción</th>
+                    <th class="tableHeaders" style="width: 10%;">Autor</th>
+                    <th class="tableHeaders" style="width: 10%;"></th>
+                    <th class="tableHeaders" style="width: 6%;"></th>
+                    <th class="tableHeaders" style="width: 6%;"></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for slot in slotList %}
+                <tr>
+                    <td>{{slot.groupName}}</td>
+                    <td>{{slot.description}}</td>
+                    <td>{{slot.startTime}}</td>
+                    <td>{{slot.endTime}}</td>
+                    <td>{{slot.listMode}}</td>
+                    <td>{{slot.author}}</td>
+                    <td><a href="#" onclick="openModal('details-{{slot._id}}')">Ver detalles</a>
+                        <input type="text" id="input-{{slot._id}}" value="{{slot.stringSlot}}" hidden/>
+                    </td>
+                    {% if slot.future %}
+                    <td><a href="/prf/slot/edit/{{slot._id}}">Modificar</a></td>
+                    <td><a href="#" onclick="openModal('delete-{{slot._id}}')">Eliminar</a></td>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}
