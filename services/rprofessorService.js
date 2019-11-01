@@ -289,6 +289,7 @@ module.exports = {
                                             intIps: intIps,
                                             slotDescription: slotDescription,
                                             actionTime: moment(notifications[i].actionTime).format("DD MMM YYYY HH:mm:ss"),
+                                            actionTimeMS: notifications[i].actionTime,
                                             actionName: this.app.get('actionCodeTranslation')[notifications[i].actionCode],
                                             moreInfo: notifications[i].moreInfo,
                                             somethingWrong: notifications[i].somethingWrong,
@@ -309,17 +310,6 @@ module.exports = {
                                 }
                                 break;
                             }
-                        }
-                        if (notificationsHashMap[notifications[i].idUser] != null) {
-                            notificationsHashMap[notifications[i].idUser].sort((a, b) => {
-                                if (a.actionTime < b.actionTime) {
-                                    return 1;
-                                } else if (a.actionTime > b.actionTime) {
-                                    return -1;
-                                } else {
-                                    return 0;
-                                }
-                            });
                         }
                     }
                     finalHashmap[groupIdArray[k]]= notificationsHashMap;

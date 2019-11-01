@@ -58,8 +58,8 @@
                 <tr>
                     <td>{{slot.groupName}}</td>
                     <td>{{slot.description}}</td>
-                    <td>{{slot.startTime}}</td>
-                    <td>{{slot.endTime}}</td>
+                    <td data-sort="{{slot.startTimeMS}}">{{slot.startTime}}</td>
+                    <td data-sort="{{slot.endTimeMS}}">{{slot.endTime}}</td>
                     <td>{{slot.listMode}}</td>
                     <td>{{slot.author}}</td>
                     <td><a href="#" onclick="openModal('details-{{slot._id}}')">Ver detalles</a>

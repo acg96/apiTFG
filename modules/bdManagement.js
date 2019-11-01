@@ -81,6 +81,24 @@ module.exports = {
                     if (err) {
                         callbackFunction(null);
                     } else {
+                        this.deleteNotifications({slotId: slotCriteria._id.toString()}, result2 => {
+                            callbackFunction(result.result.n);
+                        });
+                    }
+                    db.close();
+                }.bind(this));
+            }
+        }.bind(this));
+    }, deleteNotifications: function (notificationCriteria, callbackFunction) {
+        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = db.collection('notifications');
+                collection.deleteMany(notificationCriteria, function (err, result) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
                         callbackFunction(result.result.n);
                     }
                     db.close();

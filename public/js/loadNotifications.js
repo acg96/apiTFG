@@ -26,10 +26,12 @@ const featuresDataTableLong = { //Used on details table
     }
 };
 const featuresDataTableShort = {...featuresDataTableLong}; //copy object no reference
+featuresDataTableLong["order"]= [[2, "desc"]];
 featuresDataTableShort["columnDefs"] = [
         { "orderable": false, "targets": 3 },
         { "searchable": false, "targets": 3 }
     ];
+featuresDataTableShort["order"]= [[1, "desc"]];
 
 function openModal(option) {
     const modalContent= $('#modalContent');
@@ -61,15 +63,16 @@ window.onclick = function(event) {
     if (event.target === modal) {
         hideModal();
     }
-}
+};
 
 function manageRedCheckbox(){
     showFirstList($("#redCheckBox").is(":checked"));
 }
 
 function showFirstList(justReds){
-    $('#tableNotifications').empty();
-    $('#tableNotifications').append("<table class='table table-hover' id='tableNotificationsT'></table>");
+    const tableNotifications = $('#tableNotifications');
+    tableNotifications.empty();
+    tableNotifications.append("<table class='table table-hover' id='tableNotificationsT'></table>");
     loadTableMainHeaders();
     loadTableMainRows(justReds);
     $('#tableNotificationsT').DataTable(featuresDataTableShort);
@@ -77,7 +80,8 @@ function showFirstList(justReds){
 
 function showNotifications(optionSelected){
     if (optionSelected != null) {
-        $('#redCheckBox').removeAttr("disabled");
+        const redCheckBox = $('#redCheckBox');
+        redCheckBox.removeAttr("disabled");
         const groupIdSelected = optionSelected.value;
         const jsonNotifications = $("#studentsJson").val();
         const parseJson = JSON.parse(jsonNotifications);
@@ -86,7 +90,7 @@ function showNotifications(optionSelected){
         for (let i= 0; i < students.length; ++i){
             rowNotificationsObject.push(loadStudent(parseJson[groupIdSelected][students[i]], students[i]));
         }
-        showFirstList($("#redCheckBox").is(":checked"));
+        showFirstList(redCheckBox.is(":checked"));
     }
 }
 
@@ -96,6 +100,7 @@ function loadTableMainRows(justReds){
         if (justReds && rowNotificationsObject[i].noProblems) continue;
         rowCode += "<tr>";
         rowCode += "<td " + (rowNotificationsObject[i].noProblems ? "" :  "style='color:#EA4335;'") + ">" + rowNotificationsObject[i].student + "</td>";
+        rowCode += "<td data-sort=\""+ rowNotificationsObject[i].msMajorDate +"\">" + rowNotificationsObject[i].stringMajorDate + "</td>";
         rowCode += "<td>" + rowNotificationsObject[i].numberNotifications + "</td>";
         rowCode += "<td>" + (rowNotificationsObject[i].noProblems ? "No" :  "Sí") + "</td>";
         rowCode += "<td>" + "<a href='#' onclick='openModal(\""+ rowNotificationsObject[i].student +"\")'>Ver detalles</a></td>";
@@ -105,23 +110,32 @@ function loadTableMainRows(justReds){
 }
 
 function loadTableMainHeaders(){
-    const headers= "<thead><tr><th style=\"width: 40%;\">Alumno</th><th style=\"width: 30%;\">Número de notificaciones</th><th style=\"width: 15%;\">¿Acciones prohibidas?</th><th style=\"width: 13%;\"></th></tr></thead><tbody id='tableBody'></tbody>";
+    const headers= "<thead><tr><th style=\"width: 25%;\">Alumno</th><th style=\"width: 25%;\">Última notificación</th><th style=\"width: 25%;\">Número de notificaciones</th><th style=\"width: 15%;\">¿Acciones prohibidas?</th><th style=\"width: 13%;\"></th></tr></thead><tbody id='tableBody'></tbody>";
     $('#tableNotificationsT').append(headers);
 }
 
 function loadStudent(notifications, student){
     let rowCode = "";
     let correctControl =  true; //Used to know if some notification is not normal
+    let majorDate = null;
+    let stringMajorDate = null;
     for (let i= 0; i < notifications.length; ++i){
         let currentControl = true;
         if (!(notifications[i].actionName === "Inicio de sesión" || notifications[i].actionName === "Comienzo de slot")){
             correctControl = false;
             currentControl = false;
         }
+        if (i === 0){
+            majorDate = notifications[i].actionTimeMS;
+            stringMajorDate = notifications[i].actionTime;
+        } else if (notifications[i].actionTimeMS > majorDate){
+            majorDate = notifications[i].actionTimeMS;
+            stringMajorDate = notifications[i].actionTime;
+        }
         rowCode += "<tr>";
         rowCode += "<td>" + notifications[i].slotDescription + "</td>";
         rowCode += "<td " + (currentControl ? "" : "style='color:#EA4335;'") + ">" + notifications[i].actionName + "</td>";
-        rowCode += "<td>" + notifications[i].actionTime + "</td>";
+        rowCode += "<td data-sort=\""+ notifications[i].actionTimeMS +"\">" + notifications[i].actionTime + "</td>";
         rowCode += "<td>" + notifications[i].moreInfo + "</td>";
         rowCode += "<td>" + notifications[i].tofCache + "</td>";
         rowCode += "<td>" + notifications[i].extIp + "</td>";
@@ -129,17 +143,17 @@ function loadStudent(notifications, student){
         rowCode += "<td>" + notifications[i].somethingWrong + "</td>";
         rowCode += "</tr>";
     }
-    const returnObject = {
-      rowCodeLong: rowCode,
-      student: student.trim(),
-      numberNotifications: notifications.length,
-      noProblems: correctControl
+    return {
+        rowCodeLong: rowCode,
+        student: student.trim(),
+        numberNotifications: notifications.length,
+        noProblems: correctControl,
+        stringMajorDate: stringMajorDate,
+        msMajorDate: majorDate
     };
-    return returnObject;
 }
 
 function loadTableDetailsHeaders(){
-    const headers= "<thead><tr><th>Slot</th><th>Acción</th><th>Fecha</th><th>Más información</th>" +
+    return "<thead><tr><th>Slot</th><th>Acción</th><th>Fecha</th><th>Más información</th>" +
         "<th>Tiempo de vuelo</th><th>IP externa</th><th>IPs internas</th><th>¿Algo raro?</th></tr></thead><tbody id='tableBodyDetails'></tbody>";
-    return headers;
 }

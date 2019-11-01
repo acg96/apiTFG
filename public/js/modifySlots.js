@@ -32,7 +32,8 @@ const featuresDataTable = {
         { "orderable": false, "searchable": false },
         { "orderable": false, "searchable": false },
         { "orderable": false, "searchable": false }
-    ]
+    ],
+    "order": [[2, 'desc']]
 };
 
 window.onload = function (){

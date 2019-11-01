@@ -25,20 +25,12 @@ module.exports = function (app, logger, swig, professorService) {
                     author: slots[i].author,
                     _id: slots[i]._id.toString(),
                     startTimeMS: slots[i].startTime,
+                    endTimeMS: slots[i].endTime,
                     future: date.valueOf() < slots[i].endTime,
                     stringSlot: JSON.stringify(stringSlot)
                 };
                 adaptedSlots.push(tempSlot);
             }
-            adaptedSlots.sort((a, b) => {
-                if (a.startTimeMS > b.startTimeMS){
-                    return -1;
-                } else if (a.startTimeMS < b.startTimeMS){
-                    return 1;
-                } else{
-                    return 0;
-                }
-            });
             let newSlot = 0;
             const stringCollisionsArray= [];
             const collisions= req.session.collisions;
