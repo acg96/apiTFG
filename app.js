@@ -25,6 +25,7 @@ app.use(express.static('public'));
 //****End administration web****
 
 const actionCodeTranslation={
+    "1132": "Señal de vida de extensión",
     "1133": "Comienzo de slot",
     "1134": "Inicio de sesión",
     "1135": "Extensión desinstalada",

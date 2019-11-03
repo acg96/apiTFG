@@ -15,6 +15,8 @@ module.exports = function (app, rStudentApiService, logger) {
 
     app.post("/api/notification", function (req, res){
         /*
+        * cod. 1132 -> The extension is alive
+        * cod. 1133 -> The slot starts
         * cod. 1134 -> The user logged in
         * cod. 1135 -> Extension uninstalled
         * cod. 1136 -> Extension disabled
@@ -35,12 +37,12 @@ module.exports = function (app, rStudentApiService, logger) {
                 const arrayToStoreOnBBDD= [];
                 for (let i= 0; i < jsonAction.length; ++i) {
                     const internalIpsNot = jsonAction[i].intIp;
-                    const idUser = jsonAction[i].idUser;
+                    const idUser = jsonAction[i].idUser == null ? "NoUserProvided" : jsonAction[i].idUser;
                     const timeOfAction = jsonAction[i].actTime;
                     const actionCode = jsonAction[i].actCode;
                     const moreInfo = jsonAction[i].moreInfo;
                     const tofCache = jsonAction[i].cacheTof;
-                    const slotId = jsonAction[i].slotId == null ? "-1" : jsonAction[i].slotId;
+                    const slotId = jsonAction[i].slotId == null ? "-1" : jsonAction[i].slotId; //-2 if it's an alive signal
                     const currentHour = app.get('currentTimeWithSeconds')().valueOf();
                     const correctTime = jsonAction[i].correctTime;
                     let infoCorrect = true;
