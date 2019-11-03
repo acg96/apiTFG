@@ -1,4 +1,18 @@
 module.exports = function (app, rStudentApiService, logger) {
+    app.get("/api/slotsToday", function (req, res){
+        rStudentApiService.getTodaySlots(slots => {
+            const response = {
+                respTime: app.get('currentTimeWithSeconds')().valueOf(),
+                slotsToday: false
+            };
+            if (slots != null && slots.length > 0){
+                response.slotsToday = true;
+            }
+            res.status(200);
+            res.json(response);
+        });
+    });
+
     app.post("/api/notification", function (req, res){
         /*
         * cod. 1134 -> The user logged in
