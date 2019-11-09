@@ -2,8 +2,10 @@
 {% block body %}
 <div class="container">
     <h2>Listado Slots</h2>
+    {% if newSlot !== 1 and newSlot !== -2 and newSlot !== -1 %}
     <br/>
     <br/>
+    {% endif %}
     <div id="modalView" class="modal">
         <!-- Modal content -->
         <div class="modal-content">
@@ -15,12 +17,12 @@
     <div class="table-responsive">
         {% if newSlot === 1 %}
         <span class="text-danger">Slot añadido correctamente</span>
-        {% elseif newSlot === -1 %}
+        {% elif newSlot === -1 %}
         <span class="text-danger">El slot no se ha añadido porque todos los alumnos del mismo ya tienen una restricción en ese horario</span>
-        {% elseif newSlot === -2 %}
+        {% elif newSlot === -2 %}
         <span class="text-danger">{{slotDeletions}}</span>
         {% endif %}
-        {% if collisions != null && collisions.length > 0 %}
+        {% if collisions != null and collisions.length > 0 %}
         <br/>
         <br/>
         <span class="text-danger">Se han producido las siguientes colisiones:</span>

@@ -8,7 +8,7 @@ const bodyParser = require('body-parser');
 app.set('tokenTime', 2700000); //Used to force the session or token expires at 45min after the beginning
 
 //***Start administration web****
-const swig = require('swig');
+const swig = require('nunjucks');
 const expressSession = require('express-session');
 //when https will be activated set property secure: true TODO
 app.use(expressSession({

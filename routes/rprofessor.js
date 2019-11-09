@@ -54,14 +54,14 @@ module.exports = function (app, logger, swig, professorService) {
             req.session.collisions = null;
             req.session.noAdded = null;
             req.session.slotDeletions = null;
-            const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
+            const response = swig.render('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
             res.send(response);
         });
     });
 
     app.get('/prf/report/list', function (req, res) {
         professorService.getReportList(req.session.username, (groupsWithName, groupIdArray, finalHashmap) => {
-            const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
+            const response = swig.render('views/report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
             res.send(response);
         });
     });
@@ -76,7 +76,7 @@ module.exports = function (app, logger, swig, professorService) {
             minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
         };
         professorService.getSlotGroups(req.session.username, (adaptedGroups) => {
-            const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
+            const response = swig.render('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
             res.send(response);
         });
     });
@@ -119,7 +119,7 @@ module.exports = function (app, logger, swig, professorService) {
                     minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                 };
                 logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
-                const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
+                const response = swig.render('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
                 res.send(response);
             }
         });
