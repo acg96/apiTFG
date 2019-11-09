@@ -1,7 +1,6 @@
-module.exports = function (app, logger, bdManagement, initBD, swig) {
+module.exports = function (app, logger, bdManagement, initBD) {
     app.get('/', function (req, res) {
-        const response = swig.renderFile('views/main/index.html', {username: req.session.username});
-        res.send(response);
+        res.render('main/index.html', {username: req.session.username});
     });
     app.get("/reset", function (req, res) { //TODO
         logger.info("BBDD reset - IP: " + req.ip);

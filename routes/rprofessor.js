@@ -1,4 +1,4 @@
-module.exports = function (app, logger, swig, professorService) {
+module.exports = function (app, logger, professorService) {
     app.get('/prf/slot/list', function (req, res) {
         const date= app.get('currentTimeWithSeconds')(); //Use seconds because the startTime has a delay of 10 seconds
         const moment = app.get("moment");
@@ -54,15 +54,13 @@ module.exports = function (app, logger, swig, professorService) {
             req.session.collisions = null;
             req.session.noAdded = null;
             req.session.slotDeletions = null;
-            const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
-            res.send(response);
+            res.render('slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
         });
     });
 
     app.get('/prf/report/list', function (req, res) {
         professorService.getReportList(req.session.username, (groupsWithName, groupIdArray, finalHashmap) => {
-            const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
-            res.send(response);
+            res.render('report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
         });
     });
 
@@ -76,8 +74,7 @@ module.exports = function (app, logger, swig, professorService) {
             minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
         };
         professorService.getSlotGroups(req.session.username, (adaptedGroups) => {
-            const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
-            res.send(response);
+            res.render('slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
         });
     });
 
@@ -119,8 +116,7 @@ module.exports = function (app, logger, swig, professorService) {
                     minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                 };
                 logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
-                const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
-                res.send(response);
+                res.render('slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
             }
         });
     });
