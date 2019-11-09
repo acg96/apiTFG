@@ -8,7 +8,7 @@ module.exports = {
     deleteSlot: function(username, slotId, callback){
         //Check if the slot exists
         try {
-            this.bdManagement.getSlot({_id: this.bdManagement.mongo.ObjectID(slotId)}, function (slots) {
+            this.bdManagement.getSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, function (slots) {
                 if (slots != null && slots.length === 1) {
                     const slot = slots[0];
                     //Check if the slot it's a future one
@@ -16,11 +16,11 @@ module.exports = {
                         //Check if the slot belongs to the professor
                         this.bdManagement.getClassGroup({
                             professors: username,
-                            _id: this.bdManagement.mongo.ObjectID(slot.groupId)
+                            _id: this.bdManagement.mongoPure.ObjectID(slot.groupId)
                         }, function (groups) {
                             if (groups != null && groups.length === 1) {
                                 //The slotId is valid
-                                this.bdManagement.deleteSlot({_id: this.bdManagement.mongo.ObjectID(slotId)}, numberOfDeletions => {
+                                this.bdManagement.deleteSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, numberOfDeletions => {
                                     if (numberOfDeletions != null && numberOfDeletions > 0) {
                                         callback("Se ha borrado correctamente el slot");
                                     } else {
@@ -48,7 +48,7 @@ module.exports = {
             if (groups != null && groups.length > 0){
                 const groupsIds= [];
                 for (let i= 0; i < groups.length; ++i){
-                    groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
+                    groupsIds.push(this.bdManagement.mongoPure.ObjectID(groups[i]._id));
                 }
                 this.bdManagement.getSlot({groupId: {$in: groupsIds}}, slots => {
                     if (slots != null){
@@ -124,7 +124,7 @@ module.exports = {
         slotValidator.validateAddSlot(this.app, postInfo, this.bdManagement, username, function (errors, processedResult) {
             if (errors != null && errors.anyError === 0) {
                 //Analyze student collisions
-                this.bdManagement.getClassGroup({_id: this.bdManagement.mongo.ObjectID(processedResult.groupId)}, function (groups){
+                this.bdManagement.getClassGroup({_id: this.bdManagement.mongoPure.ObjectID(processedResult.groupId)}, function (groups){
                     if (groups == null || groups.length !== 1){
                         this.getSlotGroups(username, function (adaptedGroups){
                             errors.anyError = 1;
@@ -185,7 +185,7 @@ module.exports = {
             if (groups != null && groups.length !== 0){
                 const groupsIds= [];
                 for (let i= 0; i < groups.length; ++i){
-                    groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
+                    groupsIds.push(this.bdManagement.mongoPure.ObjectID(groups[i]._id));
                 }
                 const criteriaSlots= {
                     groupId: {$in: groupsIds},

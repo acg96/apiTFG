@@ -48,11 +48,12 @@ app.set('jwt', jwt);
 app.set('moment', moment);
 const bdManagement = require("./modules/bdManagement.js");
 const initBD = require("./modules/initBD.js");
+app.set('db', "mongodb+srv://admin:sdi@tiendamusica-s0nh9.mongodb.net/tfg?retryWrites=true&w=majority");
+app.set('dbName', 'tfg');
 bdManagement.init(app, mongo);
 initBD.init(app, bdManagement, logger);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-app.set('db', 'mongodb://admin:sdi@tiendamusica-shard-00-00-s0nh9.mongodb.net:27017,tiendamusica-shard-00-01-s0nh9.mongodb.net:27017,tiendamusica-shard-00-02-s0nh9.mongodb.net:27017/tfg?ssl=true&replicaSet=tiendamusica-shard-0&authSource=admin&retryWrites=true');
 app.set('port', 7991);
 
 //Get current time without ms and s using moment library

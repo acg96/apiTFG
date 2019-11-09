@@ -1,189 +1,206 @@
 module.exports = {
-    mongo: null,
     app: null,
+    mongoPure: null,
     init: function (app, mongo) {
-        this.mongo = mongo;
         this.app = app;
-    }, getUser: function (criteria, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        this.mongoPure = mongo;
+    },
+    getMongoClientObject: function(){
+        return new this.mongoPure.MongoClient(this.app.get('db'), { useNewUrlParser: true, useUnifiedTopology: true });
+    }
+    , getUser: function (criteria, callbackFunction) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('users');
+                const collection = mongo.db(this.app.get('dbName')).collection('users');
                 collection.find(criteria).toArray(function (err, users) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(users);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, resetMongo: function (callbackFunction) { //TODO
-        this.mongo.MongoClient.connect(this.app.get('db'), function(err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collectionUsers = db.collection('users');
-                collectionUsers.drop().then(res => {
-                }, err => {});
-                const collectionSlots = db.collection('slots');
-                collectionSlots.drop().then(res => {
-                }, err => {});
-                const collectionGroups = db.collection('groups');
-                collectionGroups.drop().then(res => {
-                }, err => {});
-
+                const collectionUsers = mongo.db(this.app.get('dbName')).collection('users');
+                collectionUsers.drop().then(() => {
+                }, () => {});
+                const collectionSlots = mongo.db(this.app.get('dbName')).collection('slots');
+                collectionSlots.drop().then(() => {
+                }, () => {});
+                const collectionGroups = mongo.db(this.app.get('dbName')).collection('groups');
+                collectionGroups.drop().then(() => {
+                }, () => {});
+                const collectionNotifications = mongo.db(this.app.get('dbName')).collection('notifications');
+                collectionNotifications.drop().then(() => {
+                }, () => {});
                 callbackFunction(1);
+                mongo.close();
             }
-            db.close();
-        });
+        }.bind(this));
     }, addUser: function (user, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('users');
+                const collection = mongo.db(this.app.get('dbName')).collection('users');
                 collection.insertOne(user, function (err, result) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.ops[0]._id);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, addSlot: function (slot, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('slots');
+                const collection = mongo.db(this.app.get('dbName')).collection('slots');
                 collection.insertOne(slot, function (err, result) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.ops[0]._id);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, deleteSlot: function (slotCriteria, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('slots');
+                const collection = mongo.db(this.app.get('dbName')).collection('slots');
                 collection.deleteOne(slotCriteria, function (err, result) {
                     if (err) {
                         callbackFunction(null);
                     } else {
-                        this.deleteNotifications({slotId: slotCriteria._id.toString()}, result2 => {
+                        this.deleteNotifications({slotId: slotCriteria._id.toString()}, () => {
                             callbackFunction(result.result.n);
                         });
                     }
-                    db.close();
+                    mongo.close();
                 }.bind(this));
             }
         }.bind(this));
     }, deleteNotifications: function (notificationCriteria, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('notifications');
+                const collection = mongo.db(this.app.get('dbName')).collection('notifications');
                 collection.deleteMany(notificationCriteria, function (err, result) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.result.n);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, getSlot: function (criteria, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('slots');
+                const collection = mongo.db(this.app.get('dbName')).collection('slots');
                 collection.find(criteria).toArray(function (err, slots) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(slots);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, addClassGroup: function (group, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('groups');
+                const collection = mongo.db(this.app.get('dbName')).collection('groups');
                 collection.insertOne(group, function (err, result) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.ops[0]._id);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, getClassGroup: function (criteria, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('groups');
+                const collection = mongo.db(this.app.get('dbName')).collection('groups');
                 collection.find(criteria).toArray(function (err, groups) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(groups);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, addNotifications: function (notifications, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('notifications');
+                const collection = mongo.db(this.app.get('dbName')).collection('notifications');
                 collection.insertMany(notifications, function (err, result) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.insertedIds);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }, getNotifications: function (criteria, callbackFunction) {
-        this.mongo.MongoClient.connect(this.app.get('db'), function (err, db) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
             if (err) {
                 callbackFunction(null);
             } else {
-                const collection = db.collection('notifications');
+                const collection = mongo.db(this.app.get('dbName')).collection('notifications');
                 collection.find(criteria).toArray(function (err, notifications) {
                     if (err) {
                         callbackFunction(null);
                     } else {
                         callbackFunction(notifications);
                     }
-                    db.close();
-                });
+                    mongo.close();
+                }.bind(this));
             }
-        });
+        }.bind(this));
     }
 };
