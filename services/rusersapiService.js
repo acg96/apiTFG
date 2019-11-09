@@ -14,7 +14,7 @@ module.exports = {
             if (groups != null && groups.length !== 0){
                 const groupsIds= [];
                 for (let i= 0; i < groups.length; ++i){
-                    groupsIds.push(this.bdManagement.mongo.ObjectID(groups[i]._id));
+                    groupsIds.push(this.bdManagement.mongoPure.ObjectID(groups[i]._id));
                 }
 
                 const msStartTime= this.app.get('currentTime')().valueOf();

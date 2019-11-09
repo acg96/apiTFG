@@ -169,7 +169,7 @@ module.exports = {
                     callback(errors, processedResult);
                 } else if (errors.errStudentsExcluded === "") {
                     const criteriaGroup = {
-                        _id: bdManagement.mongo.ObjectID(groupId),
+                        _id: bdManagement.mongoPure.ObjectID(groupId),
                         professors: username
                     };
                     bdManagement.getClassGroup(criteriaGroup, groups => {
