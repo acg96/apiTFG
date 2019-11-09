@@ -8,7 +8,11 @@ const bodyParser = require('body-parser');
 app.set('tokenTime', 2700000); //Used to force the session or token expires at 45min after the beginning
 
 //***Start administration web****
-const swig = require('nunjucks');
+const nunjucks = require('nunjucks');
+nunjucks.configure('views', {
+    autoescape: true,
+    express: app
+});
 const expressSession = require('express-session');
 //when https will be activated set property secure: true TODO
 app.use(expressSession({
@@ -244,9 +248,9 @@ app.use('/logout', routerWebAdminBeingLoggedIn);
 //Routes
 require("./routes/rusersapi.js")(app, logger, userApiService);
 require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
-require("./routes/rapp.js")(app, logger, bdManagement, initBD, swig);
-require("./routes/ruser.js")(app, logger, rUserService, swig);
-require("./routes/rprofessor.js")(app, logger, swig, rProfessorService);
+require("./routes/rapp.js")(app, logger, bdManagement, initBD);
+require("./routes/ruser.js")(app, logger, rUserService);
+require("./routes/rprofessor.js")(app, logger, rProfessorService);
 
 // When a url not exists
 app.use(function(req, res) {
@@ -257,7 +261,7 @@ app.use(function(req, res) {
 
 
 // Error management
-app.use(function (err, req, res, next) {
+app.use(function (err, req, res) {
     logger.info("Error " + err + " - IP: " + req.ip);
     res.status(500);
     res.json({message: 'unexpected error'});

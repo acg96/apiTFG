@@ -1,7 +1,6 @@
-module.exports = function (app, logger, userService, swig) {
+module.exports = function (app, logger, userService) {
     app.get('/login', function (req, res) {
-        const response = swig.render('views/main/login.html', {username: req.session.username, error: 0});
-        res.send(response);
+        res.render('main/login.html', {username: req.session.username, error: 0});
     });
 
     app.get('/logout', function (req, res) {
@@ -24,8 +23,7 @@ module.exports = function (app, logger, userService, swig) {
                 logger.info("Incorrect login. Username: " + user.username + " - IP address: " + req.ip);
                 req.session.username = null;
                 req.session.role = null;
-                const response = swig.render('views/main/login.html', {username: req.session.username, error: 1});
-                res.send(response);
+                res.render('main/login.html', {username: req.session.username, error: 1});
             } else {
                 logger.info("The user " + userBBDD.username + " has logged in on the administration web - IP address: " + req.ip);
                 req.session.username = userBBDD.username;
