@@ -79,7 +79,7 @@ module.exports = function (app, logger, professorService) {
         });
     });
 
-    app.get('/prf/slot/add', function (req, res) { //TODO
+    app.get('/prf/slot/add', function (req, res) {
         const date= app.get('currentTime')();
         const dateObject= {
             month: (date.month() + 1).toString().length === 2 ? (date.month() + 1).toString() : "0" + (date.month() + 1).toString(),
@@ -88,7 +88,7 @@ module.exports = function (app, logger, professorService) {
             hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
             minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
         };
-        professorService.getSlotGroups(req.session.username, (adaptedGroups) => {
+        professorService.getSlotModulesAndGroups(req.session.username, (adaptedGroups) => {
             res.render('slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
         });
     });
