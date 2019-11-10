@@ -7,6 +7,98 @@ module.exports = {
         this.bdManagement = bdManagement;
         this.logger = logger;
     },
+    /*addJustGroupsAndModules: function(){
+        const module1 = {
+            name: "Seguridad de Sistemas Informáticos",
+            code: "GIISOF01-3-010",
+            year: "3",
+            term: "2",
+            groupsIds: ["5db46a45a579e44bc8ee5bc5", "5db46a45a579e44bc8ee5bc1"]
+        };
+
+        const module2 = {
+            name: "Sistemas Distribuidos e Internet",
+            code: "GIISOF01-3-005",
+            year: "3",
+            term: "2",
+            groupsIds: ["5db46a45a579e44bc8ee5bc3", "5db46a45a579e44bc8ee5bc2"]
+        };
+
+        const module3 = {
+            name: "Diseño de Lenguajes de Programación",
+            code: "GIISOF01-3-009",
+            year: "3",
+            term: "2",
+            groupsIds: ["5db46a45a579e44bc8ee5bcd"]
+        };
+
+        const group1 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc5"),
+            name: "SSI-grupo1",
+            professors: ["PROFESOREJEMPLO", "PROFESOREJEMPLO2"],
+            students: ["BELEN", "UO111111", "UO222222", "ALEX"]
+        };
+
+        const group2 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc3"),
+            name: "SDI-grupo1",
+            professors: ["PROFESOREJEMPLO3"],
+            students: ["MARGA"]
+        };
+
+        const group3 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bcd"),
+            name: "DLP-grupo1",
+            professors: ["PROFESOREJEMPLO"],
+            students: ["UO333333", "BELEN"]
+        };
+
+        const group4 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc2"),
+            name: "SDI-grupo2",
+            professors: ["PROFESOREJEMPLO3"],
+            students: ["BELEN", "UO111111"]
+        };
+
+        const group5 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc1"),
+            name: "SSI-grupo2",
+            professors: ["PROFESOREJEMPLO"],
+            students: ["MARGA", "UO333333"]
+        };
+
+        this.logger.info("The group " + group1.name + " has been generated");
+        this.bdManagement.addClassGroup(group1, function (id) {
+        }.bind(this));
+
+        this.logger.info("The group " + group2.name + " has been generated");
+        this.bdManagement.addClassGroup(group2, function (id) {
+        }.bind(this));
+
+        this.logger.info("The group " + group3.name + " has been generated");
+        this.bdManagement.addClassGroup(group3, function (id) {
+        }.bind(this));
+
+        this.logger.info("The group " + group4.name + " has been generated");
+        this.bdManagement.addClassGroup(group4, function (id) {
+        }.bind(this));
+
+        this.logger.info("The group " + group5.name + " has been generated");
+        this.bdManagement.addClassGroup(group5, function (id) {
+        }.bind(this));
+
+        this.logger.info("The module " + module1.name + " has been generated");
+        this.bdManagement.addModule(module1, function (id) {
+        }.bind(this));
+
+        this.logger.info("The module " + module2.name + " has been generated");
+        this.bdManagement.addModule(module2, function (id) {
+        }.bind(this));
+
+        this.logger.info("The module " + module3.name + " has been generated");
+        this.bdManagement.addModule(module3, function (id) {
+        }.bind(this));
+    },*/
     generateData: function () {
         const user1 = {
             username: "UO111111",
@@ -113,25 +205,63 @@ module.exports = {
             lastName: "Rodríguez"
         };
 
+        const module1 = {
+            name: "Seguridad de Sistemas Informáticos",
+            code: "GIISOF01-3-010",
+            year: "3",
+            term: "2",
+            groupsIds: ["5db46a45a579e44bc8ee5bc5", "5db46a45a579e44bc8ee5bc1"]
+        };
+
+        const module2 = {
+            name: "Sistemas Distribuidos e Internet",
+            code: "GIISOF01-3-005",
+            year: "3",
+            term: "2",
+            groupsIds: ["5db46a45a579e44bc8ee5bc3", "5db46a45a579e44bc8ee5bc2"]
+        };
+
+        const module3 = {
+            name: "Diseño de Lenguajes de Programación",
+            code: "GIISOF01-3-009",
+            year: "3",
+            term: "2",
+            groupsIds: ["5db46a45a579e44bc8ee5bcd"]
+        };
+
         const group1 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc5"),
             name: "SSI-grupo1",
             professors: ["PROFESOREJEMPLO", "PROFESOREJEMPLO2"],
-            students: ["BELEN", "UO111111", "UO222222", "ALEX"],
-            moduleDecription: "Seguridad de Sistemas Informáticos"
+            students: ["BELEN", "UO111111", "UO222222", "ALEX"]
         };
 
         const group2 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc3"),
             name: "SDI-grupo1",
             professors: ["PROFESOREJEMPLO3"],
-            students: ["MARGA"],
-            moduleDecription: "Sistemas Distribuidos e Internet"
+            students: ["MARGA"]
         };
 
         const group3 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bcd"),
             name: "DLP-grupo1",
             professors: ["PROFESOREJEMPLO"],
-            students: ["UO333333", "BELEN"],
-            moduleDecription: "Diseño de Lenguajes de Programación"
+            students: ["UO333333", "BELEN"]
+        };
+
+        const group4 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc2"),
+            name: "SDI-grupo2",
+            professors: ["PROFESOREJEMPLO3"],
+            students: ["BELEN", "UO111111"]
+        };
+
+        const group5 = {
+            _id: this.bdManagement.mongoPure.ObjectID("5db46a45a579e44bc8ee5bc1"),
+            name: "SSI-grupo2",
+            professors: ["PROFESOREJEMPLO"],
+            students: ["MARGA", "UO333333"]
         };
 
         //startTime-> 28/09/2019 9:30:00
@@ -226,6 +356,27 @@ module.exports = {
                 });
             }
         }.bind(this));
+
+        this.logger.info("The group " + group4.name + " has been generated");
+        this.bdManagement.addClassGroup(group4, function (id) {
+        }.bind(this));
+
+        this.logger.info("The group " + group5.name + " has been generated");
+        this.bdManagement.addClassGroup(group5, function (id) {
+        }.bind(this));
+
+        this.logger.info("The module " + module1.name + " has been generated");
+        this.bdManagement.addModule(module1, function (id) {
+        }.bind(this));
+
+        this.logger.info("The module " + module2.name + " has been generated");
+        this.bdManagement.addModule(module2, function (id) {
+        }.bind(this));
+
+        this.logger.info("The module " + module3.name + " has been generated");
+        this.bdManagement.addModule(module3, function (id) {
+        }.bind(this));
+
         this.logger.info("The group " + group2.name + " has been generated");
         this.bdManagement.addClassGroup(group2, function (id) {
             if (id != null){
