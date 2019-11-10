@@ -5,8 +5,23 @@ module.exports = function (app, logger, professorService) {
         professorService.getSlots(req.session.username, slots => {
             const adaptedSlots= [];
             for (let i= 0; i < slots.length; ++i){
+                const studentsIncluded= [];
+                let groupNames= "";
+                for (let e= 0; e < slots[i].groupsObj.length; ++e){
+                    if (groupNames === ""){
+                        groupNames += slots[i].groupsObj[e].name;
+                    } else{
+                        groupNames += ',' + slots[i].groupsObj[e].name;
+                    }
+                    for (let j= 0; j < slots[i].groupsObj[e].studentsIncluded.length; ++j){
+                        if (!studentsIncluded.includes(slots[i].groupsObj[e].studentsIncluded[j])){
+                            studentsIncluded.push(slots[i].groupsObj[e].studentsIncluded[j]);
+                        }
+                    }
+                }
                 const stringSlot = {
-                    groupName: slots[i].groupName,
+                    groupNames: groupNames,
+                    moduleName: slots[i].moduleObj.name,
                     description: slots[i].description,
                     startTime: moment(slots[i].startTime).format("DD MMM YYYY HH:mm"),
                     endTime: moment(slots[i].endTime).format("DD MMM YYYY HH:mm"),
@@ -14,10 +29,10 @@ module.exports = function (app, logger, professorService) {
                     author: slots[i].author,
                     urls: slots[i].urls,
                     studentsExcluded: slots[i].studentsExcluded,
-                    studentsIncluded: slots[i].studentsIncluded
+                    studentsIncluded: studentsIncluded
                 };
                 const tempSlot = {
-                    groupName: slots[i].groupName,
+                    moduleName: slots[i].moduleObj.name,
                     description: slots[i].description,
                     startTime: moment(slots[i].startTime).format("DD MMM YYYY HH:mm"),
                     endTime: moment(slots[i].endTime).format("DD MMM YYYY HH:mm"),
@@ -38,7 +53,7 @@ module.exports = function (app, logger, professorService) {
             const slotDeletions= req.session.slotDeletions;
             if (collisions != null && collisions.length > 0){
                 for (let i= 0; i < collisions.length; ++i) {
-                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para el grupo " + collisions[i].groupName;
+                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para la asignatura " + collisions[i].moduleName; //TODO
                     stringCollisionsArray.push(tempString);
                 }
             }
@@ -59,12 +74,12 @@ module.exports = function (app, logger, professorService) {
     });
 
     app.get('/prf/report/list', function (req, res) {
-        professorService.getReportList(req.session.username, (groupsWithName, groupIdArray, finalHashmap) => {
-            res.render('report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
+        professorService.getReportList(req.session.username, (slotsList, notificationList) => {
+            res.render('report/list.html', {username: req.session.username, slotsList: slotsList, notificationsList: JSON.stringify(notificationList)});
         });
     });
 
-    app.get('/prf/slot/add', function (req, res) {
+    app.get('/prf/slot/add', function (req, res) { //TODO
         const date= app.get('currentTime')();
         const dateObject= {
             month: (date.month() + 1).toString().length === 2 ? (date.month() + 1).toString() : "0" + (date.month() + 1).toString(),
@@ -90,7 +105,7 @@ module.exports = function (app, logger, professorService) {
         }
     });
 
-    app.post("/prf/slot/add", function (req, res) {
+    app.post("/prf/slot/add", function (req, res) { //TODO
         const postInfo= req.body;
         if (postInfo.groupSelect == null){ //Used when no group was selected
             postInfo["groupSelect"]= "";

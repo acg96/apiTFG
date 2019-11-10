@@ -272,8 +272,7 @@ module.exports = {
             endTime: 1570302240000,
             listMode: "whitelist",
             urls: ["https://www.google.com/", "http://www.uniovi.es/", "https://es.wikipedia.org"],
-            groupName: group1.name,
-            groupId: "",
+            groupIds: [],
             studentsExcluded: [],
             author: "PROFESOREJEMPLO"
         };
@@ -286,8 +285,7 @@ module.exports = {
             endTime: 1571986800000,
             listMode: "blacklist",
             urls: ["https://es.yahoo.com/"],
-            groupName: group2.name,
-            groupId: "",
+            groupIds: [],
             studentsExcluded: [],
             author: "PROFESOREJEMPLO3"
         };
@@ -300,8 +298,7 @@ module.exports = {
             endTime: 1570383380000,
             listMode: "whitelist",
             urls: ["https://www.google.com/", "https://twitter.com/"],
-            groupName: group1.name,
-            groupId: "",
+            groupIds: [],
             studentsExcluded: ["BELEN"],
             author: "PROFESOREJEMPLO"
         };
@@ -348,8 +345,8 @@ module.exports = {
             if (id != null){
                 this.logger.info("The slot [" + slot1.description + "] has been generated");
                 this.logger.info("The slot [" + slot3.description + "] has been generated");
-                slot1.groupId= id;
-                slot3.groupId= id;
+                slot1.groupIds.push(id.toString());
+                slot3.groupIds.push(id.toString());
                 this.bdManagement.addSlot(slot1, function (id) {
                 });
                 this.bdManagement.addSlot(slot3, function (id) {
@@ -381,7 +378,7 @@ module.exports = {
         this.bdManagement.addClassGroup(group2, function (id) {
             if (id != null){
                 this.logger.info("The slot [" + slot2.description + "] has been generated");
-                slot2.groupId= id;
+                slot2.groupIds.push(id.toString());
                 this.bdManagement.addSlot(slot2, function (id) {
                 });
             }
