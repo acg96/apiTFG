@@ -44,8 +44,8 @@
             <table class="table table-hover" id="tableSlots">
                 <thead>
                 <tr>
+                    <th style="width: 23%;">Slot</th>
                     <th style="width: 10%;">Asignatura</th>
-                    <th style="width: 23%;">Descripción</th>
                     <th style="width: 13%;">Comienzo</th>
                     <th style="width: 13%;">Fin</th>
                     <th style="width: 9%;">Modo de restricción</th>
@@ -58,8 +58,8 @@
                 <tbody>
                 {% for slot in slotList %}
                 <tr>
-                    <td>{{slot.moduleName}}</td>
                     <td>{{slot.description}}</td>
+                    <td>{{slot.moduleName}}</td>
                     <td data-sort="{{slot.startTimeMS}}">{{slot.startTime}}</td>
                     <td data-sort="{{slot.endTimeMS}}">{{slot.endTime}}</td>
                     <td>{{slot.listMode}}</td>
