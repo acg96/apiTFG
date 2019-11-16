@@ -53,7 +53,7 @@ module.exports = function (app, logger, professorService) {
             const slotDeletions= req.session.slotDeletions;
             if (collisions != null && collisions.length > 0){
                 for (let i= 0; i < collisions.length; ++i) {
-                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para la asignatura " + collisions[i].moduleName; //TODO
+                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para la asignatura " + collisions[i].moduleName;
                     stringCollisionsArray.push(tempString);
                 }
             }
@@ -105,10 +105,10 @@ module.exports = function (app, logger, professorService) {
         }
     });
 
-    app.post("/prf/slot/add", function (req, res) { //TODO
+    app.post("/prf/slot/add", function (req, res) {
         const postInfo= req.body;
-        if (postInfo.groupSelect == null){ //Used when no group was selected
-            postInfo["groupSelect"]= "";
+        if (postInfo.moduleSelect == null){ //Used when no module was selected
+            postInfo["moduleSelect"]= "";
         }
 
         professorService.validateSlot(req.session.username, postInfo, (adaptedGroups, errors, collisions, noAdded) => {
