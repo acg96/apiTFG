@@ -10,26 +10,26 @@
             <div id="modalContent" style="overflow-y: auto; width: 100%; height: 550px;"></div>
         </div>
     </div>
-    <script src="/js/loadNotifications.js"></script>
+    <script src="/pb/js/loadNotifications.js"></script>
     <div class="table-responsive">
         <div class="form-row">
             <div class="form-group col-md-6">
-                <label for="groupSelect">Seleccionar grupo</label>
-                <select class="form-control" name="groupSelect" id="groupSelect" onchange="showNotifications(this.options[this.selectedIndex])">
-                    {% if groupIds.length > 0 %}
+                <label for="slotSelect">Seleccionar slot</label>
+                <select class="form-control" name="slotSelect" id="slotSelect" onchange="showNotifications(this.options[this.selectedIndex])">
+                    {% if slotsList.length > 0 %}
                     <option disabled selected value> -- Escoge una opción -- </option>
                     {% else %}
-                    <option disabled selected value> -- No tienes grupos con notificaciones -- </option>
+                    <option disabled selected value> -- No tienes slots creados -- </option>
                     {% endif %}
-                    {% for groupId in groupIds %}
-                        <option value="{{groupId}}">{{groupList[groupId]}}</option>
+                    {% for slot in slotsList %}
+                        <option value="{{slot._id}}">{{slot.slotDescription}}</option>
                     {% endfor %}
                 </select>
-                <input type="text" name="studentsJson" id="studentsJson" value="{{notificationsHashMap}}" hidden />
+                <input type="text" name="notificationsJson" id="notificationsJson" value="{{notificationsList}}" hidden />
             </div>
             <div class="form-group col-md-6">
-                <input class="form-check-input" onclick="manageRedCheckbox();" type="checkbox" name="redCheckBox" id="redCheckBox" disabled />
-                <label style="color: #EA4335;" class="form-check-label" for="redCheckBox">Mostrar solo con acciones no permitidas</label>
+                <input class="form-check-input" onclick="manageRedCheckbox();" type="checkbox" name="redCheckBox" id="redCheckBox" hidden />
+                <label style="color: #EA4335;" id="redCheckBoxLabel" class="form-check-label" for="redCheckBox" hidden>Mostrar solo con acciones no permitidas</label>
             </div>
         </div>
     </div>

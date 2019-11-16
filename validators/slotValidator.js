@@ -1,7 +1,7 @@
 module.exports = {
     validateAddSlot: function(app, postInfo, bdManagement, username, callback) {
         if (postInfo == null || postInfo.initDate == null ||  postInfo.initTime == null || postInfo.endDate == null || postInfo.endTime == null || postInfo.description == null ||
-            postInfo.groupSelect == null || postInfo.listRadio == null || postInfo.urls == null || postInfo.studentsExcluded == null){
+            postInfo.moduleSelect == null || postInfo.groupsIncluded == null || postInfo.listRadio == null || postInfo.urls == null || postInfo.studentsExcluded == null){
             callback(null, null);
         } else {
             const moment = app.get('moment');
@@ -12,7 +12,8 @@ module.exports = {
                 errEndDate: '',
                 errEndTime: '',
                 errDescription: '',
-                errGroupSelect: '',
+                errModuleSelect: '',
+                errGroupsIncluded: '',
                 errListRadio: '',
                 errUrls: '',
                 errStudentsExcluded: '',
@@ -25,8 +26,7 @@ module.exports = {
                 endTime: '',
                 listMode: '',
                 urls: [],
-                groupName: '',
-                groupId: '',
+                groupIds: [],
                 studentsExcluded: [],
                 author: ""
             };
@@ -157,53 +157,111 @@ module.exports = {
                 }
             }
 
-            if (postInfo.groupSelect.trim() === "") {
-                errors.errGroupSelect = "Se debe seleccionar un grupo";
+            let arrayGroupsIncluded = [];
+
+            if (postInfo.groupsIncluded.trim() !== "") {
+                const tempArrayGroupsIncluded = postInfo.groupsIncluded.split("%$-%5$%-$7-%$-8%$-9%$");
+                if (tempArrayGroupsIncluded.length === 0) {
+                    errors.errGroupsIncluded = "El valor de los grupos incluidos no es válido";
+                    errors.anyError = 1;
+                }
+                for (let i = 0; i < tempArrayGroupsIncluded.length; ++i) {
+                    const groupValue = tempArrayGroupsIncluded[i].trim();
+                    if (!arrayGroupsIncluded.includes(groupValue)) {
+                        arrayGroupsIncluded.push(groupValue);
+                    }
+                }
+            } else{
+                errors.errGroupsIncluded = "Debes incluir al menos un grupo";
+                errors.anyError = 1;
+            }
+
+            if (postInfo.moduleSelect.trim() === "") {
+                errors.errModuleSelect = "Se debe seleccionar una asignatura";
                 errors.anyError = 1;
                 callback(errors, processedResult);
             } else {
-                const groupId = postInfo.groupSelect.trim().split("%%65&4-%.43%%")[0].trim();
-                if (groupId.length !== 24) {
-                    errors.errGroupSelect = "El id del grupo seleccionado es incorrecto";
+                const moduleId = postInfo.moduleSelect.trim().split("%%65&4-%.43%%")[0].trim();
+                if (moduleId.length !== 24) {
+                    errors.errModuleSelect = "El id de la asignatura seleccionada es incorrecto";
                     errors.anyError = 1;
                     callback(errors, processedResult);
-                } else if (errors.errStudentsExcluded === "") {
-                    const criteriaGroup = {
-                        _id: bdManagement.mongoPure.ObjectID(groupId),
-                        professors: username
+                } else if (errors.errStudentsExcluded === "" && errors.errGroupsIncluded === "") {
+                    const moduleCriteria = {
+                        _id: bdManagement.mongoPure.ObjectID(moduleId)
                     };
-                    bdManagement.getClassGroup(criteriaGroup, groups => {
-                        if (groups == null || groups.length !== 1) {
-                            errors.errGroupSelect = "El id del grupo seleccionado es incorrecto";
+                    bdManagement.getModule(moduleCriteria, modules => {
+                        if (modules == null || modules.length !== 1) {
+                            errors.errModuleSelect = "El id de la asignatura seleccionada es incorrecto";
                             errors.anyError = 1;
-                        } else {
-                            const group = groups[0];
-                            let controlExcluded = 0;
-                            for (let i = 0; i < arrayStudentsExcluded.length; ++i) {
-                                if (!group.students.includes(arrayStudentsExcluded[i])) {
-                                    controlExcluded = 1;
+                            callback(errors, processedResult);
+                        } else{
+                            const module = modules[0];
+                            const stringGroupIds = module.groupsIds;
+                            let controlIncludedGroups = true;
+                            const arrayGroupsIncludedObj = [];
+                            //Check all the included groups are included on the selected module
+                            for (let i= 0; i < arrayGroupsIncluded.length; ++i){
+                                if (!stringGroupIds.includes(arrayGroupsIncluded[i])){
+                                    controlIncludedGroups = false;
                                     break;
+                                } else{
+                                    arrayGroupsIncludedObj.push(bdManagement.mongoPure.ObjectID(arrayGroupsIncluded[i]));
                                 }
                             }
-                            if (controlExcluded === 1) {
-                                errors.errStudentsExcluded = "Algún estudiante excluido no pertenece al grupo seleccionado";
+                            if (controlIncludedGroups){
+                                const groupIdsObject = [];
+                                for (let i= 0; i < stringGroupIds.length; ++i){
+                                    groupIdsObject.push(bdManagement.mongoPure.ObjectID(stringGroupIds[i]));
+                                }
+                                bdManagement.getClassGroup({_id: {$in: groupIdsObject}, professors: username}, userGroups => {
+                                    if (userGroups == null || userGroups.length === 0) {
+                                        errors.errModuleSelect = "El id de la asignatura seleccionada es incorrecto";
+                                        errors.anyError = 1;
+                                        callback(errors, processedResult);
+                                    } else {
+                                        bdManagement.getClassGroup({_id: {$in: arrayGroupsIncludedObj}}, groups => { //Just get the selected groups
+                                            if (groups != null){
+                                                const allStudentsArray = [];
+                                                for (let i= 0; i < groups.length; ++i){
+                                                    allStudentsArray.push(...groups[i].students);
+                                                }
+                                                let controlExcluded = 0;
+                                                for (let i = 0; i < arrayStudentsExcluded.length; ++i) {
+                                                    if (!allStudentsArray.includes(arrayStudentsExcluded[i])) {
+                                                        controlExcluded = 1;
+                                                        break;
+                                                    }
+                                                }
+                                                if (controlExcluded === 1) {
+                                                    errors.errStudentsExcluded = "Algún estudiante excluido no pertenece al grupo seleccionado";
+                                                    errors.anyError = 1;
+                                                } else if (allStudentsArray.length === arrayStudentsExcluded.length && allStudentsArray.length !== 0) {
+                                                    errors.errStudentsExcluded = "No se puede excluir a todos los alumnos de los grupos seleccionados";
+                                                    errors.anyError = 1;
+                                                } else if (allStudentsArray.length === 0) {
+                                                    errors.errGroupsIncluded = "Los grupos seleccionados no tienen estudiantes asignados";
+                                                    errors.anyError = 1;
+                                                }
+                                                if (errors.errStudentsExcluded === "" && errors.errModuleSelect === "" && errors.errGroupsIncluded === "") {
+                                                    processedResult.groupIds = arrayGroupsIncluded;
+                                                    processedResult.studentsExcluded = arrayStudentsExcluded;
+                                                    processedResult.author = username;
+                                                }
+                                            }
+                                            callback(errors, processedResult);
+                                        });
+                                    }
+                                });
+                            } else{
+                                errors.errGroupsIncluded = "Los grupos seleccionados no pertenecen a la asignatura elegida";
                                 errors.anyError = 1;
-                            } else if (group.students.length === arrayStudentsExcluded.length && group.students.length !== 0) {
-                                errors.errStudentsExcluded = "No se puede excluir a todos los alumnos de un grupo";
-                                errors.anyError = 1;
-                            } else if (group.students.length === 0) {
-                                errors.errGroupSelect = "El grupo seleccionado no tiene alumnos asignados";
-                                errors.anyError = 1;
-                            }
-                            if (errors.errStudentsExcluded === "" && errors.errGroupSelect === "") {
-                                processedResult.groupName = group.name;
-                                processedResult.groupId = group._id;
-                                processedResult.studentsExcluded = arrayStudentsExcluded;
-                                processedResult.author = username;
+                                callback(errors, processedResult);
                             }
                         }
-                        callback(errors, processedResult);
                     });
+                } else{
+                    callback(errors, processedResult);
                 }
             }
         }

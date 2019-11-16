@@ -26,12 +26,17 @@ const featuresDataTableLong = { //Used on details table
     }
 };
 const featuresDataTableShort = {...featuresDataTableLong}; //copy object no reference
-featuresDataTableLong["order"]= [[2, "desc"]];
-featuresDataTableShort["columnDefs"] = [
-        { "orderable": false, "targets": 3 },
-        { "searchable": false, "targets": 3 }
+featuresDataTableLong["order"]= [[3, "desc"]];
+featuresDataTableShort["columns"] = [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        { "orderable": false, "searchable": false}
     ];
-featuresDataTableShort["order"]= [[1, "desc"]];
+featuresDataTableShort["order"]= [[3, "desc"], [0, "asc"]];
 
 function openModal(option) {
     const modalContent= $('#modalContent');
@@ -65,6 +70,14 @@ window.onclick = function(event) {
     }
 };
 
+window.onload = function(){
+    const optionSelectedSlot = $("#slotSelect > option:selected")[0];
+    const idSelectedSlot = optionSelectedSlot.attributes[0].value;
+    if (idSelectedSlot.trim() !== ""){
+        showNotifications(optionSelectedSlot);
+    }
+};
+
 function manageRedCheckbox(){
     showFirstList($("#redCheckBox").is(":checked"));
 }
@@ -81,14 +94,27 @@ function showFirstList(justReds){
 function showNotifications(optionSelected){
     if (optionSelected != null) {
         const redCheckBox = $('#redCheckBox');
-        redCheckBox.removeAttr("disabled");
-        const groupIdSelected = optionSelected.value;
-        const jsonNotifications = $("#studentsJson").val();
+        $('#redCheckBoxLabel').removeAttr("hidden");
+        redCheckBox.removeAttr("hidden");
+        const slotIdSelected = optionSelected.value;
+        const jsonNotifications = $("#notificationsJson").val();
         const parseJson = JSON.parse(jsonNotifications);
-        const students = Object.keys(parseJson[groupIdSelected]);
+        const usersArray = [];
+        const userNamesArray = [];
+        for (let i= 0; i < parseJson.length; ++i){
+            if (parseJson[i].slotId === slotIdSelected){
+                if (!userNamesArray.includes(parseJson[i].idUser)){
+                    userNamesArray.push(parseJson[i].idUser);
+                    usersArray[parseJson[i].idUser] = [];
+                }
+                usersArray[parseJson[i].idUser].push(parseJson[i]);
+            }
+        }
+
         rowNotificationsObject= [];
+        const students = Object.keys(usersArray);
         for (let i= 0; i < students.length; ++i){
-            rowNotificationsObject.push(loadStudent(parseJson[groupIdSelected][students[i]], students[i]));
+            rowNotificationsObject.push(loadStudent(usersArray[students[i]], students[i]));
         }
         showFirstList(redCheckBox.is(":checked"));
     }
@@ -100,6 +126,8 @@ function loadTableMainRows(justReds){
         if (justReds && rowNotificationsObject[i].noProblems) continue;
         rowCode += "<tr>";
         rowCode += "<td " + (rowNotificationsObject[i].noProblems ? "" :  "style='color:#EA4335;'") + ">" + rowNotificationsObject[i].student + "</td>";
+        rowCode += "<td>" + rowNotificationsObject[i].moduleName + "</td>";
+        rowCode += "<td>" + rowNotificationsObject[i].groupName + "</td>";
         rowCode += "<td data-sort=\""+ rowNotificationsObject[i].msMajorDate +"\">" + rowNotificationsObject[i].stringMajorDate + "</td>";
         rowCode += "<td>" + rowNotificationsObject[i].numberNotifications + "</td>";
         rowCode += "<td>" + (rowNotificationsObject[i].noProblems ? "No" :  "Sí") + "</td>";
@@ -110,7 +138,7 @@ function loadTableMainRows(justReds){
 }
 
 function loadTableMainHeaders(){
-    const headers= "<thead><tr><th style=\"width: 25%;\">Alumno</th><th style=\"width: 25%;\">Última notificación</th><th style=\"width: 25%;\">Número de notificaciones</th><th style=\"width: 15%;\">¿Acciones prohibidas?</th><th style=\"width: 13%;\"></th></tr></thead><tbody id='tableBody'></tbody>";
+    const headers= "<thead><tr><th style=\"width: 15%;\">Alumno</th><th style=\"width: 15%;\">Asignatura</th><th style=\"width: 15%;\">Grupo</th><th style=\"width: 15%;\">Última notificación</th><th style=\"width: 15%;\">Número de notificaciones</th><th style=\"width: 15%;\">¿Acciones prohibidas?</th><th style=\"width: 10%;\"></th></tr></thead><tbody id='tableBody'></tbody>";
     $('#tableNotificationsT').append(headers);
 }
 
@@ -133,7 +161,8 @@ function loadStudent(notifications, student){
             stringMajorDate = notifications[i].actionTime;
         }
         rowCode += "<tr>";
-        rowCode += "<td>" + notifications[i].slotDescription + "</td>";
+        rowCode += "<td>" + notifications[i].moduleName + "</td>";
+        rowCode += "<td>" + notifications[i].groupName + "</td>";
         rowCode += "<td " + (currentControl ? "" : "style='color:#EA4335;'") + ">" + notifications[i].actionName + "</td>";
         rowCode += "<td data-sort=\""+ notifications[i].actionTimeMS +"\">" + notifications[i].actionTime + "</td>";
         rowCode += "<td>" + notifications[i].moreInfo + "</td>";
@@ -146,6 +175,8 @@ function loadStudent(notifications, student){
     return {
         rowCodeLong: rowCode,
         student: student.trim(),
+        groupName: notifications[0].groupName,
+        moduleName: notifications[0].moduleName,
         numberNotifications: notifications.length,
         noProblems: correctControl,
         stringMajorDate: stringMajorDate,
@@ -154,6 +185,6 @@ function loadStudent(notifications, student){
 }
 
 function loadTableDetailsHeaders(){
-    return "<thead><tr><th>Slot</th><th>Acción</th><th>Fecha</th><th>Más información</th>" +
+    return "<thead><tr><th>Asignatura</th><th>Grupo</th><th>Acción</th><th>Fecha</th><th>Más información</th>" +
         "<th>Tiempo de vuelo</th><th>IP externa</th><th>IPs internas</th><th>¿Algo raro?</th></tr></thead><tbody id='tableBodyDetails'></tbody>";
 }

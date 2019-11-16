@@ -40,6 +40,9 @@ module.exports = {
                 const collectionGroups = mongo.db(this.app.get('dbName')).collection('groups');
                 collectionGroups.drop().then(() => {
                 }, () => {});
+                const collectionModules = mongo.db(this.app.get('dbName')).collection('modules');
+                collectionModules.drop().then(() => {
+                }, () => {});
                 const collectionNotifications = mongo.db(this.app.get('dbName')).collection('notifications');
                 collectionNotifications.drop().then(() => {
                 }, () => {});
@@ -129,6 +132,40 @@ module.exports = {
                         callbackFunction(null);
                     } else {
                         callbackFunction(slots);
+                    }
+                    mongo.close();
+                }.bind(this));
+            }
+        }.bind(this));
+    }, addModule: function (module, callbackFunction) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = mongo.db(this.app.get('dbName')).collection('modules');
+                collection.insertOne(module, function (err, result) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(result.ops[0]._id);
+                    }
+                    mongo.close();
+                }.bind(this));
+            }
+        }.bind(this));
+    }, getModule: function (criteria, callbackFunction) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = mongo.db(this.app.get('dbName')).collection('modules');
+                collection.find(criteria).toArray(function (err, modules) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(modules);
                     }
                     mongo.close();
                 }.bind(this));

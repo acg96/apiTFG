@@ -1,6 +1,6 @@
 {% extends "../base.html" %}
 {% block body %}
-<script src="/js/addSlots.js"></script>
+<script src="/pb/js/addSlots.js"></script>
 <div class="container">
     <h2>Nuevo slot</h2>
     {% if errors and errors.anyError === 1 %}
@@ -50,20 +50,39 @@
             </div>
 
             <div class="form-group col-sm-12">
-                <label for="groupSelect">Grupo</label>
-                <select class="form-control" name="groupSelect" id="groupSelect" onchange="showStudents(this.options[this.selectedIndex])">
+                <label for="moduleSelect">Asignatura</label>
+                <select class="form-control" name="moduleSelect" id="moduleSelect" onchange="showGroups(this.options[this.selectedIndex])">
                     {% if groups.length > 0 %}
-                        <option disabled selected value> -- Escoge una opción -- </option>
+                    <option disabled selected value> -- Escoge una opción -- </option>
                     {% else %}
-                        <option disabled selected value> -- No tienes grupos asignados -- </option>
+                    <option disabled selected value> -- No tienes asignaturas -- </option>
                     {% endif %}
                     {% for group in groups %}
-                        <option value="{{group.id}}%%65&4-%.43%%{{group.students}}">{{group.name}}</option>
+                    <option value="{{group.moduleId}}%%65&4-%.43%%{{group.groups}}">{{group.moduleName}}</option>
                     {% endfor %}
                 </select>
-                {% if errors and errors.errGroupSelect != '' %}
-                    <span class="text-danger">{{errors.errGroupSelect}}</span>
+                {% if errors and errors.errModuleSelect != '' %}
+                <span class="text-danger">{{errors.errModuleSelect}}</span>
                 {% endif %}
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="groupSelect">Grupos incluidos</label>
+                <select multiple class="form-control" id="groupSelect"></select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeGroup()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+                {% if errors and errors.errGroupsIncluded != '' %}
+                <span class="text-danger">{{errors.errGroupsIncluded}}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="groupsIncluded" id="groupsIncludedText" value=" " hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="excludedGroups">Grupos excluidos</label>
+                <select multiple class="form-control" id="excludedGroups"></select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeExcludedGroup()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
             </div>
 
             <div class="form-group col-sm-12">

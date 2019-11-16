@@ -1,11 +1,11 @@
 module.exports = {
     app: null,
     bdManagement: null,
-    init: function(app, bdManagement){
-        this.app= app;
-        this.bdManagement= bdManagement;
+    init: function (app, bdManagement) {
+        this.app = app;
+        this.bdManagement = bdManagement;
     },
-    deleteSlot: function(username, slotId, callback){
+    deleteSlot: function (username, slotId, callback) {
         //Check if the slot exists
         try {
             this.bdManagement.getSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, function (slots) {
@@ -13,20 +13,30 @@ module.exports = {
                     const slot = slots[0];
                     //Check if the slot it's a future one
                     if (slot.endTime > this.app.get("currentTimeWithSeconds")().valueOf()) {
-                        //Check if the slot belongs to the professor
-                        this.bdManagement.getClassGroup({
-                            professors: username,
-                            _id: this.bdManagement.mongoPure.ObjectID(slot.groupId)
-                        }, function (groups) {
-                            if (groups != null && groups.length === 1) {
-                                //The slotId is valid
-                                this.bdManagement.deleteSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, numberOfDeletions => {
-                                    if (numberOfDeletions != null && numberOfDeletions > 0) {
-                                        callback("Se ha borrado correctamente el slot");
+                        //Check if the slot belongs to one of the professor of the module
+                        this.bdManagement.getModule({groupsIds: {$in: slot.groupIds}}, function (modules) {
+                            if (modules != null && modules.length === 1) {
+                                const groupsIdsObjectId = [];
+                                for (let i = 0; i < modules[0].groupsIds.length; ++i) {
+                                    groupsIdsObjectId.push(this.bdManagement.mongoPure.ObjectID(modules[0].groupsIds[i]));
+                                }
+                                this.bdManagement.getClassGroup({
+                                    _id: {$in: groupsIdsObjectId},
+                                    professors: username
+                                }, function (groups) {
+                                    if (groups != null && groups.length > 0) {
+                                        //The slotId is valid
+                                        this.bdManagement.deleteSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, numberOfDeletions => {
+                                            if (numberOfDeletions != null && numberOfDeletions > 0) {
+                                                callback("Se ha borrado correctamente el slot");
+                                            } else {
+                                                callback("Ha ocurrido un error cuando se trataba de borrar el slot");
+                                            }
+                                        });
                                     } else {
-                                        callback("Ha ocurrido un error cuando se trataba de borrar el slot");
+                                        callback("No existe ningún slot con ese id");
                                     }
-                                });
+                                }.bind(this));
                             } else {
                                 callback("No existe ningún slot con ese id");
                             }
@@ -39,48 +49,67 @@ module.exports = {
                     callback("No existe ningún slot con ese id");
                 }
             }.bind(this));
-        }catch(e){
+        } catch (e) {
             callback("No existe ningún slot con ese id");
         }
     },
-    getSlots: function(username, callback){
-        this.bdManagement.getClassGroup({professors: username}, function(groups) {
-            if (groups != null && groups.length > 0){
-                const groupsIds= [];
-                for (let i= 0; i < groups.length; ++i){
-                    groupsIds.push(this.bdManagement.mongoPure.ObjectID(groups[i]._id));
+    getSlots: function (username, callback) {
+        this.getModuleGroupsByProfessor(username, function(groupsModule, modules){
+            if (groupsModule != null && groupsModule.length > 0 && modules != null && modules.length > 0) {
+                const groupsIds = [];
+                for (let i= 0; i < modules.length; ++i){
+                    groupsIds.push(...modules[i].groupsIds);
                 }
-                this.bdManagement.getSlot({groupId: {$in: groupsIds}}, slots => {
-                    if (slots != null){
-                        for (let i= 0; i < slots.length; ++i){
-                            for (let e= 0; e < groups.length; ++e){
-                                if (groups[e]._id.toString() === slots[i].groupId.toString()){
-                                    const studentsIncluded = [];
-                                    for (let f= 0; f < groups[e].students.length; ++f){
-                                        if (!slots[i].studentsExcluded.includes(groups[e].students[f])){
-                                            studentsIncluded.push(groups[e].students[f]);
+                this.bdManagement.getSlot({groupIds: {$in: groupsIds}}, function (slots) {
+                    if (slots != null) {
+                        for (let i = 0; i < slots.length; ++i) {
+                            const groupsObj = [];
+                            const moduleObj = {
+                                name: "",
+                                id: ""
+                            };
+                            for (let e = 0; e < groupsModule.length; ++e) {
+                                if (slots[i].groupIds.includes(groupsModule[e]._id.toString())) {
+                                    const groupObj = {
+                                        name: groupsModule[e].name,
+                                        id: groupsModule[e]._id.toString(),
+                                        studentsIncluded: []
+                                    };
+                                    for (let f = 0; f < groupsModule[e].students.length; ++f) {
+                                        if (!slots[i].studentsExcluded.includes(groupsModule[e].students[f])) {
+                                            groupObj.studentsIncluded.push(groupsModule[e].students[f]);
                                         }
                                     }
-                                    slots[i]["studentsIncluded"] = studentsIncluded;
-                                    break;
+                                    groupsObj.push(groupObj);
+                                    if (moduleObj.name === "") {
+                                        for (let f = 0; f < modules.length; ++f) {
+                                            if (modules[f].groupsIds.includes(groupsModule[e]._id.toString())) {
+                                                moduleObj.name = modules[f].name;
+                                                moduleObj.id = modules[f]._id.toString();
+                                                break;
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                            slots[i]["groupsObj"] = groupsObj;
+                            slots[i]["moduleObj"] = moduleObj;
                         }
                         callback(slots);
                     } else {
                         callback([]);
                     }
-                });
+                }.bind(this));
             } else {
                 callback([]);
             }
         }.bind(this));
     },
-    getNotificationsBySlotIds: function(slotIds, callback){
+    getNotificationsBySlotIds: function (slotIds, callback) {
         this.bdManagement.getNotifications({slotId: {$in: slotIds}}, notifications => {
-            const adaptedNotifications= [];
-            for (let i= 0; i < notifications.length; ++i){
-                const adaptedNotification= {
+            const adaptedNotifications = [];
+            for (let i = 0; i < notifications.length; ++i) {
+                const adaptedNotification = {
                     intIps: notifications[i].intIps,
                     slotId: notifications[i].slotId,
                     idUser: notifications[i].idUser,
@@ -96,47 +125,104 @@ module.exports = {
             callback(adaptedNotifications);
         });
     },
-    getSlotGroups: function(username, callback){
-        this.bdManagement.getClassGroup({professors: username}, groups => {
-            const adaptedGroups= [];
-            if (groups != null && groups.length > 0){
+    getModuleGroupsByProfessor: function(username, callback){
+        this.bdManagement.getClassGroup({professors: username}, function(groups) {
+            if (groups != null && groups.length > 0) {
+                const groupsIdsBeingProfessor= [];
                 for (let i= 0; i < groups.length; ++i){
-                    let stringStudents= "";
-                    for (let e= 0; e < groups[i].students.length; ++e){
-                        stringStudents+= groups[i].students[e] + "-;%;&&-%;-";
-                    }
-                    if (stringStudents !== ""){
-                        stringStudents= stringStudents.substr(0, stringStudents.length - 10);
-                    }
-                    const adGroup= {
-                        id: groups[i]._id.toString(),
-                        name: groups[i].name,
-                        students: stringStudents
-                    };
-                    adaptedGroups.push(adGroup);
+                    groupsIdsBeingProfessor.push(groups[i]._id.toString());
                 }
+                this.bdManagement.getModule({groupsIds: {$in: groupsIdsBeingProfessor}}, function (modules){
+                    if (modules != null && modules.length > 0) {
+                        const groupsIdsObjectId = [];
+                        for (let i = 0; i < modules.length; ++i) {
+                            for (let e = 0; e < modules[i].groupsIds.length; ++e) {
+                                groupsIdsObjectId.push(this.bdManagement.mongoPure.ObjectID(modules[i].groupsIds[e]));
+                            }
+                        }
+                        this.bdManagement.getClassGroup({_id: {$in: groupsIdsObjectId}}, function(groupsModule){
+                            if (groupsModule != null && groupsModule.length > 0) {
+                                callback(groupsModule, modules);
+                            } else{
+                                callback([], []);
+                            }
+                        }.bind(this));
+                    } else{
+                        callback([], []);
+                    }
+                }.bind(this));
+            } else{
+                callback([], []);
             }
-            callback(adaptedGroups);
-        });
+        }.bind(this));
+    },
+    getSlotModulesAndGroups: function(username, callback){
+        this.getModuleGroupsByProfessor(username, function(groups, modules){
+            if (groups != null && groups.length > 0) {
+                if (modules != null && modules.length > 0) {
+                    const adaptedModulesGroups= [];
+                    for (let i= 0; i < modules.length; ++i){
+                        const adaptedModuleGroup= {
+                            moduleName: modules[i].name,
+                            moduleId: modules[i]._id.toString(),
+                            groups: []
+                        };
+                        for (let e= 0; e < groups.length; ++e){
+                            if (modules[i].groupsIds.includes(groups[e]._id.toString())){
+                                const adaptedGroup= {
+                                    id: groups[e]._id.toString(),
+                                    name: groups[e].name,
+                                    students: groups[e].students
+                                };
+                                adaptedModuleGroup.groups.push(adaptedGroup);
+                            }
+                        }
+                        adaptedModuleGroup.groups = JSON.stringify(adaptedModuleGroup.groups);
+                        adaptedModulesGroups.push(adaptedModuleGroup);
+                    }
+                    adaptedModulesGroups.sort((a, b) => {
+                        if (a.moduleName < b.moduleName){
+                            return -1;
+                        } else if (a.moduleName > b.moduleName){
+                            return 1;
+                        } else{
+                            return 0;
+                        }
+                    });
+                    callback(adaptedModulesGroups);
+                } else {
+                    callback([]);
+                }
+            } else{
+                callback([]);
+            }
+        }.bind(this));
     },
     validateSlot: function(username, postInfo, callback){
         const slotValidator = require("../validators/slotValidator.js");
         slotValidator.validateAddSlot(this.app, postInfo, this.bdManagement, username, function (errors, processedResult) {
             if (errors != null && errors.anyError === 0) {
+                const groupIdsObj = [];
+                for (let i= 0; i < processedResult.groupIds.length; ++i){
+                    groupIdsObj.push(this.bdManagement.mongoPure.ObjectID(processedResult.groupIds[i]));
+                }
                 //Analyze student collisions
-                this.bdManagement.getClassGroup({_id: this.bdManagement.mongoPure.ObjectID(processedResult.groupId)}, function (groups){
-                    if (groups == null || groups.length !== 1){
-                        this.getSlotGroups(username, function (adaptedGroups){
+                this.bdManagement.getClassGroup({_id: {$in: groupIdsObj}}, function (groups){
+                    if (groups == null || groups.length === 0){
+                        this.getSlotModulesAndGroups(username, adaptedGroups => {
                             errors.anyError = 1;
                             callback(adaptedGroups, errors, null, true);
                         });
                     } else {
-                        const group = groups[0];
-                        const studentsToAnalyze = [];
+                        const allStudentsArray = [];
+                        for (let i= 0; i < groups.length; ++i){
+                            allStudentsArray.push(...groups[i].students);
+                        }
                         const collisions = [];
-                        for (let i= 0; i < group.students.length; ++i){
-                            if (!processedResult.studentsExcluded.includes(group.students[i])){
-                                studentsToAnalyze.push(group.students[i]);
+                        const studentsToAnalyze = [];
+                        for (let i= 0; i < allStudentsArray.length; ++i){
+                            if (!processedResult.studentsExcluded.includes(allStudentsArray[i])){
+                                studentsToAnalyze.push(allStudentsArray[i]);
                             }
                         }
                         this.getCollisions(studentsToAnalyze, 0, 0, collisions, processedResult.startTime, processedResult.endTime, function (studentCollisions) {
@@ -147,14 +233,14 @@ module.exports = {
                                     }
                                 }
                                 processedResult.startTime += this.app.get('millisecondsDelayStartSlot'); //To avoid race hazards
-                                if (processedResult.studentsExcluded.length >= group.students.length){ //If all the students have a collision
+                                if (processedResult.studentsExcluded.length >= allStudentsArray.length){ //If all the students have a collision
                                     callback(null, null, studentCollisions, true);
                                 } else {
                                     this.bdManagement.addSlot(processedResult, function (result) {
                                         if (result != null) {
                                             callback(null, null, studentCollisions, false);
                                         } else {
-                                            this.getSlotGroups(username, function (adaptedGroups) {
+                                            this.getSlotModulesAndGroups(username, adaptedGroups => {
                                                 errors.anyError = 1;
                                                 callback(adaptedGroups, errors, null, true);
                                             });
@@ -162,7 +248,7 @@ module.exports = {
                                     }.bind(this));
                                 }
                             } else {
-                                this.getSlotGroups(username, function (adaptedGroups){
+                                this.getSlotModulesAndGroups(username, adaptedGroups => {
                                     errors.anyError = 1;
                                     callback(adaptedGroups, errors, null, true);
                                 });
@@ -171,7 +257,7 @@ module.exports = {
                     }
                 }.bind(this));
             } else {
-                this.getSlotGroups(username, function (adaptedGroups){
+                this.getSlotModulesAndGroups(username, adaptedGroups => {
                     callback(adaptedGroups, errors, null, true);
                 });
             }
@@ -185,10 +271,10 @@ module.exports = {
             if (groups != null && groups.length !== 0){
                 const groupsIds= [];
                 for (let i= 0; i < groups.length; ++i){
-                    groupsIds.push(this.bdManagement.mongoPure.ObjectID(groups[i]._id));
+                    groupsIds.push(groups[i]._id.toString());
                 }
                 const criteriaSlots= {
-                    groupId: {$in: groupsIds},
+                    groupIds: {$in: groupsIds},
                     $or: [{$and: [{startTime: {$lte: startTime}}, {endTime: {$gte: endTime}}]},
                         {$and: [{startTime: {$gte: startTime}}, {startTime: {$lt: endTime}}]},
                         {$and: [{startTime: {$lte: startTime}}, {endTime: {$lt: endTime}}, {endTime: {$gt: startTime}}]}],
@@ -196,20 +282,57 @@ module.exports = {
                 };
                 this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
-                        for (let i= 0; i < slots.length; ++i){
-                            const jsonCollision = {
-                                student: students[index],
-                                description: slots[i].description,
-                                groupName: slots[i].groupName,
-                                author: slots[i].author
-                            };
-                            collisions.push(jsonCollision);
+                        const slotGroupIdsArray = [];
+                        for (let i = 0; i < slots.length; ++i){
+                            for (let e= 0; e < slots[i].groupIds.length; ++e){
+                                if (!slotGroupIdsArray.includes(slots[i].groupIds[e])){
+                                    slotGroupIdsArray.push(slots[i].groupIds[e]);
+                                }
+                            }
                         }
-                    }
-                    if (students.length - 1 === index) {
-                        callback(collisions);
+                        this.bdManagement.getModule({groupsIds: {$in: slotGroupIdsArray}}, function (modules){
+                            if (modules != null){
+                                for (let i= 0; i < slots.length; ++i){
+                                    for (let e= 0; e < modules.length; ++e){
+                                        if (modules[e].groupsIds.some(element => slots[i].groupIds.includes(element))){
+                                            const jsonCollision = {
+                                                student: students[index],
+                                                description: slots[i].description,
+                                                moduleName: modules[e].name,
+                                                author: slots[i].author
+                                            };
+                                            collisions.push(jsonCollision);
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (students.length - 1 === index) {
+                                    callback(collisions);
+                                } else {
+                                    this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback);
+                                }
+                            } else{
+                                if (errorTime === 3){
+                                    callback(null);
+                                } else {
+                                    this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback);
+                                }
+                            }
+                        }.bind(this));
                     } else {
-                        this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback);
+                        if (slots != null) {
+                            if (students.length - 1 === index) {
+                                callback(collisions);
+                            } else {
+                                this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback);
+                            }
+                        } else{
+                            if (errorTime === 3){
+                                callback(null);
+                            } else {
+                                this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback);
+                            }
+                        }
                     }
                 }.bind(this));
             } else{
@@ -224,97 +347,67 @@ module.exports = {
     getReportList: function(username, callback){
         const moment = this.app.get("moment");
         this.getSlots(username, function(slots){
-            const adaptedGroups= [];
+            const adaptedSlots= [];
+            const slotsIds = []; //Used to get the notifications
             for (let i= 0; i < slots.length; ++i){
                 const tempSlot = {
-                    groupName: slots[i].groupName,
-                    groupId: slots[i].groupId.toString(),
+                    groupsObj: slots[i].groupsObj,
+                    moduleObj: slots[i].moduleObj,
                     _id: slots[i]._id.toString(),
-                    slotDescription: slots[i].description,
-                    studentsIncluded: JSON.stringify(slots[i].studentsIncluded)
+                    slotDescription: slots[i].description
                 };
-                adaptedGroups.push(tempSlot);
-            }
-
-            const groupsHashMap = []; //Used to classify the slots by groupIds
-            const groupIdArray = [];
-            const groupsWithName = []; //Used to the html list
-            for (let e= 0; e < adaptedGroups.length; ++e){
-                if (groupIdArray.includes(adaptedGroups[e].groupId)){
-                    groupsHashMap[adaptedGroups[e].groupId].push(adaptedGroups[e]);
-                } else{
-                    groupsWithName[adaptedGroups[e].groupId]= adaptedGroups[e].groupName;
-                    groupIdArray.push(adaptedGroups[e].groupId);
-                    groupsHashMap[adaptedGroups[e].groupId]= [];
-                    groupsHashMap[adaptedGroups[e].groupId].push(adaptedGroups[e]);
+                adaptedSlots.push(tempSlot);
+                if (!slotsIds.includes(slots[i]._id.toString())){
+                    slotsIds.push(slots[i]._id.toString());
                 }
             }
 
-            const slotsIds = []; //Used to get the notifications
-            for (let i= 0; i < adaptedGroups.length; ++i){
-                if (!slotsIds.includes(adaptedGroups[i]._id)){
-                    slotsIds.push(adaptedGroups[i]._id);
-                }
-            }
             this.getNotificationsBySlotIds(slotsIds, function(notifications){
-                const finalHashmap = {}; //HashMap with group ids as keys and some HashMaps inside with the students name as keys which contains the notifications classified
-                notifications.sort((a, b) => {
-                    if (a.idUser > b.idUser) {
-                        return 1;
-                    } else if (a.idUser < b.idUser) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                });
-                for (let k= 0; k < groupIdArray.length; ++k){
-                    const notificationsHashMap = {};
-                    const usernameArray = [];
-                    for (let i= 0; i < notifications.length; ++i) {
-                        for (let f= 0; f < groupsHashMap[groupIdArray[k]].length; ++f) {
-                            if (notifications[i].slotId === groupsHashMap[groupIdArray[k]][f]._id) {
-                                const includedStudents = JSON.parse(groupsHashMap[groupIdArray[k]][f].studentsIncluded);
-                                for (let e= 0; e < includedStudents.length; ++e) {
-                                    if (notifications[i].idUser === includedStudents[e]){
-                                        let intIps= "";
-                                        for (let e= 0; e < notifications[i].intIps.length; ++e){
-                                            if (e === 0){
-                                                intIps+= notifications[i].intIps[e];
-                                            } else{
-                                                intIps+= ", " + notifications[i].intIps[e];
-                                            }
-                                        }
-                                        let slotDescription= groupsHashMap[groupIdArray[k]][f].slotDescription.trim();
-                                        const adaptedNotification = {
-                                            intIps: intIps,
-                                            slotDescription: slotDescription,
-                                            actionTime: moment(notifications[i].actionTime).format("DD MMM YYYY HH:mm:ss"),
-                                            actionTimeMS: notifications[i].actionTime,
-                                            actionName: this.app.get('actionCodeTranslation')[notifications[i].actionCode],
-                                            moreInfo: notifications[i].moreInfo,
-                                            somethingWrong: notifications[i].somethingWrong,
-                                            tofCache: notifications[i].tofCache ? "Activado" : "Desactivado",
-                                            extIp: notifications[i].extIp === "::1" ? "localhost" : notifications[i].extIp,
-                                            idUser: notifications[i].idUser
-                                        };
-
-                                        if (usernameArray.includes(notifications[i].idUser)){
-                                            notificationsHashMap[notifications[i].idUser].push(adaptedNotification);
+                const adaptedNotifications= [];
+                for (let i = 0; i < adaptedSlots.length; ++i) {
+                    for (let e = 0; e < notifications.length; ++e) {
+                        if (notifications[e].slotId === adaptedSlots[i]._id){
+                            for (let f= 0; f < adaptedSlots[i].groupsObj.length; ++f){
+                                if (adaptedSlots[i].groupsObj[f].studentsIncluded.includes(notifications[e].idUser)){
+                                    let intIps= "";
+                                    for (let j= 0; j < notifications[e].intIps.length; ++j){
+                                        if (j === 0){
+                                            intIps+= notifications[e].intIps[j];
                                         } else{
-                                            usernameArray.push(notifications[i].idUser);
-                                            notificationsHashMap[notifications[i].idUser]= [];
-                                            notificationsHashMap[notifications[i].idUser].push(adaptedNotification);
+                                            intIps+= ", " + notifications[e].intIps[j];
                                         }
-                                        break;
                                     }
+                                    const adaptedNotification= {
+                                        intIps: intIps,
+                                        slotId: adaptedSlots[i]._id,
+                                        slotDescription: adaptedSlots[i].slotDescription.trim(),
+                                        moduleName: adaptedSlots[i].moduleObj.name,
+                                        groupName: adaptedSlots[i].groupsObj[f].name,
+                                        actionTime: moment(notifications[e].actionTime).format("DD MMM YYYY HH:mm:ss"),
+                                        actionTimeMS: notifications[e].actionTime,
+                                        actionName: this.app.get('actionCodeTranslation')[notifications[e].actionCode],
+                                        moreInfo: notifications[e].moreInfo,
+                                        somethingWrong: notifications[e].somethingWrong,
+                                        tofCache: notifications[e].tofCache ? "Activado" : "Desactivado",
+                                        extIp: notifications[e].extIp === "::1" ? "localhost" : notifications[e].extIp,
+                                        idUser: notifications[e].idUser
+                                    };
+                                    adaptedNotifications.push(adaptedNotification);
                                 }
-                                break;
                             }
                         }
                     }
-                    finalHashmap[groupIdArray[k]]= notificationsHashMap;
                 }
-                callback(groupsWithName, groupIdArray, finalHashmap);
+                adaptedSlots.sort((a, b) => {
+                    if (a.slotDescription < b.slotDescription){
+                        return -1;
+                    } else if (a.slotDescription > b.slotDescription){
+                        return 1;
+                    } else{
+                        return 0;
+                    }
+                });
+                callback(adaptedSlots, adaptedNotifications);
             }.bind(this));
         }.bind(this));
     }

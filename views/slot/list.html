@@ -13,7 +13,7 @@
             <div id="modalContent"></div>
         </div>
     </div>
-    <script src="/js/modifySlots.js"></script>
+    <script src="/pb/js/modifySlots.js"></script>
     <div class="table-responsive">
         {% if newSlot === 1 %}
         <span class="text-danger">Slot añadido correctamente</span>
@@ -40,26 +40,26 @@
         <br/>
         {% endif %}
 
-        <div style="overflow-y: auto; height: 600px; width:100%;">
+        <div>
             <table class="table table-hover" id="tableSlots">
                 <thead>
                 <tr>
-                    <th class="tableHeaders" style="width: 10%;">Grupo</th>
-                    <th class="tableHeaders" style="width: 23%;">Descripción</th>
-                    <th class="tableHeaders" style="width: 13%;">Comienzo</th>
-                    <th class="tableHeaders" style="width: 13%;">Fin</th>
-                    <th class="tableHeaders" style="width: 9%;">Modo de restricción</th>
-                    <th class="tableHeaders" style="width: 10%;">Autor</th>
-                    <th class="tableHeaders" style="width: 10%;"></th>
-                    <th class="tableHeaders" style="width: 6%;"></th>
-                    <th class="tableHeaders" style="width: 6%;"></th>
+                    <th style="width: 23%;">Slot</th>
+                    <th style="width: 10%;">Asignatura</th>
+                    <th style="width: 13%;">Comienzo</th>
+                    <th style="width: 13%;">Fin</th>
+                    <th style="width: 9%;">Modo de restricción</th>
+                    <th style="width: 10%;">Autor</th>
+                    <th style="width: 10%;"></th>
+                    <th style="width: 6%;"></th>
+                    <th style="width: 6%;"></th>
                 </tr>
                 </thead>
                 <tbody>
                 {% for slot in slotList %}
                 <tr>
-                    <td>{{slot.groupName}}</td>
                     <td>{{slot.description}}</td>
+                    <td>{{slot.moduleName}}</td>
                     <td data-sort="{{slot.startTimeMS}}">{{slot.startTime}}</td>
                     <td data-sort="{{slot.endTimeMS}}">{{slot.endTime}}</td>
                     <td>{{slot.listMode}}</td>

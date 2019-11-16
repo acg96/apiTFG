@@ -75,13 +75,14 @@ function showDetails(slotId){
     const currentValue= $('#input-'+slotId).val().trim();
     const valueJson= JSON.parse(currentValue);
     const modalContent= $('#modalContent');
-    modalContent.append("<div class='modal-header'><h2 style='text-align: center;'>"+ valueJson.groupName +"</h2></div>");
+    modalContent.append("<div class='modal-header'><h2 style='text-align: center;'>"+ valueJson.moduleName +"</h2></div>");
     let initHtml= "<ul style='list-style: none;'>";
     initHtml+= "<li>"+ "<b>Detalles:</b> " + valueJson.description +"</li>";
     initHtml+= "<li>"+ "<b>Comienzo:</b> " + valueJson.startTime +"</li>";
     initHtml+= "<li>"+ "<b>Fin:</b> " + valueJson.endTime +"</li>";
     initHtml+= "<li>"+ "<b>Modo:</b> " + valueJson.listMode +"</li>";
     initHtml+= "<li>"+ "<b>Autor:</b> " + valueJson.author +"</li>";
+    initHtml+= "<li>"+ "<b>Grupos:</b> " + valueJson.groupNames +"</li>";
     initHtml+= "</ul>";
     modalContent.append(initHtml);
     modalContent.append("<div class='modal-header2'><h3>Urls:</h3></div>");
