@@ -70,6 +70,14 @@ window.onclick = function(event) {
     }
 };
 
+window.onload = function(){
+    const optionSelectedSlot = $("#slotSelect > option:selected")[0];
+    const idSelectedSlot = optionSelectedSlot.attributes[0].value;
+    if (idSelectedSlot.trim() !== ""){
+        showNotifications(optionSelectedSlot);
+    }
+};
+
 function manageRedCheckbox(){
     showFirstList($("#redCheckBox").is(":checked"));
 }

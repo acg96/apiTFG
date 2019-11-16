@@ -14,10 +14,10 @@ nunjucks.configure('views', {
     express: app
 });
 const expressSession = require('express-session');
-//when https will be activated set property secure: true TODO
 app.use(expressSession({
     secret: 'lp#2S-9)8e.$u(PL#7.-.$O)y23$-.8Nmp9$-,Po#U2;K)Sn.',
     resave: false,
+    secure: true,
     saveUninitialized: false,
     cookie: {
         httpOnly: false,
@@ -25,7 +25,7 @@ app.use(expressSession({
         secure: false
     }
 }));
-app.use(express.static('public'));
+app.use('/pb', express.static('public'));
 //****End administration web****
 
 const actionCodeTranslation={
@@ -269,6 +269,6 @@ app.use(function (err, req, res) {
 
 
 // Run server
-app.listen(app.get('port'), function () {
+app.listen(app.get('port'), "localhost", function () {
     logger.info("Server active on port " + app.get('port'));
 });
