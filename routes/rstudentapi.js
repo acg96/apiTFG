@@ -29,7 +29,7 @@ module.exports = function (app, rStudentApiService, logger) {
         * cod. 1143 -> Pivot extension uninstalled
         */
         const username= res.user;
-        const ipRequest= req.ip;
+        const ipRequest= res.ipReal;
         const internalIps= res.ips;
         const jsonAction= req.body.action_;
         if (jsonAction != null && typeof jsonAction !== "undefined"){
@@ -77,10 +77,10 @@ module.exports = function (app, rStudentApiService, logger) {
                         whyInfoNoCorrect += "\n" + "Se utiliza la hora del pc destino porque la información de tiempo almacenada allí no era correcta. Si el usuario ha cambiado la hora del pc puede que los datos de tiempo no sean ciertos.";
                     }
                     if (username === "NoTokenProvided") {
-                        logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                        logger.info("Action notified without token. Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + res.ipReal);
                     } else {
                         logger.info("Action notified about user " +
-                            res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + req.ip);
+                            res.user + ". Action: " + actionCode + ". More Info: " + moreInfo + " - IP: " + res.ipReal);
                     }
 
                     const toStoreOnBBDD = {

@@ -102,6 +102,7 @@ rProfessorService.init(app, bdManagement);
 // router actions
 const routerActions = express.Router();
 routerActions.use(function(req, res, next) {
+    res.ipReal = req.headers["x-real-ip"];
     const urlRequested = req.originalUrl;
     const info = "Access requested to " + urlRequested;
     logger.info(info);
@@ -116,13 +117,13 @@ routerUserToken.use(function (req, res, next) { // get the token
     if (token != null) {// verify token
         jwt.verify(token, app.get("tokenKey")(), function (err, infoToken) {
             if (err || (app.get('currentTime')().valueOf() / 1000 - infoToken.time) > app.get('tokenTime')/1000) { //45min token expiration time
-                logger.info("Token provided invalid or expired - IP address: " + req.ip);
+                logger.info("Token provided invalid or expired - IP address: " + res.ipReal);
                 res.status(403); // Forbidden
                 res.json({access: false, error: 'Invalid or expired token'});
             } else {
                 //check role is valid
                 if (infoToken.role !== "student") {
-                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    logger.info("Token role provided invalid - IP address: " + res.ipReal);
                     res.status(403); // Forbidden
                     res.json({access: false, message: 'Token role invalid'});
                 }
@@ -133,10 +134,10 @@ routerUserToken.use(function (req, res, next) { // get the token
                         res.user = infoToken.user;
                         res.role = infoToken.role;
                         res.ips = infoToken.ips;
-                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + res.ipReal);
                         next();
                     } else{
-                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        logger.info("Token provided manipulated - IP address: " + res.ipReal);
                         res.status(403); // Forbidden
                         res.json({access: false, message: 'Token manipulated'});
                     }
@@ -144,7 +145,7 @@ routerUserToken.use(function (req, res, next) { // get the token
             }
         });
     } else {
-        logger.info("Token provided invalid - IP address: " + req.ip);
+        logger.info("Token provided invalid - IP address: " + res.ipReal);
         res.status(403); // Forbidden
         res.json({access: false, message: 'Token invalid'});
     }
@@ -158,14 +159,14 @@ routerNotificationToken.use(function (req, res, next) { // get the token
     if (token != null) {// verify token
         jwt.verify(token, app.get("tokenKey")(), function (err, infoToken) {
             if (err) {
-                logger.info("Token provided invalid or expired - IP address: " + req.ip);
+                logger.info("Token provided invalid or expired - IP address: " + res.ipReal);
                 res.user = "NoTokenProvided";
                 res.ips = [];
                 next();
             } else {
                 //check role is valid
                 if (infoToken.role !== "student") {
-                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    logger.info("Token role provided invalid - IP address: " + res.ipReal);
                     res.user = "NoTokenProvided";
                     res.ips = [];
                     next();
@@ -177,10 +178,10 @@ routerNotificationToken.use(function (req, res, next) { // get the token
                         res.user = infoToken.user;
                         res.role = infoToken.role;
                         res.ips = infoToken.ips;
-                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + res.ipReal);
                         next();
                     } else{
-                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        logger.info("Token provided manipulated - IP address: " + res.ipReal);
                         res.user = "NoTokenProvided";
                         res.ips = [];
                         next();
@@ -207,7 +208,7 @@ routerRoleUserProfessor.use(function(req, res, next) {
         if (role === "professor" && user.trim() !== "") {
             next();
         } else {
-            logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + req.ip);
+            logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + res.ipReal);
             req.session.username= null;
             req.session.role= null;
             res.redirect("/");
@@ -224,7 +225,7 @@ routerWebAdminNotLoggedIn.use(function(req, res, next) {
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
     } else{
-        logger.info("The user " + user + " being logged in has requested access to login page - IP address: " + req.ip);
+        logger.info("The user " + user + " being logged in has requested access to login page - IP address: " + res.ipReal);
         res.redirect("/");
     }
 });
@@ -236,7 +237,7 @@ routerWebAdminBeingLoggedIn.use(function(req, res, next) {
     const user= req.session.username;
     const role= req.session.role;
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
-        logger.info("A user not being logged in has requested access to restricted areas - IP address: " + req.ip);
+        logger.info("A user not being logged in has requested access to restricted areas - IP address: " + res.ipReal);
         res.redirect("/login");
     } else{
         next();
@@ -254,7 +255,7 @@ require("./routes/rprofessor.js")(app, logger, rProfessorService);
 
 // When a url not exists
 app.use(function(req, res) {
-    logger.info("URL not found - IP: " + req.ip);
+    logger.info("URL not found - IP: " + res.ipReal);
     res.status(404);
     res.json({message: 'url not found'});
 });
@@ -262,7 +263,7 @@ app.use(function(req, res) {
 
 // Error management
 app.use(function (err, req, res) {
-    logger.info("Error " + err + " - IP: " + req.ip);
+    logger.info("Error " + err + " - IP: " + res.ipReal);
     res.status(500);
     res.json({message: 'unexpected error'});
 });

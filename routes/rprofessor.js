@@ -114,9 +114,9 @@ module.exports = function (app, logger, professorService) {
         professorService.validateSlot(req.session.username, postInfo, (adaptedGroups, errors, collisions, noAdded) => {
             if (adaptedGroups == null && errors == null){
                 if (!noAdded) {
-                    logger.info("Slot created by user " + req.session.username + " - IP: " + req.ip);
+                    logger.info("Slot created by user " + req.session.username + " - IP: " + res.ipReal);
                 } else{
-                    logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
+                    logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + res.ipReal);
                 }
                 req.session.collisions = collisions;
                 req.session.noAdded = noAdded;
@@ -130,7 +130,7 @@ module.exports = function (app, logger, professorService) {
                     hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
                     minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                 };
-                logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
+                logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + res.ipReal);
                 res.render('slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
             }
         });

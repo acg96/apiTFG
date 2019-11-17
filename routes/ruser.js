@@ -4,7 +4,7 @@ module.exports = function (app, logger, userService) {
     });
 
     app.get('/logout', function (req, res) {
-        logger.info("The user " + req.session.username + " has logged out - IP address: " + req.ip);
+        logger.info("The user " + req.session.username + " has logged out - IP address: " + res.ipReal);
         req.session.username = null;
         req.session.role = null;
         res.redirect("/login");
@@ -20,12 +20,12 @@ module.exports = function (app, logger, userService) {
         };
         userService.userLogin(user, function (userBBDD) {
             if (userBBDD == null) {
-                logger.info("Incorrect login. Username: " + user.username + " - IP address: " + req.ip);
+                logger.info("Incorrect login. Username: " + user.username + " - IP address: " + res.ipReal);
                 req.session.username = null;
                 req.session.role = null;
                 res.render('main/login.html', {username: req.session.username, error: 1});
             } else {
-                logger.info("The user " + userBBDD.username + " has logged in on the administration web - IP address: " + req.ip);
+                logger.info("The user " + userBBDD.username + " has logged in on the administration web - IP address: " + res.ipReal);
                 req.session.username = userBBDD.username;
                 req.session.role = userBBDD.role;
                 res.redirect("/");
