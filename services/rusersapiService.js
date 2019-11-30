@@ -1,9 +1,11 @@
 module.exports = {
     app: null,
     bdManagement: null,
-    init: function(app, bdManagement){
+    rLdapConnectionService: null,
+    init: function(app, bdManagement, rLdapConnectionService){
         this.app= app;
         this.bdManagement= bdManagement;
+        this.rLdapConnectionService= rLdapConnectionService;
     },
     getUrls: function(username, callback){
         const criteriaGroups= {
@@ -61,25 +63,52 @@ module.exports = {
         }.bind(this));
     },
     getUserToken: function(username, password, ips, callback){
-        const secure = this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
-            .update(password.trim()).digest('hex');
-        const user = {
-            username: username,
-            password: secure,
-            role: "student"
-        };
-        this.bdManagement.getUser(user, function (users) {
-            if (users == null || users.length === 0 || users[0].role !== "student") {
-                callback(null);
-            } else {
-                const token = this.app.get('jwt').sign({
-                    user: user.username,
-                    time: this.app.get('currentTime')().valueOf() / 1000,
-                    role: users[0].role,
-                    ips: ips
-                }, this.app.get('tokenKey')());
-                callback(token);
-            }
-        }.bind(this));
+        let user = null;
+        if (this.app.get('useLDAP')){ //If it's in use the ldap (production mode)
+            user = {
+                username: username.trim(),
+                role: "student"
+            };
+            this.rLdapConnectionService.requestStudentConnection({username: username.trim(), password: password.trim()}, response => {
+                if (response) {
+                    this.bdManagement.getUser(user, function (users) {
+                        if (users == null || users.length === 0 || users[0].role !== "student") {
+                            callback(null);
+                        } else {
+                            const token = this.app.get('jwt').sign({
+                                user: user.username.trim(),
+                                time: this.app.get('currentTime')().valueOf() / 1000,
+                                role: users[0].role,
+                                ips: ips
+                            }, this.app.get('tokenKey')());
+                            callback(token);
+                        }
+                    }.bind(this));
+                } else{
+                    callback(null);
+                }
+            });
+        } else { //If it's not in use the ldap
+            const secure = this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
+                .update(password.trim()).digest('hex');
+            user = {
+                username: username.trim(),
+                password: secure,
+                role: "student"
+            };
+            this.bdManagement.getUser(user, function (users) {
+                if (users == null || users.length === 0 || users[0].role !== "student") {
+                    callback(null);
+                } else {
+                    const token = this.app.get('jwt').sign({
+                        user: user.username.trim(),
+                        time: this.app.get('currentTime')().valueOf() / 1000,
+                        role: users[0].role,
+                        ips: ips
+                    }, this.app.get('tokenKey')());
+                    callback(token);
+                }
+            }.bind(this));
+        }
     }
 };
