@@ -11,7 +11,7 @@ module.exports = {
         if (this.app.get('useLDAP')){ //If it's in use the ldap (production mode)
             const user = {
                 username: username,
-                role: "professor"
+                role: {$in: ["professor", "administrator"]}
             };
             this.rLdapConnectionService.requestPASConnection({username: username, password: password}, response => {
                 if (response) {
@@ -32,7 +32,7 @@ module.exports = {
             const user = {
                 username: username,
                 password: hashPass,
-                role: "professor"
+                role: {$in: ["professor", "administrator"]}
             };
             this.bdManagement.getUser(user, function (users) {
                 if (users == null || users.length === 0) {

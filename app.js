@@ -88,7 +88,7 @@ app.set('passKey', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('crypto', crypto);
 
 //LDAP configuration
-app.set('useLDAP', true); //If it's set to 'false' the ldap service it's not used
+app.set('useLDAP', false); //If it's set to 'false' the ldap service it's not used
 const fs= require('fs');
 const rLdapConnectionService= require("./services/rldapConnectionService.js");
 rLdapConnectionService.init(app, fs);
@@ -211,7 +211,7 @@ routerRoleUserProfessor.use(function(req, res, next) {
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
     } else{
-        if (role === "professor" && user.trim() !== "") {
+        if ((role === "professor" || role === "administrator") && user.trim() !== "") {
             next();
         } else {
             logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + res.ipReal);
@@ -250,7 +250,36 @@ routerWebAdminBeingLoggedIn.use(function(req, res, next) {
     }
 });
 app.use('/prf/*', routerWebAdminBeingLoggedIn);
+app.use('/adm/*', routerWebAdminBeingLoggedIn);
 app.use('/logout', routerWebAdminBeingLoggedIn);
+
+//Router controlling the access to restricted areas of the administration web just for professors
+const routerWebAdminBeingLoggedInProfessor = express.Router();
+routerWebAdminBeingLoggedInProfessor.use(function(req, res, next) {
+    const user= req.session.username;
+    const role= req.session.role;
+    if (role !== "professor"){
+        logger.info("The user " + user + " being logged in has requested access to professor's resources not being allowed - IP address: " + res.ipReal);
+        res.redirect("/");
+    } else{
+        next();
+    }
+});
+app.use('/prf/*', routerWebAdminBeingLoggedInProfessor);
+
+//Router controlling the access to restricted areas of the administration web just for administrators
+const routerWebAdminBeingLoggedInAdministrator = express.Router();
+routerWebAdminBeingLoggedInAdministrator.use(function(req, res, next) {
+    const user= req.session.username;
+    const role= req.session.role;
+    if (role !== "administrator"){
+        logger.info("The user " + user + " being logged in has requested access to administrator's resources not being allowed - IP address: " + res.ipReal);
+        res.redirect("/");
+    } else{
+        next();
+    }
+});
+app.use('/adm/*', routerWebAdminBeingLoggedInAdministrator);
 
 //Routes
 require("./routes/rusersapi.js")(app, logger, userApiService);
