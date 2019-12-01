@@ -1,6 +1,6 @@
 module.exports = function (app, logger, bdManagement, initBD) {
     app.get('/', function (req, res) {
-        res.render('main/index.html', {username: req.session.username});
+        res.render('main/index.html', {username: req.session.username, role: req.session.role});
     });
     app.get("/reset", function (req, res) { //TODO
         logger.info("BBDD reset - IP: " + res.ipReal);
