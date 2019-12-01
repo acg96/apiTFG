@@ -89,9 +89,7 @@ app.set('crypto', crypto);
 
 //LDAP configuration
 app.set('useLDAP', true); //If it's set to 'false' the ldap service it's not used
-const ldapAuth = require('ldapauth-fork');
 const fs= require('fs');
-app.set('ldapAuth', ldapAuth);
 const rLdapConnectionService= require("./services/rldapConnectionService.js");
 rLdapConnectionService.init(app, fs);
 

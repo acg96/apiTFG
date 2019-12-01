@@ -1,58 +1,48 @@
 module.exports = {
     app: null,
     fs: null,
+    moduleLibraries: null,
+    ldapClient: null,
     init: function(app, fs){
         this.app= app;
         this.fs= fs;
+        this.moduleLibraries= {
+            ldap: require('ldapjs')
+        };
     },
-    requestStudentConnection: function(user, callback){
-        const serverConfiguration = {
+    initLdapClient: function(){
+        this.ldapClient= this.moduleLibraries.ldap.createClient({
             url: 'ldaps://directorio.uniovi.es:636',
-            bindDN: 'uid=' + user.username + ',ou=Alumnos,dc=uniovi,dc=es',
-            bindCredentials: user.password,
-            searchBase: 'ou=Alumnos,dc=uniovi,dc=es',
-            searchFilter: '(uid={{username}})',
+            timeout: 40000,
+            connectTimeout: 30000,
             tlsOptions: {
                 ca: [
                     this.fs.readFileSync('./ldapCertificate/certificateCA.cer')
                 ]
             },
-            reconnect: true
-        };
-        const LdapAuth = this.app.get('ldapAuth');
-        const ldap = new LdapAuth(serverConfiguration);
-        ldap.authenticate(user.username, user.password, function(err, user) {
-            if (err) {
-                callback(false, null);
-            } else{
-                callback(true, user);
+            idleTimeout: 40000
+        });
+    },
+    requestStudentConnection: function(user, callback){
+        this.initLdapClient();
+        this.ldapClient.bind('uid=' + user.username + ',ou=Alumnos,dc=uniovi,dc=es', user.password, err => {
+            if (err){
+                callback(false);
+            } else {
+                callback(true);
             }
-            ldap.close(() => {});
+            this.ldapClient.unbind(function() {});
         });
     },
     requestPASConnection: function(user, callback){
-        const serverConfiguration = {
-            url: 'ldaps://directorio.uniovi.es:636',
-            bindDN: 'uid=' + user.username + ',ou=personal,dc=uniovi,dc=es',
-            bindCredentials: user.password,
-            searchBase: 'ou=personal,dc=uniovi,dc=es',
-            searchFilter: '(uid={{username}})',
-            tlsOptions: {
-                ca: [
-                    this.fs.readFileSync('./ldapCertificate/certificateCA.cer')
-                ]
-            },
-            reconnect: true
-        };
-        const LdapAuth = this.app.get('ldapAuth');
-        const ldap = new LdapAuth(serverConfiguration);
-        ldap.authenticate(user.username, user.password, function(err, user) {
-            if (err) {
-                callback(false, null);
-            } else{
-                callback(true, user);
+        this.initLdapClient();
+        this.ldapClient.bind('uid=' + user.username + ',ou=personal,dc=uniovi,dc=es', user.password, err => {
+            if (err){
+                callback(false);
+            } else {
+                callback(true);
             }
-            ldap.close(() => {});
+            this.ldapClient.unbind(function() {});
         });
     }
 };
