@@ -11,16 +11,9 @@ module.exports = function (app, logger, userService) {
     });
 
     app.post("/login", function (req, res) {
-        const hashPass = app.get("crypto").createHmac('sha256', app.get('passKey'))
-            .update(req.body.password.trim()).digest('hex');
-        const user = {
-            username: req.body.username.trim(),
-            password: hashPass,
-            role: "professor"
-        };
-        userService.userLogin(user, function (userBBDD) {
+        userService.userLogin(req.body.username.trim(), req.body.password.trim(), function (userBBDD) {
             if (userBBDD == null) {
-                logger.info("Incorrect login. Username: " + user.username + " - IP address: " + res.ipReal);
+                logger.info("Incorrect login. Username: " + req.body.username.trim() + " - IP address: " + res.ipReal);
                 req.session.username = null;
                 req.session.role = null;
                 res.render('main/login.html', {username: req.session.username, error: 1});

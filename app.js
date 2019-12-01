@@ -87,15 +87,21 @@ app.set('millisecondsDelayStartSlot', 10000); //To avoid race hazards on the sta
 app.set('passKey', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('crypto', crypto);
 
+//LDAP configuration
+app.set('useLDAP', true); //If it's set to 'false' the ldap service it's not used
+const fs= require('fs');
+const rLdapConnectionService= require("./services/rldapConnectionService.js");
+rLdapConnectionService.init(app, fs);
+
 //Services
 const userApiService= require("./services/rusersapiService.js");
-userApiService.init(app, bdManagement);
+userApiService.init(app, bdManagement, rLdapConnectionService);
 const rAppService= require("./services/rappService.js");
 rAppService.init(app, bdManagement, initBD);
 const rStudentApiService= require("./services/rstudentapiService.js");
 rStudentApiService.init(app, bdManagement);
 const rUserService= require("./services/ruserService.js");
-rUserService.init(app, bdManagement);
+rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
 

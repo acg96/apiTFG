@@ -1,12 +1,13 @@
 {
   "name": "TFG_API_REST",
   "description": "API REST OF MY TFG",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "jsonwebtoken": "^8.5.1",
+    "ldapjs": "^1.0.2",
     "log4js": "^4.1.0",
     "moment": "^2.24.0",
     "mongodb": "^3.3.3",
