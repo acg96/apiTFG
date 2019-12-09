@@ -9,7 +9,12 @@
             <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Atención! Hay campos con valores incorrectos o se ha producido algún error</span></div>
         </div>
     {% endif %}
-    <form method="post" action="/adm/file/add">
+    {% if correct %}
+    <div class="row">
+        <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Los datos se han cargado corréctamente</span></div>
+    </div>
+    {% endif %}
+    <form method="post" action="/adm/file/add" enctype="multipart/form-data">
         <div class="form-row">
             <div class="form-group col-sm-12">
                 <label for="professorsFile">Fichero profesores-grupos (.csv)</label>

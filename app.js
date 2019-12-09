@@ -1,10 +1,15 @@
 // Modules and globals
 const express = require('express');
+const fileUpload = require('express-fileupload');
 const app = express();
+app.use(fileUpload({
+    useTempFiles : true,
+    tempFileDir : '/tmp/'}));
 const loggerLib = require('log4js');
 const logger = loggerLib.getLogger("apiTFG");
 logger.level = 'all';
 const bodyParser = require('body-parser');
+const csvToJson = require('csvtojson');
 app.set('tokenTime', 2700000); //Used to force the session or token expires at 45min after the beginning
 
 //***Start administration web****
@@ -104,6 +109,8 @@ const rUserService= require("./services/ruserService.js");
 rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
+const rAdministratorService= require("./services/radministratorService.js");
+rAdministratorService.init(app, bdManagement);
 
 // router actions
 const routerActions = express.Router();
@@ -287,7 +294,7 @@ require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp.js")(app, logger, bdManagement, initBD);
 require("./routes/ruser.js")(app, logger, rUserService);
 require("./routes/rprofessor.js")(app, logger, rProfessorService);
-require("./routes/radministrator.js")(app, logger, rProfessorService, fs);
+require("./routes/radministrator.js")(app, logger, rAdministratorService, csvToJson);
 
 // When a url not exists
 app.use(function(req, res) {
