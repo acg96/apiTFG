@@ -287,6 +287,7 @@ require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp.js")(app, logger, bdManagement, initBD);
 require("./routes/ruser.js")(app, logger, rUserService);
 require("./routes/rprofessor.js")(app, logger, rProfessorService);
+require("./routes/radministrator.js")(app, logger, rProfessorService, fs);
 
 // When a url not exists
 app.use(function(req, res) {

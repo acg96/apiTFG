@@ -1,0 +1,33 @@
+{% extends "../../base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Cargar grupos, profesores y alumnos</h2>
+    <br/>
+    <br/>
+    {% if errors and errors.anyError === 1 %}
+        <div class="row">
+            <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Atención! Hay campos con valores incorrectos o se ha producido algún error</span></div>
+        </div>
+    {% endif %}
+    <form method="post" action="/adm/file/add">
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="professorsFile">Fichero profesores-grupos (.csv)</label>
+                <input type="file" name="professorsFile" class="form-control" accept=".csv" id="professorsFile" required />
+                {% if errors and errors.errProfessorsFile != '' %}
+                    <span class="text-danger">{{errors.errProfessorsFile}}</span>
+                {% endif %}
+            </div>
+            <div class="form-group col-sm-12">
+                <label for="studentsFile">Fichero alumnos-grupos (.csv)</label>
+                <input type="file" name="studentsFile" class="form-control" accept=".csv" id="studentsFile" required />
+                {% if errors and errors.errStudentsFile != '' %}
+                <span class="text-danger">{{errors.errStudentsFile}}</span>
+                {% endif %}
+            </div>
+            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Cargar Ficheros*</button>
+            <span class="text-danger">*La carga de ficheros borrará todos los datos existentes hasta el momento, incluidas notificaciones</span>
+        </div>
+    </form>
+</div>
+{% endblock %}
