@@ -31,7 +31,11 @@
                 {% endif %}
             </div>
             <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Cargar Ficheros*</button>
-            <span class="text-danger">*La carga de ficheros borrará todos los datos existentes hasta el momento, incluidas notificaciones</span>
+            <span class="text-danger">*Se pueden cargar ambos ficheros o uno solo, a excepción del de estudiantes que si no se ha cargado previamente la estructura
+                de grupos-profesores no se podrá cargar de forma individual.</span><br/>
+            <span class="text-danger">*La carga de ficheros borrará todos los datos existentes hasta el momento, incluidas notificaciones en caso de que se carguen ambos ficheros
+            o solamente se cambie el de profesores-grupos. En caso de cambiar solamente el de alumnos, se añadirán los nuevos y se incluirán en los grupos ya existentes según corresponda,
+                pero no se eliminarán de los grupos en los que ya estuvieran, para ello se deben cargar de nuevo los dos ficheros para que se resetee toda la base de datos.</span>
         </div>
     </form>
 </div>

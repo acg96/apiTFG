@@ -28,6 +28,7 @@ module.exports = function (app, logger, administratorService, csvToJson) {
             const extStudentsFile= studentsFileName.split(".")[studentsFileName.split(".").length-1];
             if (extStudentsFile !== "csv" || extProfessorsFile !== "csv"){
                 req.session.errorsAdminLoad = true;
+                logger.info("Error loading structure files by " + req.session.username + ". Not csv files provided - IP: " + res.ipReal);
                 res.redirect("/adm/file/add");
             } else{
                 const professorsFilePath= postInfo.professorsFile.tempFilePath;
@@ -36,38 +37,45 @@ module.exports = function (app, logger, administratorService, csvToJson) {
                     trim: true,
                     delimiter: ";",
                     ignoreEmpty: true,
-                    noheader: false
+                    noheader: false,
+                    checkColumn: true
                 }).fromFile(professorsFilePath).then((jsonProfessors)=>{
                     csvToJson({
                         trim: true,
                         delimiter: ";",
                         ignoreEmpty: true,
-                        noheader: false
+                        noheader: false,
+                        checkColumn: true
                     }).fromFile(studentsFilePath).then((jsonStudents)=>{
                         administratorService.addFiles(jsonProfessors, jsonStudents, errors => {
                            if  (errors.anyError === 1){
                                req.session.errorsDetected = errors;
+                               logger.info("Error loading structure files by " + req.session.username + ". Error while adding files - IP: " + res.ipReal);
                                res.redirect("/adm/file/add");
                            } else {
                                req.session.adminLoadCorrect = true;
+                               logger.info("Structure files loaded by " + req.session.username + " - IP: " + res.ipReal);
                                res.redirect("/adm/file/add");
                            }
                         });
                     }).catch((err) => {
                         if (err) {
                             req.session.errorsAdminLoad = true;
+                            logger.info("Error loading structure files by " + req.session.username + ". Students file structure invalid - IP: " + res.ipReal);
                             res.redirect("/adm/file/add");
                         }
                     });
                 }).catch((err) => {
                     if (err){
                         req.session.errorsAdminLoad = true;
+                        logger.info("Error loading structure files by " + req.session.username + ". Professors file structure invalid - IP: " + res.ipReal);
                         res.redirect("/adm/file/add");
                     }
                 });
             }
         } else{
             req.session.errorsAdminLoad = true;
+            logger.info("Error loading structure files by " + req.session.username + ". Files not found - IP: " + res.ipReal);
             res.redirect("/adm/file/add");
         }
     });

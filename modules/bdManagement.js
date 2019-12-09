@@ -7,8 +7,69 @@ module.exports = {
     },
     getMongoClientObject: function(){
         return new this.mongoPure.MongoClient(this.app.get('db'), { useNewUrlParser: true, useUnifiedTopology: true });
-    }
-    , getUser: function (criteria, callbackFunction) {
+    },
+    loadAdministrators: function () {
+        const admin1 = {
+            username: "movilidad.eii@uniovi.es",
+            password: this.app.get("crypto").createHmac('sha256', this.app.get('passKey'))
+                .update("123456").digest('hex'),
+            role: "administrator"
+        };
+
+        this.addUser(admin1, () => {});
+    },
+    renameCollection: function(collectionsInfo, timeMilliseconds, index, mongo, errTime, anyErr, callback){
+        const oldName= collectionsInfo[index];
+        const newName = oldName + timeMilliseconds;
+        const collection= mongo.db(this.app.get('dbName')).collection(oldName);
+        collection.rename(newName, err => {
+            if (err){
+                if (errTime < 8){
+                    this.renameCollection(collectionsInfo, timeMilliseconds, index, mongo, ++errTime, anyErr, callback);
+                } else{
+                    if (index === collectionsInfo.length - 1){
+                        callback(false);
+                    } else {
+                        this.renameCollection(collectionsInfo, timeMilliseconds, ++index, mongo, 0, 1, callback);
+                    }
+                }
+            } else{
+                if (index === collectionsInfo.length - 1){
+                    callback(anyErr === 0);
+                } else {
+                    this.renameCollection(collectionsInfo, timeMilliseconds, ++index, mongo, 0, anyErr, callback);
+                }
+            }
+        });
+    },
+    renameAllCollections: function(callback){
+        let mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err){
+                callback(false);
+            } else{
+                mongo.db(this.app.get('dbName')).listCollections().toArray((err, collectionsInfo) => {
+                    if (err){
+                        callback(false);
+                    } else{
+                        const timeMilliseconds= this.app.get('currentTimeWithSeconds')().valueOf().toString();
+                        const collectionNames= ["users", "groups", "notifications", "modules", "slots"];
+                        const collectionsToChange= [];
+                        for (let i= 0; i < collectionsInfo.length; ++i){
+                            if (collectionNames.includes(collectionsInfo[i].name) && !collectionsToChange.includes(collectionsInfo[i].name)){
+                                collectionsToChange.push(collectionsInfo[i].name);
+                            }
+                        }
+                        this.renameCollection(collectionsToChange, timeMilliseconds, 0, mongo, 0, 0, resultRenaming => {
+                            callback(resultRenaming);
+                            mongo.close();
+                        });
+                    }
+                });
+            }
+        }.bind(this));
+    },
+    getUser: function (criteria, callbackFunction) {
         const mongo = this.getMongoClientObject();
         mongo.connect(function(err) {
             if (err) {
@@ -25,7 +86,7 @@ module.exports = {
                 }.bind(this));
             }
         }.bind(this));
-    }, resetMongo: function (callbackFunction) { //TODO
+    }, resetMongo: function (callbackFunction) {
         const mongo = this.getMongoClientObject();
         mongo.connect(function(err) {
             if (err) {
@@ -46,7 +107,7 @@ module.exports = {
                 const collectionNotifications = mongo.db(this.app.get('dbName')).collection('notifications');
                 collectionNotifications.drop().then(() => {
                 }, () => {});
-                callbackFunction(1);
+                callbackFunction(true);
                 mongo.close();
             }
         }.bind(this));
@@ -62,6 +123,23 @@ module.exports = {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.ops[0]._id);
+                    }
+                    mongo.close();
+                }.bind(this));
+            }
+        }.bind(this));
+    }, addSomeUsers: function (users, callbackFunction) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = mongo.db(this.app.get('dbName')).collection('users');
+                collection.insertMany(users, function (err, result) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(result.insertedCount);
                     }
                     mongo.close();
                 }.bind(this));
@@ -154,6 +232,23 @@ module.exports = {
                 }.bind(this));
             }
         }.bind(this));
+    }, addSomeModules: function (modules, callbackFunction) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = mongo.db(this.app.get('dbName')).collection('modules');
+                collection.insertMany(modules, function (err, result) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(result.insertedCount);
+                    }
+                    mongo.close();
+                }.bind(this));
+            }
+        }.bind(this));
     }, getModule: function (criteria, callbackFunction) {
         const mongo = this.getMongoClientObject();
         mongo.connect(function(err) {
@@ -183,6 +278,23 @@ module.exports = {
                         callbackFunction(null);
                     } else {
                         callbackFunction(result.ops[0]._id);
+                    }
+                    mongo.close();
+                }.bind(this));
+            }
+        }.bind(this));
+    }, addSomeClassGroups: function (groups, callbackFunction) {
+        const mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err) {
+                callbackFunction(null);
+            } else {
+                const collection = mongo.db(this.app.get('dbName')).collection('groups');
+                collection.insertMany(groups, function (err, result) {
+                    if (err) {
+                        callbackFunction(null);
+                    } else {
+                        callbackFunction(result.insertedCount);
                     }
                     mongo.close();
                 }.bind(this));
