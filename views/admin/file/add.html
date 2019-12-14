@@ -1,0 +1,48 @@
+{% extends "../../base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Cargar grupos, profesores y alumnos</h2>
+    <br/>
+    <br/>
+    {% if errors and errors.anyError === 1 %}
+        <div class="row">
+            <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Atención! Hay campos con valores incorrectos o se ha producido algún error</span></div>
+        </div>
+    {% endif %}
+    {% if correct %}
+    <div class="row">
+        <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Los datos se han cargado corréctamente</span></div>
+    </div>
+    {% endif %}
+    <form method="post" action="/adm/file/add" enctype="multipart/form-data">
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="professorsFile">Fichero profesores-grupos (.csv)</label>
+                <input type="file" name="professorsFile" class="form-control" accept=".csv" id="professorsFile" />
+                {% if errors and errors.errProfessorsFile != '' %}
+                    <span class="text-danger">{{errors.errProfessorsFile}}</span>
+                {% endif %}
+            </div>
+            <div class="form-group col-sm-12">
+                <label for="studentsFile">Fichero alumnos-grupos (.csv)</label>
+                <input type="file" name="studentsFile" class="form-control" accept=".csv" id="studentsFile" />
+                {% if errors and errors.errStudentsFile != '' %}
+                <span class="text-danger">{{errors.errStudentsFile}}</span>
+                {% endif %}
+            </div>
+            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Cargar Ficheros*</button>
+            <span class="text-danger">*Se pueden cargar ambos ficheros o uno solo, a excepción del de estudiantes que si no se ha cargado previamente la estructura
+                de grupos-profesores no se podrá cargar de forma individual.</span><br/>
+            <span class="text-danger">*Si se cargan los dos ficheros a la vez se <b>borrarán</b> todos los datos existentes, incluidas las notificaciones y slots, aunque se realizará
+                un backup por seguridad.</span><br/>
+            <span class="text-danger">*Si se carga solamente el fichero de <b>profesores-grupos</b> se añadirán los nuevos profesores de haberlos, los nuevos grupos, las nuevas asignaturas y
+                se asignarán los profesores a los grupos indicados en el fichero, pero no se cambiará nada de los grupos no indicados, así como de las asignaturas no incluidas en el fichero.
+                Nunca se eliminarán grupos, asignaturas o profesores que hubiera en la anterior carga y no aparecieran en el nuevo fichero subido.</span><br/>
+            <span class="text-danger">*En caso de cambiar solamente el de <b>alumnos-grupos</b>, se añadirán los nuevos y se incluirán a todos los estudiantes en los grupos indicados en el fichero.
+                No obstante, grupos no indicados en el fichero no se verán modificados, por lo que no se eliminará a estudiantes de los mismos por el simple hecho de no estar en el fichero,
+                para ello deberá subirse un fichero actualizado con los estudiantes asociados a los grupos que se quieren modificar. Nunca se eliminarán alumnos como usuarios, para ello
+                deben cargarse los dos ficheros a la vez de forma que se haga un reset completo del sistema.</span><br/><br/>
+        </div>
+    </form>
+</div>
+{% endblock %}
