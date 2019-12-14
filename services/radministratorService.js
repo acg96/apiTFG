@@ -102,7 +102,7 @@ module.exports = {
                             totalUsers.push(...studentsAdministratorsAndDeletedProfessors);
                             totalUsers.push(...modulesGroupsProfessors.professors);
 
-                            //Backup the proper collections to another not existing values
+                            //Backup the proper collections renaming them to another not existing values
                             this.bdManagement.renameCertainCollections(["users", "groups", "modules"], result => {
                                 if (result) {
                                     //Load the new data
@@ -148,6 +148,10 @@ module.exports = {
                                     });
                                 }
                             });
+                        } else{
+                            callback({
+                                anyError: 1
+                            });
                         }
                     });
                 });
@@ -160,10 +164,91 @@ module.exports = {
             });
         }
     },
-    addFileStudents: function (jsonStudents, callback){ //TODO
-        //Check professors, groups and modules are loaded
-        //Add the new students
-        //Add the students indicated on the file to the corresponding groups
+    addFileStudents: function (jsonStudents, callback){
+        this.bdManagement.getClassGroup({}, groups => {
+            if (groups != null && groups.length > 0){
+                const studentsAndGroupUpdatedWithStudents= this.getStudentsAndGroupsWithStudents(jsonStudents, groups);
+                let infoStudentsCorrect= studentsAndGroupUpdatedWithStudents.students.length > 0 && studentsAndGroupUpdatedWithStudents.groups.length > 0;
+                for (let i= 0; i < studentsAndGroupUpdatedWithStudents.students.length && infoStudentsCorrect; ++i){
+                    if (typeof studentsAndGroupUpdatedWithStudents.students[i] === "undefined") {
+                        infoStudentsCorrect= false;
+                    }
+                }
+                for (let i= 0; i < studentsAndGroupUpdatedWithStudents.groups.length && infoStudentsCorrect; ++i){
+                    if (typeof studentsAndGroupUpdatedWithStudents.groups[i] === "undefined") {
+                        infoStudentsCorrect= false;
+                    }
+                }
+                if (infoStudentsCorrect){
+                    this.bdManagement.getUser({}, users => {
+                        if (users != null){
+                            const professorsAdministratorsAndDeletedStudents = [];
+                            for (let i= 0; i < users.length; ++i){
+                                let passed= false;
+                                if (users[i].role === "student") {
+                                    for (let e = 0; e < studentsAndGroupUpdatedWithStudents.students.length; ++e) {
+                                        if (users[i].username === studentsAndGroupUpdatedWithStudents.students[e].username) {
+                                            studentsAndGroupUpdatedWithStudents.students[e]._id = this.bdManagement.mongoPure.ObjectID(users[i]._id);
+                                            passed = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!passed){
+                                    professorsAdministratorsAndDeletedStudents.push(users[i]);
+                                }
+                            }
+                            const totalUsers = [];
+                            totalUsers.push(...professorsAdministratorsAndDeletedStudents);
+                            totalUsers.push(...studentsAndGroupUpdatedWithStudents.students);
+                            //Backup the proper collections renaming them to another not existing values
+                            this.bdManagement.renameCertainCollections(["users", "groups"], result => {
+                                if (result) {
+                                    //Load the new data
+                                    this.bdManagement.addSomeUsers(totalUsers, numberOfUsersAdded => {
+                                        if (numberOfUsersAdded !== totalUsers.length) {
+                                            callback({
+                                                anyError: 1
+                                            });
+                                        } else {
+                                            this.bdManagement.addSomeClassGroups(studentsAndGroupUpdatedWithStudents.groups, numberOfGroupsAdded => {
+                                                if (numberOfGroupsAdded !== studentsAndGroupUpdatedWithStudents.groups.length) {
+                                                    callback({
+                                                        anyError: 1
+                                                    });
+                                                } else {
+                                                    callback({
+                                                        anyError: 0
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                } else{
+                                    callback({
+                                        anyError: 1
+                                    });
+                                }
+                            });
+                        } else{
+                            callback({
+                                anyError: 1
+                            });
+                        }
+                    });
+                } else {
+                    callback({
+                        anyError: 1,
+                        errStudentsFile: "Formato de archivo incorrecto"
+                    });
+                }
+            } else{
+                callback({
+                    anyError: 1,
+                    errStudentsFile: "Deben haberse cargado previamente asignaturas, grupos y profesores"
+                });
+            }
+        });
     },
     addFiles: function (professorsJson, studentsJson, callback) {
         const modulesGroupsProfessors= this.getModulesGroupsAndProfessors(professorsJson);
@@ -302,12 +387,19 @@ module.exports = {
             for (let i = 0; i < groups.length; ++i) {
                 const moduleShortName = groups[i].name.split(".L.")[0];
                 const groupNumber = groups[i].groupNumber;
+                let groupModified = false;
+                const studentsCurrentGroup = groups[i].students;
+                groups[i].students= [];
                 for (let e = 0; e < studentsJson.length; ++e) {
                     if (studentsJson[e][moduleShortName] != null && studentsJson[e][moduleShortName] === groupNumber) {
+                        groupModified = true;
                         if (!groups[i].students.includes(studentsJson[e]['Email universidad'].split("@")[0].toUpperCase())) {
                             groups[i].students.push(studentsJson[e]['Email universidad'].split("@")[0].toUpperCase());
                         }
                     }
+                }
+                if (!groupModified){
+                    groups[i].students= studentsCurrentGroup;
                 }
             }
             return {
