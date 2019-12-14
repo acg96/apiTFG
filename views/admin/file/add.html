@@ -18,14 +18,14 @@
         <div class="form-row">
             <div class="form-group col-sm-12">
                 <label for="professorsFile">Fichero profesores-grupos (.csv)</label>
-                <input type="file" name="professorsFile" class="form-control" accept=".csv" id="professorsFile" required />
+                <input type="file" name="professorsFile" class="form-control" accept=".csv" id="professorsFile" />
                 {% if errors and errors.errProfessorsFile != '' %}
                     <span class="text-danger">{{errors.errProfessorsFile}}</span>
                 {% endif %}
             </div>
             <div class="form-group col-sm-12">
                 <label for="studentsFile">Fichero alumnos-grupos (.csv)</label>
-                <input type="file" name="studentsFile" class="form-control" accept=".csv" id="studentsFile" required />
+                <input type="file" name="studentsFile" class="form-control" accept=".csv" id="studentsFile" />
                 {% if errors and errors.errStudentsFile != '' %}
                 <span class="text-danger">{{errors.errStudentsFile}}</span>
                 {% endif %}
@@ -33,9 +33,14 @@
             <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Cargar Ficheros*</button>
             <span class="text-danger">*Se pueden cargar ambos ficheros o uno solo, a excepción del de estudiantes que si no se ha cargado previamente la estructura
                 de grupos-profesores no se podrá cargar de forma individual.</span><br/>
-            <span class="text-danger">*La carga de ficheros borrará todos los datos existentes hasta el momento, incluidas notificaciones en caso de que se carguen ambos ficheros
-            o solamente se cambie el de profesores-grupos. En caso de cambiar solamente el de alumnos, se añadirán los nuevos y se incluirán en los grupos ya existentes según corresponda,
-                pero no se eliminarán de los grupos en los que ya estuvieran, para ello se deben cargar de nuevo los dos ficheros para que se resetee toda la base de datos.</span>
+            <span class="text-danger">*Si se cargan los dos ficheros a la vez se <b>borrarán</b> todos los datos existentes, incluidas las notificaciones y slots, aunque se realizará
+                un backup por seguridad.</span><br/>
+            <span class="text-danger">*Si se carga solamente el fichero de <b>profesores-grupos</b> se añadirán los nuevos profesores de haberlos, los nuevos grupos, las nuevas asignaturas y
+                se asignarán los profesores a los grupos indicados en el fichero, pero no se cambiará nada de los grupos no indicados, así como de las asignaturas no incluidas en el fichero.
+                Nunca se eliminarán grupos, asignaturas o profesores que hubiera en la anterior carga y no aparecieran en el nuevo fichero subido.</span><br/>
+            <span class="text-danger">*En caso de cambiar solamente el de <b>alumnos-grupos</b>, se añadirán los nuevos y se incluirán a todos los estudiantes en los grupos indicados en el fichero.
+                No obstante, grupos no indicados en el fichero no se verán modificados, por lo que no se eliminará a estudiantes de los mismos por el simple hecho de no estar en el fichero,
+                para ello deberá subirse un fichero actualizado con los estudiantes asociados a los grupos que se quieren modificar.</span><br/><br/>
         </div>
     </form>
 </div>

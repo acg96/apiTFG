@@ -1,9 +1,169 @@
 module.exports = {
     app: null,
     bdManagement: null,
-    init: function (app, bdManagement) {
+    csvToJson: null,
+    init: function (app, bdManagement, csvToJson) {
         this.app = app;
         this.bdManagement = bdManagement;
+        this.csvToJson = csvToJson;
+    },
+    getJsonFromCsv: function (filePath, callback){
+        this.csvToJson({
+            trim: true,
+            delimiter: ";",
+            ignoreEmpty: true,
+            noheader: false,
+            checkColumn: true
+        }).fromFile(filePath).then((jsonFile)=>{
+            callback(jsonFile);
+        }).catch((err) => {
+            if (err){
+                callback(null);
+            }
+        });
+    },
+    addFileProfessors: function (jsonProfessors, callback){
+        const modulesGroupsProfessors= this.getModulesGroupsAndProfessors(jsonProfessors);
+        let infoProfessorsCorrect= modulesGroupsProfessors.modules.length > 0 || modulesGroupsProfessors.groups.length > 0 || modulesGroupsProfessors.professors.length > 0;
+        for (let i= 0; i < modulesGroupsProfessors.modules.length && infoProfessorsCorrect; ++i){
+            if (typeof modulesGroupsProfessors.modules[i] === "undefined"){
+                infoProfessorsCorrect= false;
+            }
+        }
+        for (let i= 0; i < modulesGroupsProfessors.groups.length && infoProfessorsCorrect; ++i){
+            if (typeof modulesGroupsProfessors.groups[i] === "undefined"){
+                infoProfessorsCorrect= false;
+            }
+        }
+        for (let i= 0; i < modulesGroupsProfessors.professors.length && infoProfessorsCorrect; ++i){
+            if (typeof modulesGroupsProfessors.professors[i] === "undefined"){
+                infoProfessorsCorrect= false;
+            }
+        }
+        if (infoProfessorsCorrect){
+            this.bdManagement.getModule({}, modules => {
+                this.bdManagement.getUser({}, users => {
+                    this.bdManagement.getClassGroup({}, groups => {
+                        if (modules != null && users != null && groups != null){
+                            const modulesDeleted = [];
+                            for (let i= 0; i < modules.length; ++i){
+                                let passed= false;
+                                for (let e= 0; e < modulesGroupsProfessors.modules.length; ++e) {
+                                    if (modules[i].code === modulesGroupsProfessors.modules[e].code){
+                                        modulesGroupsProfessors.modules[e]._id= this.bdManagement.mongoPure.ObjectID(modules[i]._id);
+                                        passed= true;
+                                        break;
+                                    }
+                                }
+                                if (!passed){
+                                    modulesDeleted.push(modules[i]);
+                                }
+                            }
+                            const studentsAdministratorsAndDeletedProfessors = [];
+                            for (let i= 0; i < users.length; ++i){
+                                let passed= false;
+                                if (users[i].role === "professor") {
+                                    for (let e = 0; e < modulesGroupsProfessors.professors.length; ++e) {
+                                        if (users[i].username === modulesGroupsProfessors.professors[e].username) {
+                                            modulesGroupsProfessors.professors[e]._id = this.bdManagement.mongoPure.ObjectID(users[i]._id);
+                                            passed = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (!passed){
+                                    studentsAdministratorsAndDeletedProfessors.push(users[i]);
+                                }
+                            }
+                            const groupsDeleted = [];
+                            for (let i= 0; i < groups.length; ++i){
+                                let passed= false;
+                                for (let e= 0; e < modulesGroupsProfessors.groups.length; ++e) {
+                                    if (groups[i].name === modulesGroupsProfessors.groups[e].name){
+                                        modulesGroupsProfessors.groups[e]._id= this.bdManagement.mongoPure.ObjectID(groups[i]._id);
+                                        modulesGroupsProfessors.groups[e].students= groups[i].students;
+                                        passed= true;
+                                        break;
+                                    }
+                                }
+                                if (!passed){
+                                    groupsDeleted.push(groups[i]);
+                                }
+                            }
+                            const totalGroups = [];
+                            totalGroups.push(...groupsDeleted);
+                            totalGroups.push(...modulesGroupsProfessors.groups);
+
+                            const totalModules = [];
+                            totalModules.push(...modulesDeleted);
+                            totalModules.push(...modulesGroupsProfessors.modules);
+
+                            const totalUsers = [];
+                            totalUsers.push(...studentsAdministratorsAndDeletedProfessors);
+                            totalUsers.push(...modulesGroupsProfessors.professors);
+
+                            //Backup the proper collections to another not existing values
+                            this.bdManagement.renameCertainCollections(["users", "groups", "modules"], result => {
+                                if (result) {
+                                    //Load the new data
+                                    this.bdManagement.addSomeUsers(totalUsers, numberOfUsersAdded => {
+                                        if (numberOfUsersAdded !== totalUsers.length) {
+                                            callback({
+                                                anyError: 1
+                                            });
+                                        } else {
+                                            this.bdManagement.addSomeClassGroups(totalGroups, numberOfGroupsAdded => {
+                                                if (numberOfGroupsAdded !== totalGroups.length) {
+                                                    callback({
+                                                        anyError: 1
+                                                    });
+                                                } else {
+                                                    //Update the modules with the group ids
+                                                    this.getModulesWithGroupIds(totalModules, modulesUpdated => {
+                                                        if (modulesUpdated != null) {
+                                                            this.bdManagement.addSomeModules(modulesUpdated, numberOfModulesAdded => {
+                                                                if (numberOfModulesAdded !== modulesUpdated.length) {
+                                                                    callback({
+                                                                        anyError: 1
+                                                                    });
+                                                                } else {
+                                                                    callback({
+                                                                        anyError: 0
+                                                                    });
+                                                                }
+                                                            });
+                                                        } else {
+                                                            callback({
+                                                                anyError: 1
+                                                            });
+                                                        }
+                                                    });
+                                                }
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    callback({
+                                        anyError: 1
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+        } else{
+            callback({
+                anyError: 1,
+                errProfessorsFile: "Formato de archivo incorrecto"
+            });
+        }
+    },
+    addFileStudents: function (jsonStudents, callback){ //TODO
+        //Check professors, groups and modules are loaded
+        //Add the new students
+        //Add the students indicated on the file to the corresponding groups
     },
     addFiles: function (professorsJson, studentsJson, callback) {
         const modulesGroupsProfessors= this.getModulesGroupsAndProfessors(professorsJson);

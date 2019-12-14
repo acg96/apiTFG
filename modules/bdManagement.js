@@ -43,6 +43,12 @@ module.exports = {
         });
     },
     renameAllCollections: function(callback){
+        const collectionNames= ["users", "groups", "notifications", "modules", "slots"];
+        this.renameCertainCollections(collectionNames, resultRemaining => {
+            callback(resultRemaining);
+        });
+    },
+    renameCertainCollections: function(collectionNames, callback){
         let mongo = this.getMongoClientObject();
         mongo.connect(function(err) {
             if (err){
@@ -53,7 +59,6 @@ module.exports = {
                         callback(false);
                     } else{
                         const timeMilliseconds= this.app.get('currentTimeWithSeconds')().valueOf().toString();
-                        const collectionNames= ["users", "groups", "notifications", "modules", "slots"];
                         const collectionsToChange= [];
                         for (let i= 0; i < collectionsInfo.length; ++i){
                             if (collectionNames.includes(collectionsInfo[i].name) && !collectionsToChange.includes(collectionsInfo[i].name)){

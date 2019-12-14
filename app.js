@@ -108,7 +108,7 @@ rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
 const rAdministratorService= require("./services/radministratorService.js");
-rAdministratorService.init(app, bdManagement);
+rAdministratorService.init(app, bdManagement, csvToJson);
 
 // router actions
 const routerActions = express.Router();
@@ -292,7 +292,7 @@ require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
 require("./routes/rapp.js")(app);
 require("./routes/ruser.js")(app, logger, rUserService);
 require("./routes/rprofessor.js")(app, logger, rProfessorService);
-require("./routes/radministrator.js")(app, logger, rAdministratorService, csvToJson);
+require("./routes/radministrator.js")(app, logger, rAdministratorService);
 
 // When a url not exists
 app.use(function(req, res) {
