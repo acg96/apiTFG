@@ -157,6 +157,28 @@ module.exports = {
             }
         }.bind(this));
     },
+    getListOfCollections: function(callback){
+        let mongo = this.getMongoClientObject();
+        mongo.connect(function(err) {
+            if (err){
+                callback(null);
+            } else{
+                mongo.db(this.app.get('dbName')).listCollections().toArray((err, collectionsInfo) => {
+                    if (err){
+                        callback(null);
+                    } else{
+                        const collectionNames= [];
+                        for (let i= 0; i < collectionsInfo.length; ++i){
+                            if (!collectionNames.includes(collectionsInfo[i].name)) {
+                                collectionNames.push(collectionsInfo[i].name);
+                            }
+                        }
+                        callback(collectionNames);
+                    }
+                });
+            }
+        }.bind(this));
+    },
     renameCertainCollections: function(collectionNames, callback){
         let mongo = this.getMongoClientObject();
         const allCollections= ["users", "groups", "notifications", "modules", "slots"];

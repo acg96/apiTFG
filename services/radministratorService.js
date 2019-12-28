@@ -164,6 +164,29 @@ module.exports = {
             });
         }
     },
+    getBackupsList: function(callback){
+        this.bdManagement.getListOfCollections(collectionNames => {
+            if (collectionNames != null){
+                const collectionBaseNames = ["users", "groups", "notifications", "modules", "slots"];
+                const backupsMsDates = [];
+                for (let i= 0; i < collectionNames.length; ++i){
+                    for (let e= 0; e < collectionBaseNames.length; ++e) {
+                        const arrayName = collectionNames[i].split(collectionBaseNames[e]);
+                        if (arrayName.length === 2 && arrayName[1].trim() !== ""){
+                            const msDate = arrayName[1];
+                            if (!backupsMsDates.includes(msDate)){
+                                backupsMsDates.push(msDate);
+                            }
+                            break;
+                        }
+                    }
+                }
+                callback(backupsMsDates);
+            } else{
+                callback([]);
+            }
+        });
+    },
     addFileStudents: function (jsonStudents, callback){
         this.bdManagement.getClassGroup({}, groups => {
             if (groups != null && groups.length > 0){
