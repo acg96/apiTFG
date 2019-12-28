@@ -194,7 +194,7 @@ module.exports = {
             for (let i= 0; i < allCollectionsBaseNames.length; ++i){
                 allCollectionsToErase.push(allCollectionsBaseNames[i] + backupIdentificator);
             }
-            this.bdManagement.deleteBackup(allCollectionsToErase, backupIdentificator, resultErasing => {
+            this.bdManagement.deleteBackup(allCollectionsToErase, resultErasing => {
                 callback(resultErasing);
             });
         } else{

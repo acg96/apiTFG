@@ -215,7 +215,7 @@ module.exports = {
             callback(false);
         }
     },
-    deleteBackup: function(collectionNamesToDelete, backupIdentificator, callback){
+    deleteBackup: function(collectionNamesToDelete, callback){
         if (collectionNamesToDelete != null){
             this.getListOfCollections(listOfCollections => {
                 if (listOfCollections != null){
