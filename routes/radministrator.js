@@ -19,6 +19,68 @@ module.exports = function (app, logger, administratorService) {
         res.render('admin/file/add.html', {username: req.session.username, role: req.session.role, errors: errors, correct: correct});
     });
 
+    app.get('/adm/back/rest', function (req, res) {
+        let errors= null;
+        if (req.session.errorsBackupDetected != null){
+            errors= req.session.errorsBackupDetected;
+            req.session.errorsBackupDetected= null;
+        }
+        let correct= null;
+        if (req.session.correctBackupDetected != null){
+            correct= req.session.correctBackupDetected;
+            req.session.correctBackupDetected= null;
+        }
+        administratorService.getBackupsList(dateMsStringList => {
+            const moment = app.get("moment");
+            const objsBackupList = [];
+            //Order the dates from major to minor
+            dateMsStringList.sort((a, b) => {
+                const aInt = parseFloat(a);
+                const bInt = parseFloat(b);
+                return b - a;
+            });
+            for (let i= 0; i < dateMsStringList.length; ++i){
+                const objBackupList = {
+                    backupMS: parseFloat(dateMsStringList[i]),
+                    dateToShow: moment(parseFloat(dateMsStringList[i])).format("DD MMM YYYY HH:mm")
+                };
+                objsBackupList.push(objBackupList);
+            }
+            res.render('admin/backup/restore.html', {username: req.session.username, role: req.session.role, errors: errors, correct: correct, backups: objsBackupList});
+        });
+    });
+
+    app.post('/adm/back/rest', function (req, res) {
+        let optSelected = req.body.backupSelector;
+        if (optSelected != null && optSelected.trim() !== "") {
+            optSelected = optSelected.trim();
+            //Check the backup exists
+            administratorService.getBackupsList(dateMsStringList => {
+                if (dateMsStringList.includes(optSelected)){
+                    administratorService.restoreBackup(optSelected, resultRestore => {
+                        if (resultRestore){
+                            req.session.correctBackupDetected= true;
+                            logger.info("Backup restored by " + req.session.username + " - IP: " + res.ipReal);
+                            res.redirect("/adm/back/rest");
+                        } else{
+                            req.session.errorsBackupDetected= true;
+                            logger.info("Backup restored has failed. " + req.session.username + " - IP: " + res.ipReal);
+                            res.redirect("/adm/back/rest");
+                        }
+                    });
+                } else{
+                    req.session.errorsBackupDetected= true;
+                    logger.info("Backup restored has failed. " + req.session.username + " - IP: " + res.ipReal);
+                    res.redirect("/adm/back/rest");
+                }
+            });
+        } else{
+            req.session.errorsBackupDetected= true;
+            logger.info("Backup restored has failed. " + req.session.username + " - IP: " + res.ipReal);
+            res.redirect("/adm/back/rest");
+        }
+    });
+
     app.post('/adm/file/add', function (req, res) {
         const postInfo= req.files;
         if (postInfo.professorsFile != null && postInfo.studentsFile != null && postInfo.professorsFile.size !== 0 && postInfo.studentsFile.size !== 0){

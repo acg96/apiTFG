@@ -1,0 +1,39 @@
+{% extends "../../base.html" %}
+{% block body %}
+<script src="/pb/js/restoreBackup.js"></script>
+<div class="container">
+    <h2>Restaurar copia de seguridad</h2>
+    <br/>
+    <br/>
+    {% if errors != null %}
+        <div class="row">
+            <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Se ha producido un error al intentar restaurar la copia de seguridad. Antes de usar el sistema compruébese que
+            la base de datos tiene las colecciones adecuadas y no está corrompida.</span></div>
+        </div>
+    {% endif %}
+    {% if correct != null %}
+    <div class="row">
+        <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">El backup se ha restaurado corréctamente</span></div>
+    </div>
+    {% endif %}
+    <form method="post" action="/adm/back/rest">
+        <div class="form-row">
+            <div class="form-group col-sm-12">
+                <label for="backupSelector">Seleccionar backup</label>
+                <select class="form-control" name="backupSelector" id="backupSelector" onchange="enableBackupButton()">
+                    {% if backups.length > 0 %}
+                    <option disabled selected value> -- Escoge una opción -- </option>
+                    {% else %}
+                    <option disabled selected value> -- No hay backups -- </option>
+                    {% endif %}
+                    {% for backup in backups %}
+                    <option value="{{backup.backupMS}}">{{backup.dateToShow}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" id="btnRestoreBackup" type="submit" disabled>Restaurar</button>
+            <br/><br/>
+        </div>
+    </form>
+</div>
+{% endblock %}
