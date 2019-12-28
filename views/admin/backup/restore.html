@@ -1,6 +1,6 @@
 {% extends "../../base.html" %}
 {% block body %}
-<script src="/pb/js/restoreBackup.js"></script>
+<script src="/pb/js/utilsBackup.js"></script>
 <div class="container">
     <h2>Restaurar copia de seguridad</h2>
     <br/>
@@ -20,7 +20,7 @@
         <div class="form-row">
             <div class="form-group col-sm-12">
                 <label for="backupSelector">Seleccionar backup</label>
-                <select class="form-control" name="backupSelector" id="backupSelector" onchange="enableBackupButton()">
+                <select class="form-control" name="backupSelector" id="backupSelector" onchange="enableRestoreBackupButton()">
                     {% if backups.length > 0 %}
                     <option disabled selected value> -- Escoge una opción -- </option>
                     {% else %}

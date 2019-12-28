@@ -50,6 +50,69 @@ module.exports = function (app, logger, administratorService) {
         });
     });
 
+    app.get('/adm/back/del', function (req, res) {
+        let errors= null;
+        if (req.session.errorsDelBackupDetected != null){
+            errors= req.session.errorsDelBackupDetected;
+            req.session.errorsDelBackupDetected= null;
+        }
+        let correct= null;
+        if (req.session.correctDelBackupDetected != null){
+            correct= req.session.correctDelBackupDetected;
+            req.session.correctDelBackupDetected= null;
+        }
+        administratorService.getBackupsList(dateMsStringList => {
+            const moment = app.get("moment");
+            const objsBackupList = [];
+            //Order the dates from major to minor
+            dateMsStringList.sort((a, b) => {
+                const aInt = parseFloat(a);
+                const bInt = parseFloat(b);
+                return b - a;
+            });
+            for (let i= 0; i < dateMsStringList.length; ++i){
+                const objBackupList = {
+                    backupMS: parseFloat(dateMsStringList[i]),
+                    dateToShow: moment(parseFloat(dateMsStringList[i])).format("DD MMM YYYY HH:mm")
+                };
+                objsBackupList.push(objBackupList);
+            }
+            res.render('admin/backup/delete.html', {username: req.session.username, role: req.session.role, errors: errors, correct: correct, backups: objsBackupList});
+        });
+    });
+
+    app.post('/adm/back/del', function (req, res) {
+        let optSelected = req.body.backupSelector;
+        const confirmErase = req.body.listCheckBox;
+        if (optSelected != null && optSelected.trim() !== "" && confirmErase != null && confirmErase) {
+            optSelected = optSelected.trim();
+            //Check the backup exists
+            administratorService.getBackupsList(dateMsStringList => {
+                if (dateMsStringList.includes(optSelected)){
+                    administratorService.deleteBackup(optSelected, resultErase => {
+                        if (resultErase){
+                            req.session.correctDelBackupDetected= true;
+                            logger.info("Backup erase by " + req.session.username + " - IP: " + res.ipReal);
+                            res.redirect("/adm/back/del");
+                        } else{
+                            req.session.errorsDelBackupDetected= true;
+                            logger.info("Backup erase has failed. " + req.session.username + " - IP: " + res.ipReal);
+                            res.redirect("/adm/back/del");
+                        }
+                    });
+                } else{
+                    req.session.errorsDelBackupDetected= true;
+                    logger.info("Backup erase has failed. " + req.session.username + " - IP: " + res.ipReal);
+                    res.redirect("/adm/back/del");
+                }
+            });
+        } else{
+            req.session.errorsDelBackupDetected= true;
+            logger.info("Backup erase has failed. " + req.session.username + " - IP: " + res.ipReal);
+            res.redirect("/adm/back/del");
+        }
+    });
+
     app.post('/adm/back/rest', function (req, res) {
         let optSelected = req.body.backupSelector;
         if (optSelected != null && optSelected.trim() !== "") {

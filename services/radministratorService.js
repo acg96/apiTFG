@@ -186,6 +186,21 @@ module.exports = {
             callback(false);
         }
     },
+    deleteBackup: function(backupIdentificator, callback){
+        if (backupIdentificator != null && backupIdentificator.trim() !== ""){
+            //Delete the requested backup
+            const allCollectionsBaseNames= ["users", "groups", "notifications", "modules", "slots"];
+            const allCollectionsToErase= [];
+            for (let i= 0; i < allCollectionsBaseNames.length; ++i){
+                allCollectionsToErase.push(allCollectionsBaseNames[i] + backupIdentificator);
+            }
+            this.bdManagement.deleteBackup(allCollectionsToErase, resultErasing => {
+                callback(resultErasing);
+            });
+        } else{
+            callback(false);
+        }
+    },
     getBackupsList: function(callback){
         this.bdManagement.getListOfCollections(collectionNames => {
             if (collectionNames != null){
