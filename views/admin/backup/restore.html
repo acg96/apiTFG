@@ -7,7 +7,8 @@
     <br/>
     {% if errors != null %}
         <div class="row">
-            <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Se ha producido un error al intentar restaurar la copia de seguridad</span></div>
+            <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Se ha producido un error al intentar restaurar la copia de seguridad. Antes de usar el sistema compruébese que
+            la base de datos tiene las colecciones adecuadas y no está corrompida.</span></div>
         </div>
     {% endif %}
     {% if correct != null %}

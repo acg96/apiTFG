@@ -179,6 +179,66 @@ module.exports = {
             }
         }.bind(this));
     },
+    restoreBackup: function(collectionNamesToRestore, backupIdentificator, callback){
+        if (collectionNamesToRestore != null){
+            this.getListOfCollections(listOfCollections => {
+                if (listOfCollections != null){
+                    const existingCollectionsToRestore = [];
+                    for (let i= 0; i < collectionNamesToRestore.length; ++i){
+                        const resultList = listOfCollections.filter(currentCollection => currentCollection === collectionNamesToRestore[i]);
+                        if (resultList.length > 0){
+                            if (!existingCollectionsToRestore.includes(collectionNamesToRestore[i])){
+                                existingCollectionsToRestore.push(collectionNamesToRestore[i]);
+                            }
+                        }
+                    }
+                    let mongo = this.getMongoClientObject();
+                    if (existingCollectionsToRestore.length > 0) {
+                        mongo.connect(function(err) {
+                            if (err) {
+                                callback(false);
+                            } else {
+                                this.restoreCollection(existingCollectionsToRestore, backupIdentificator, 0, mongo, 0, 0, resultRestoring => {
+                                    callback(resultRestoring);
+                                    mongo.close();
+                                });
+                            }
+                        }.bind(this));
+                    } else{
+                        callback(false);
+                    }
+                } else{
+                    callback(false);
+                }
+            });
+        } else{
+            callback(false);
+        }
+    },
+    restoreCollection: function(collectionsInfo, backupIdentificator, index, mongo, errTime, anyErr, callback){
+        const oldName= collectionsInfo[index];
+        const newName = oldName.split(backupIdentificator)[0];
+        const collection= mongo.db(this.app.get('dbName')).collection(oldName);
+        collection.rename(newName, err => {
+            if (err){
+                if (errTime < 8){
+                    this.restoreCollection(collectionsInfo, backupIdentificator, index, mongo, ++errTime, anyErr, callback);
+                } else{
+                    if (index === collectionsInfo.length - 1){
+                        callback(false);
+                    } else {
+                        this.restoreCollection(collectionsInfo, backupIdentificator, ++index, mongo, 0, 1, callback);
+                    }
+                }
+            } else{
+                if (index === collectionsInfo.length - 1){
+                    callback(anyErr === 0);
+                } else {
+                    this.restoreCollection(collectionsInfo, backupIdentificator, ++index, mongo, 0, anyErr, callback);
+                }
+            }
+        });
+    },
     renameCertainCollections: function(collectionNames, callback){
         let mongo = this.getMongoClientObject();
         const allCollections= ["users", "groups", "notifications", "modules", "slots"];

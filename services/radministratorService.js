@@ -164,6 +164,28 @@ module.exports = {
             });
         }
     },
+    restoreBackup: function(backupIdentificator, callback){
+        if (backupIdentificator != null && backupIdentificator.trim() !== ""){
+            //Backup the current data
+            this.bdManagement.renameAllCollections(result => {
+                if (result){
+                    //Restore the requested backup
+                    const allCollectionsBaseNames= ["users", "groups", "notifications", "modules", "slots"];
+                    const allCollectionsToChange= [];
+                    for (let i= 0; i < allCollectionsBaseNames.length; ++i){
+                        allCollectionsToChange.push(allCollectionsBaseNames[i] + backupIdentificator);
+                    }
+                    this.bdManagement.restoreBackup(allCollectionsToChange, backupIdentificator, resultRestoring => {
+                        callback(resultRestoring);
+                    });
+                } else{
+                    callback(false);
+                }
+            });
+        } else{
+            callback(false);
+        }
+    },
     getBackupsList: function(callback){
         this.bdManagement.getListOfCollections(collectionNames => {
             if (collectionNames != null){

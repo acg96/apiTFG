@@ -51,8 +51,34 @@ module.exports = function (app, logger, administratorService) {
     });
 
     app.post('/adm/back/rest', function (req, res) {
-        const optSelected = req.body.backupSelector;
-        
+        let optSelected = req.body.backupSelector;
+        if (optSelected != null && optSelected.trim() !== "") {
+            optSelected = optSelected.trim();
+            //Check the backup exists
+            administratorService.getBackupsList(dateMsStringList => {
+                if (dateMsStringList.includes(optSelected)){
+                    administratorService.restoreBackup(optSelected, resultRestore => {
+                        if (resultRestore){
+                            req.session.correctBackupDetected= true;
+                            logger.info("Backup restored by " + req.session.username + " - IP: " + res.ipReal);
+                            res.redirect("/adm/back/rest");
+                        } else{
+                            req.session.errorsBackupDetected= true;
+                            logger.info("Backup restored has failed. " + req.session.username + " - IP: " + res.ipReal);
+                            res.redirect("/adm/back/rest");
+                        }
+                    });
+                } else{
+                    req.session.errorsBackupDetected= true;
+                    logger.info("Backup restored has failed. " + req.session.username + " - IP: " + res.ipReal);
+                    res.redirect("/adm/back/rest");
+                }
+            });
+        } else{
+            req.session.errorsBackupDetected= true;
+            logger.info("Backup restored has failed. " + req.session.username + " - IP: " + res.ipReal);
+            res.redirect("/adm/back/rest");
+        }
     });
 
     app.post('/adm/file/add', function (req, res) {
