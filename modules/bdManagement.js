@@ -215,6 +215,30 @@ module.exports = {
             callback(false);
         }
     },
+    deleteBackup: function(collectionNamesToDelete, backupIdentificator, callback){
+        if (collectionNamesToDelete != null){
+            this.getListOfCollections(listOfCollections => {
+                if (listOfCollections != null){
+                    const existingCollectionsToDelete = [];
+                    for (let i= 0; i < collectionNamesToDelete.length; ++i){
+                        const resultList = listOfCollections.filter(currentCollection => currentCollection === collectionNamesToDelete[i]);
+                        if (resultList.length > 0){
+                            if (!existingCollectionsToDelete.includes(collectionNamesToDelete[i])){
+                                existingCollectionsToDelete.push(collectionNamesToDelete[i]);
+                            }
+                        }
+                    }
+                    this.deleteCollections(existingCollectionsToDelete, resultErasing => {
+                        callback(resultErasing);
+                    });
+                } else{
+                    callback(false);
+                }
+            });
+        } else{
+            callback(false);
+        }
+    },
     restoreCollection: function(collectionsInfo, backupIdentificator, index, mongo, errTime, anyErr, callback){
         const oldName= collectionsInfo[index];
         const newName = oldName.split(backupIdentificator)[0];
@@ -283,29 +307,34 @@ module.exports = {
     getUser: function (criteria, callbackFunction) {
         this.getValuesFromCollection(criteria, 'users', callbackFunction);
     },
-    resetMongo: function (callbackFunction) {
+    deleteCollections: function(collectionNames, callbackFunction){
         const mongo = this.getMongoClientObject();
         mongo.connect(function(err) {
             if (err) {
-                callbackFunction(null);
+                callbackFunction(false);
             } else {
-                const collectionUsers = mongo.db(this.app.get('dbName')).collection('users');
-                collectionUsers.drop().then(() => {
-                }, () => {});
-                const collectionSlots = mongo.db(this.app.get('dbName')).collection('slots');
-                collectionSlots.drop().then(() => {
-                }, () => {});
-                const collectionGroups = mongo.db(this.app.get('dbName')).collection('groups');
-                collectionGroups.drop().then(() => {
-                }, () => {});
-                const collectionModules = mongo.db(this.app.get('dbName')).collection('modules');
-                collectionModules.drop().then(() => {
-                }, () => {});
-                const collectionNotifications = mongo.db(this.app.get('dbName')).collection('notifications');
-                collectionNotifications.drop().then(() => {
-                }, () => {});
-                callbackFunction(true);
-                mongo.close();
+                let totalErase = 0;
+                let withoutErrors = true;
+                for (let i = 0; i < collectionNames.length; ++i){
+                    const currentCollection = mongo.db(this.app.get('dbName')).collection(collectionNames[i]);
+                    currentCollection.drop().then(() => {
+                        ++totalErase;
+                        if (totalErase === collectionNames.length){
+                            mongo.close();
+                            callbackFunction(withoutErrors);
+                        }
+                    }, () => {
+                        ++totalErase;
+                        withoutErrors = false;
+                        if (totalErase === collectionNames.length){
+                            mongo.close();
+                            callbackFunction(withoutErrors);
+                        }
+                    });
+                }
+                if (collectionNames.length <= 0){
+                    callbackFunction(false);
+                }
             }
         }.bind(this));
     },
