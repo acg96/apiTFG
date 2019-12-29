@@ -38,7 +38,7 @@ featuresDataTableShort["order"]= [[1, "desc"]]; //Sorted by last notification da
 function openModal(option) {
     const modalContent= $('#modalContent');
     const studentSelected = option;
-    $("#modalHeaderTitle").text(studentSelected);
+    $("#modalHeaderTitle").text(studentSelected === "NoUserProvided" ? "Sin usuario" : studentSelected);
     let htmlToLoad = "<table class='table table-hover' id='tableNotificationsDetails'>";
     htmlToLoad += tableHeadersDetail;
     htmlToLoad += "</table>";

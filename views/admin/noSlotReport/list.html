@@ -1,7 +1,7 @@
 {% extends "../../base.html" %}
 {% block body %}
 <div class="container">
-    <h2>Ver notificaciones</h2>
+    <h2>Ver notificaciones sin slot asociado</h2>
     <div id="modalView" class="modal">
         <!-- Modal content -->
         <div class="modal-content" style="z-index: 99 !important;">
@@ -27,9 +27,17 @@
                 {% for student in students %}
                 <tr>
                 {% if student.noProblems %}
+                    {% if student.username === "NoUserProvided" %}
+                    <td>Sin usuario</td>
+                    {% else %}
                     <td>{{student.username}}</td>
+                    {% endif %}
                 {% else %}
+                    {% if student.username === "NoUserProvided" %}
+                    <td style="color:#EA4335;">Sin usuario</td>
+                    {% else %}
                     <td style="color:#EA4335;">{{student.username}}</td>
+                    {% endif %}
                 {% endif %}
                     <td data-sort="{{student.msMajorDate}}">{{student.stringMajorDate}}</td>
                     <td>{{student.numberNotifications}}</td>
