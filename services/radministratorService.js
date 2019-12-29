@@ -186,6 +186,66 @@ module.exports = {
             callback(false);
         }
     },
+    getSignalReportList: function(callback){
+        this.bdManagement.getNotifications({slotId: "-2"}, signalsList => {
+            if (signalsList != null){
+                const moment = this.app.get("moment");
+                const signalsArray = [];
+                const signalsObjArray = [];
+                for (let i = 0; i < signalsList.length; ++i){
+                    let intIps= "";
+                    signalsList[i].intIps.sort((a, b) => a - b);
+                    for (let j= 0; j < signalsList[i].intIps.length; ++j){
+                        if (j === 0){
+                            intIps+= signalsList[i].intIps[j];
+                        } else{
+                            intIps+= ", " + signalsList[i].intIps[j];
+                        }
+                    }
+                    const notificationObj = {
+                        actionTimeMS: signalsList[i].actionTime,
+                        actionTime: moment(signalsList[i].actionTime).format("DD MMM YYYY HH:mm:ss"),
+                        tofCache: signalsList[i].tofCache ? "Activado" : "Desactivado"
+                    };
+                    const currentExtIp = signalsList[i].requestExtIp === "::1" ? "localhost" : signalsList[i].requestExtIp === null ? "localhost" : signalsList[i].requestExtIp.replace("::ffff:", "");
+                    const currentName = currentExtIp.replace(/\./g, "") + "-" + intIps.replace(/ /g, "").replace(/\./g, "").replace(/,/g, "");
+                    if (!signalsArray.includes(currentName)){
+                        signalsArray.push(currentName);
+                        const signalObj = {
+                            signalName: currentName,
+                            extIp: currentExtIp,
+                            intIps: intIps,
+                            msMajorDate: notificationObj.actionTimeMS,
+                            stringMajorDate: notificationObj.actionTime,
+                            numberOfSignals: 1,
+                            review: false,
+                            notificationsList: [notificationObj]
+                        };
+                        signalsObjArray.push(signalObj);
+                    } else{
+                        const resultArray = signalsObjArray.filter(currentSignal => currentSignal.signalName === currentName);
+                        ++ resultArray[0].numberOfSignals;
+                        resultArray[0].msMajorDate = resultArray[0].msMajorDate < notificationObj.actionTimeMS ? notificationObj.actionTimeMS : resultArray[0].msMajorDate;
+                        resultArray[0].stringMajorDate = resultArray[0].msMajorDate === notificationObj.actionTimeMS ? notificationObj.actionTime : resultArray[0].stringMajorDate;
+                        resultArray[0].notificationsList.push(notificationObj);
+                    }
+                }
+                let msDateSum = 0;
+                for (let i = 0; i < signalsObjArray.length; ++i){
+                    msDateSum += signalsObjArray[i].msMajorDate; //To calculate the average of the signal notifications date
+                    signalsObjArray[i].notificationsList = JSON.stringify(signalsObjArray[i].notificationsList);
+                }
+                const averageDateMS = msDateSum/signalsObjArray.length;
+                //All the signals under the average date are due to be reviewed
+                for (let i = 0; i < signalsObjArray.length; ++i){
+                    signalsObjArray[i].review = signalsObjArray[i].msMajorDate < averageDateMS;
+                }
+                callback(signalsObjArray);
+            } else{
+                callback([]);
+            }
+        });
+    },
     getNoSlotReportList: function(callback){
         this.bdManagement.getNotifications({slotId: "-1", idUser: {$ne: null}}, notificationsList => {
             if (notificationsList != null){

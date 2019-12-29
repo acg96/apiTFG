@@ -25,6 +25,12 @@ module.exports = function (app, logger, administratorService) {
         });
     });
 
+    app.get('/adm/signal-report/list', function (req, res) {
+        administratorService.getSignalReportList(signalsList => {
+            res.render('admin/signalReport/list.html', {username: req.session.username, role: req.session.role, signals: signalsList});
+        });
+    });
+
     app.get('/adm/back/rest', function (req, res) {
         let errors= null;
         if (req.session.errorsBackupDetected != null){
