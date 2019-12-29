@@ -389,7 +389,7 @@ module.exports = {
                                         moreInfo: notifications[e].moreInfo,
                                         somethingWrong: notifications[e].somethingWrong,
                                         tofCache: notifications[e].tofCache ? "Activado" : "Desactivado",
-                                        extIp: notifications[e].extIp === "::1" ? "localhost" : notifications[e].extIp,
+                                        extIp: notifications[e].extIp === "::1" ? "localhost" : notifications[e].extIp === null ? "localhost" : notifications[e].extIp.replace("::ffff:", ""),
                                         idUser: notifications[e].idUser
                                     };
                                     adaptedNotifications.push(adaptedNotification);

@@ -4,8 +4,8 @@
     <img class="img-rounded img-responsive" src="/pb/img/297x180.png" alt="Imagen de fondo de la cabecera">
     <h1>Bienvenido</h1>
     {% if role != null and role === "administrator" %}
-        <p>Desde aquí podrás gestionar los grupos, profesores y alumnos que utilizan la extensión de restricciones además de visualizar los informes de señal de vida de la extensión y notificaciones en tiempo de vuelo. También
-        se podrá restaurar o eliminar un backup anterior</p>
+        <p>Desde aquí podrás gestionar los grupos, profesores y alumnos que utilizan la extensión de restricciones además de visualizar los informes de señal de vida de la extensión y notificaciones sin slot asociado. También
+        podrás restaurar o eliminar un backup anterior</p>
     {% elif role != null and role === "professor" %}
         <p>Desde aquí podrás administrar las restricciones de navegación que apliques a los alumnos de tus asignaturas en horarios concretos</p>
     {% else %}
