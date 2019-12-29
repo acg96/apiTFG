@@ -43,7 +43,7 @@
                     <li><a style="color: #FFFFFF; text-align: center;" id="navUsername">{{username}}</a></li>
                 {% endif %}
                 <li><a href="/">Inicio</a></li>
-            {% if username != null %}
+            {% if username != null and role != null and role === "professor" %}
                 <li id="slots-menu" class="dropdown"><a
                         class="dropdown-toggle" data-toggle="dropdown" href="#"
                         id="btnSlotsManagement"><span
@@ -58,6 +58,31 @@
                         class="caret"></span> Gestión de Informes </a>
                     <ul class="dropdown-menu" id="reportsDropdownMenuButton">
                         <li><a href="/prf/report/list">Ver listado</a></li>
+                    </ul></li>
+            {% endif %}
+            {% if username != null and role != null and role === "administrator" %}
+                <li id="management-menu" class="dropdown"><a
+                        class="dropdown-toggle" data-toggle="dropdown" href="#"
+                        id="btnManagement"><span
+                        class="caret"></span> Gestión de Grupos </a>
+                    <ul class="dropdown-menu" id="managementDropdownMenuButton">
+                        <li><a href="/adm/file/add">Carga por fichero</a></li>
+                    </ul></li>
+                <li id="adminReports-menu" class="dropdown"><a
+                        class="dropdown-toggle" data-toggle="dropdown" href="#"
+                        id="btnAdminReportsManagement"><span
+                        class="caret"></span> Gestión de Informes </a>
+                    <ul class="dropdown-menu" id="adminReportsDropdownMenuButton">
+                        <li><a href="/adm/noslot-report/list">Notificaciones sin slot asociado</a></li>
+                        <li><a href="/adm/signal-report/list">Señales de vida de la extensión</a></li>
+                    </ul></li>
+                <li id="backups-menu" class="dropdown"><a
+                        class="dropdown-toggle" data-toggle="dropdown" href="#"
+                        id="btnBackupsRestorement"><span
+                        class="caret"></span> Gestión de Backups </a>
+                    <ul class="dropdown-menu" id="backupsRestorementDropdownMenuButton">
+                        <li><a href="/adm/back/rest">Restaurar backup</a></li>
+                        <li><a href="/adm/back/del">Eliminar backup</a></li>
                     </ul></li>
             {% endif %}
             </ul>

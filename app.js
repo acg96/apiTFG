@@ -1,10 +1,15 @@
 // Modules and globals
 const express = require('express');
+const fileUpload = require('express-fileupload');
 const app = express();
+app.use(fileUpload({
+    useTempFiles : true,
+    tempFileDir : '/tmp/'}));
 const loggerLib = require('log4js');
 const logger = loggerLib.getLogger("apiTFG");
 logger.level = 'all';
 const bodyParser = require('body-parser');
+const csvToJson = require('csvtojson');
 app.set('tokenTime', 2700000); //Used to force the session or token expires at 45min after the beginning
 
 //***Start administration web****
@@ -51,11 +56,9 @@ const jwt = require('jsonwebtoken');
 app.set('jwt', jwt);
 app.set('moment', moment);
 const bdManagement = require("./modules/bdManagement.js");
-const initBD = require("./modules/initBD.js");
 app.set('db', "mongodb+srv://admin:sdi@tiendamusica-s0nh9.mongodb.net/tfg?retryWrites=true&w=majority");
 app.set('dbName', 'tfg');
 bdManagement.init(app, mongo);
-initBD.init(app, bdManagement, logger);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set('port', 7991);
@@ -88,7 +91,7 @@ app.set('passKey', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('crypto', crypto);
 
 //LDAP configuration
-app.set('useLDAP', true); //If it's set to 'false' the ldap service it's not used
+app.set('useLDAP', false); //If it's set to 'false' the ldap service it's not used
 const fs= require('fs');
 const rLdapConnectionService= require("./services/rldapConnectionService.js");
 rLdapConnectionService.init(app, fs);
@@ -97,13 +100,15 @@ rLdapConnectionService.init(app, fs);
 const userApiService= require("./services/rusersapiService.js");
 userApiService.init(app, bdManagement, rLdapConnectionService);
 const rAppService= require("./services/rappService.js");
-rAppService.init(app, bdManagement, initBD);
+rAppService.init(app, bdManagement);
 const rStudentApiService= require("./services/rstudentapiService.js");
 rStudentApiService.init(app, bdManagement);
 const rUserService= require("./services/ruserService.js");
 rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
+const rAdministratorService= require("./services/radministratorService.js");
+rAdministratorService.init(app, bdManagement, csvToJson);
 
 // router actions
 const routerActions = express.Router();
@@ -211,7 +216,7 @@ routerRoleUserProfessor.use(function(req, res, next) {
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
     } else{
-        if (role === "professor" && user.trim() !== "") {
+        if ((role === "professor" || role === "administrator") && user.trim() !== "") {
             next();
         } else {
             logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + res.ipReal);
@@ -250,14 +255,44 @@ routerWebAdminBeingLoggedIn.use(function(req, res, next) {
     }
 });
 app.use('/prf/*', routerWebAdminBeingLoggedIn);
+app.use('/adm/*', routerWebAdminBeingLoggedIn);
 app.use('/logout', routerWebAdminBeingLoggedIn);
+
+//Router controlling the access to restricted areas of the administration web just for professors
+const routerWebAdminBeingLoggedInProfessor = express.Router();
+routerWebAdminBeingLoggedInProfessor.use(function(req, res, next) {
+    const user= req.session.username;
+    const role= req.session.role;
+    if (role !== "professor"){
+        logger.info("The user " + user + " being logged in has requested access to professor's resources not being allowed - IP address: " + res.ipReal);
+        res.redirect("/");
+    } else{
+        next();
+    }
+});
+app.use('/prf/*', routerWebAdminBeingLoggedInProfessor);
+
+//Router controlling the access to restricted areas of the administration web just for administrators
+const routerWebAdminBeingLoggedInAdministrator = express.Router();
+routerWebAdminBeingLoggedInAdministrator.use(function(req, res, next) {
+    const user= req.session.username;
+    const role= req.session.role;
+    if (role !== "administrator"){
+        logger.info("The user " + user + " being logged in has requested access to administrator's resources not being allowed - IP address: " + res.ipReal);
+        res.redirect("/");
+    } else{
+        next();
+    }
+});
+app.use('/adm/*', routerWebAdminBeingLoggedInAdministrator);
 
 //Routes
 require("./routes/rusersapi.js")(app, logger, userApiService);
 require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
-require("./routes/rapp.js")(app, logger, bdManagement, initBD);
+require("./routes/rapp.js")(app);
 require("./routes/ruser.js")(app, logger, rUserService);
 require("./routes/rprofessor.js")(app, logger, rProfessorService);
+require("./routes/radministrator.js")(app, logger, rAdministratorService);
 
 // When a url not exists
 app.use(function(req, res) {
