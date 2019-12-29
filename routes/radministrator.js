@@ -19,6 +19,12 @@ module.exports = function (app, logger, administratorService) {
         res.render('admin/file/add.html', {username: req.session.username, role: req.session.role, errors: errors, correct: correct});
     });
 
+    app.get('/adm/noslot-report/list', function (req, res) {
+        administratorService.getNoSlotReportList(studentsList => {
+            res.render('admin/noSlotReport/list.html', {username: req.session.username, role: req.session.role, students: studentsList});
+        });
+    });
+
     app.get('/adm/back/rest', function (req, res) {
         let errors= null;
         if (req.session.errorsBackupDetected != null){

@@ -186,6 +186,60 @@ module.exports = {
             callback(false);
         }
     },
+    getNoSlotReportList: function(callback){
+        this.bdManagement.getNotifications({slotId: "-1", idUser: {$ne: null}}, notificationsList => {
+            if (notificationsList != null){
+                const moment = this.app.get("moment");
+                const studentsArray = [];
+                const studentsObjArray = [];
+                for (let i = 0; i < notificationsList.length; ++i){
+                    let intIps= "";
+                    for (let j= 0; j < notificationsList[i].intIps.length; ++j){
+                        if (j === 0){
+                            intIps+= notificationsList[i].intIps[j];
+                        } else{
+                            intIps+= ", " + notificationsList[i].intIps[j];
+                        }
+                    }
+                    const notificationObj = {
+                        actionName:  this.app.get('actionCodeTranslation')[notificationsList[i].actionCode],
+                        actionTimeMS: notificationsList[i].actionTime,
+                        actionTime: moment(notificationsList[i].actionTime).format("DD MMM YYYY HH:mm:ss"),
+                        moreInfo: notificationsList[i].moreInfo,
+                        tofCache: notificationsList[i].tofCache ? "Activado" : "Desactivado",
+                        extIp: notificationsList[i].requestExtIp === "::1" ? "localhost" : notificationsList[i].requestExtIp === null ? "localhost" : notificationsList[i].requestExtIp.replace("::ffff:", ""),
+                        intIps: intIps,
+                        somethingWrong: notificationsList[i].whyInfoNoCorrect
+                    };
+                    if (!studentsArray.includes(notificationsList[i].idUser)){
+                        studentsArray.push(notificationsList[i].idUser);
+                        const studentObj = {
+                            username: notificationsList[i].idUser,
+                            noProblems: notificationObj.actionName === "Inicio de sesión" || notificationObj.actionName === "Comienzo de slot",
+                            msMajorDate: notificationObj.actionTimeMS,
+                            stringMajorDate: notificationObj.actionTime,
+                            numberNotifications: 1,
+                            notificationsList: [notificationObj]
+                        };
+                        studentsObjArray.push(studentObj);
+                    } else{
+                        const resultArray = studentsObjArray.filter(currentStudent => currentStudent.username === notificationsList[i].idUser);
+                        ++ resultArray[0].numberNotifications;
+                        resultArray[0].noProblems = resultArray[0].noProblems && (notificationObj.actionName === "Inicio de sesión" || notificationObj.actionName === "Comienzo de slot");
+                        resultArray[0].msMajorDate = resultArray[0].msMajorDate < notificationObj.actionTimeMS ? notificationObj.actionTimeMS : resultArray[0].msMajorDate;
+                        resultArray[0].stringMajorDate = resultArray[0].msMajorDate === notificationObj.actionTimeMS ? notificationObj.actionTime : resultArray[0].stringMajorDate;
+                        resultArray[0].notificationsList.push(notificationObj);
+                    }
+                }
+                for (let i = 0; i < studentsObjArray.length; ++i){
+                    studentsObjArray[i].notificationsList = JSON.stringify(studentsObjArray[i].notificationsList);
+                }
+                callback(studentsObjArray);
+            } else{
+                callback([]);
+            }
+        });
+    },
     deleteBackup: function(backupIdentificator, callback){
         if (backupIdentificator != null && backupIdentificator.trim() !== ""){
             //Delete the requested backup
