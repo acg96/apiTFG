@@ -1,0 +1,50 @@
+{% extends "../../base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Señales de vida de la extensión</h2>
+    <div id="modalView" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content" style="z-index: 99 !important;">
+            <span class="close">x</span>
+            <div class="modal-header"><h2 style="text-align: center;" id="modalHeaderTitle"></h2></div>
+            <div id="modalContent" style="overflow-y: auto; width: 100%; height: 550px;"></div>
+        </div>
+    </div>
+    <script src="/pb/js/loadAdministratorSignals.js"></script>
+    <br/><br/>
+    <div id="tableNotifications">
+        <table class='table table-hover' id='tableNotificationsT'>
+            <thead>
+            <tr>
+                <th style="width: 20%;">IP externa</th>
+                <th style="width: 20%;">Ordenador</th>
+                <th style="width: 20%;">Última señal</th>
+                <th style="width: 20%;">Número de señales</th>
+                <th style="width: 20%;"><a href="#" title="Si la última notificación es inferior a la media se marcará como revisable">¿Necesario revisar?</a></th>
+                <th style="width: 20%;"></th>
+            </tr>
+            </thead>
+            <tbody id='tableBody'>
+                {% for signal in signals %}
+                <tr>
+                    <td>{{signal.extIp}}</td>
+                    <td>{{signal.intIps}}</td>
+                    <td data-sort="{{signal.msMajorDate}}">{{signal.stringMajorDate}}</td>
+                    <td>{{signal.numberOfSignals}}</td>
+                {% if signal.review %}
+                    <td>Sí</td>
+                {% else %}
+                    <td>No</td>
+                {% endif %}
+                    <td>
+                        <a href='#' onclick="openModal('{{signal.extIp}}', '{{signal.intIps}}', '{{signal.signalName}}')">Ver detalles</a>
+                        <input type="text" name="notificationsJson" id="notificationsJson-{{signal.signalName}}" value="{{signal.notificationsList}}" hidden />
+                    </td>
+                {% endfor %}
+                </tr>
+            </tbody>
+        </table>
+        <script>loadDataTableOnMainTable();</script>
+    </div>
+</div>
+{% endblock %}
