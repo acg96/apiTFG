@@ -101,6 +101,7 @@ module.exports = {
                                                 }
                                                 groups[i].excluded = false;
                                             }
+                                            groups[i].id = groups[i]._id.toString();
                                         }
                                         for (let i = 0; i < slot.studentsExcluded.length; ++i) {
                                             if (slot.studentsExcludedText === "") {
@@ -124,6 +125,7 @@ module.exports = {
                                                 slot.urlsText += "%$-%5$%-$7-%$-8%$-9%$" + slot.urls[i];
                                             }
                                         }
+                                        module.groupsJson = JSON.stringify(groups);
                                         const objSlot = {
                                             slot: slot,
                                             module: module,

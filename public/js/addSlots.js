@@ -35,6 +35,21 @@ function removeUrls(){
     $('#urlsText').val(tempUrlText);
 }
 
+function initModification(){
+    const moduleInfoString = $('#groupsAssociated').val();
+    const arraySelected = moduleInfoString.split("%%65-4-%.43%%");
+    groups = JSON.parse(arraySelected[1]);
+    groups.sort((a, b) => {
+        if (a.name < b.name){
+            return -1;
+        } else if (a.name > b.name){
+            return 1;
+        } else{
+            return 0;
+        }
+    });
+}
+
 function showGroups(optionSelected){
     if (optionSelected != null){
         $('#groupSelect').empty();
