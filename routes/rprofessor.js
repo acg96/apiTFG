@@ -105,6 +105,30 @@ module.exports = function (app, logger, professorService) {
         }
     });
 
+    app.get("/prf/slot/edit/:id", function (req, res) {
+        const id= req.params.id;
+        if (id != null){
+            professorService.getSpecifiedSlot(req.session.username, id, (objResult, strResult) => {
+                if (objResult == null){
+                    req.session.slotDeletions= strResult;
+                    res.redirect("/prf/slot/list");
+                } else{
+                    const date= app.get('currentTime')();
+                    const dateObject= {
+                        month: (date.month() + 1).toString().length === 2 ? (date.month() + 1).toString() : "0" + (date.month() + 1).toString(),
+                        day: date.date().toString().length === 2 ? date.date().toString() : "0" + date.date().toString(),
+                        year: date.year().toString(),
+                        hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
+                        minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
+                    };
+                    res.render('slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult});
+                }
+            });
+        } else{
+            res.redirect("/prf/slot/list");
+        }
+    });
+
     app.post("/prf/slot/add", function (req, res) {
         const postInfo= req.body;
         if (postInfo.moduleSelect == null){ //Used when no module was selected

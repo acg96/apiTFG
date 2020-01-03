@@ -53,6 +53,102 @@ module.exports = {
             callback("No existe ningún slot con ese id");
         }
     },
+    getSpecifiedSlot: function (username, slotId, callback){
+        try {
+            this.bdManagement.getSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, slots => {
+                if (slots != null && slots.length === 1){
+                    //Get the module associated
+                    const slot = slots[0];
+                    this.bdManagement.getModule({groupsIds: {$in: slot.groupIds}}, modules => {
+                        if (modules != null && modules.length === 1){
+                            const module = modules[0];
+                            const groupsIdsObj = [];
+                            try {
+                                for (let i = 0; i < module.groupsIds.length; ++i) {
+                                    groupsIdsObj.push(this.bdManagement.mongoPure.ObjectID(module.groupsIds[i]));
+                                }
+                            } catch (e){
+                                callback(null, "Se ha producido un error inesperado");
+                            }
+                            //Get the groups associated to the module
+                            this.bdManagement.getClassGroup({_id: {$in: groupsIdsObj}}, groups => {
+                                if (groups != null && groups.length > 0){
+                                    //Check the current username is professor or at least one of the groups retrieved
+                                    let isProfessor =  false;
+                                    for (let i = 0; i < groups.length; ++i){
+                                        if (groups[i].professors.includes(username)){
+                                            isProfessor = true;
+                                            break;
+                                        }
+                                    }
+                                    if (isProfessor){
+                                        const moment = this.app.get("moment");
+                                        slot.startDateStr = moment(slot.startTime).format("YYYY-MM-DD");
+                                        slot.startTimeStr = moment(slot.startTime).format("HH:mm");
+                                        slot.endDateStr = moment(slot.endTime).format("YYYY-MM-DD");
+                                        slot.endTimeStr = moment(slot.endTime).format("HH:mm");
+                                        slot.groupsIncludedText = "";
+                                        slot.studentsExcludedText = "";
+                                        slot.studentsIncluded = [];
+                                        for (let i = 0; i < groups.length; ++i) {
+                                            if (!slot.groupIds.includes(groups[i]._id.toString())){
+                                                groups[i].excluded = true;
+                                            } else{
+                                                for (let e = 0; e < groups[i].students.length; ++e){
+                                                    if (!slot.studentsExcluded.includes(groups[i].students[e]) && !slot.studentsIncluded.includes(groups[i].students[e])){
+                                                        slot.studentsIncluded.push(groups[i].students[e]);
+                                                    }
+                                                }
+                                                groups[i].excluded = false;
+                                            }
+                                        }
+                                        for (let i = 0; i < slot.studentsExcluded.length; ++i) {
+                                            if (slot.studentsExcludedText === "") {
+                                                slot.studentsExcludedText += slot.studentsExcluded[i];
+                                            } else {
+                                                slot.studentsExcludedText += "%$-%5$%-$7-%$-8%$-9%$" + slot.studentsExcluded[i];
+                                            }
+                                        }
+                                        for (let i = 0; i < slot.groupIds.length; ++i) {
+                                            if (slot.groupsIncludedText === "") {
+                                                slot.groupsIncludedText += slot.groupIds[i];
+                                            } else {
+                                                slot.groupsIncludedText += "%$-%5$%-$7-%$-8%$-9%$" + slot.groupIds[i];
+                                            }
+                                        }
+                                        slot.urlsText = "";
+                                        for (let i= 0; i < slot.urls.length; ++i){
+                                            if (slot.urlsText === ""){
+                                                slot.urlsText += slot.urls[i];
+                                            } else {
+                                                slot.urlsText += "%$-%5$%-$7-%$-8%$-9%$" + slot.urls[i];
+                                            }
+                                        }
+                                        const objSlot = {
+                                            slot: slot,
+                                            module: module,
+                                            groups: groups
+                                        };
+                                        callback(objSlot, "Ok");
+                                    } else{
+                                        callback(null, "No existe ningún slot con ese id");
+                                    }
+                                } else{
+                                    callback(null, "No existe ningún slot con ese id");
+                                }
+                            });
+                        } else{
+                            callback(null, "No existe ningún slot con ese id");
+                        }
+                    });
+                } else{
+                    callback(null, "No existe ningún slot con ese id");
+                }
+            });
+        }catch (e) {
+            callback(null, "No existe ningún slot con ese id");
+        }
+    },
     getSlots: function (username, callback) {
         this.getModuleGroupsByProfessor(username, function(groupsModule, modules){
             if (groupsModule != null && groupsModule.length > 0 && modules != null && modules.length > 0) {
