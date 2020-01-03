@@ -53,6 +53,104 @@ module.exports = {
             callback("No existe ningún slot con ese id");
         }
     },
+    getSpecifiedSlot: function (username, slotId, callback){
+        try {
+            this.bdManagement.getSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, slots => {
+                if (slots != null && slots.length === 1){
+                    //Get the module associated
+                    const slot = slots[0];
+                    this.bdManagement.getModule({groupsIds: {$in: slot.groupIds}}, modules => {
+                        if (modules != null && modules.length === 1){
+                            const module = modules[0];
+                            const groupsIdsObj = [];
+                            try {
+                                for (let i = 0; i < module.groupsIds.length; ++i) {
+                                    groupsIdsObj.push(this.bdManagement.mongoPure.ObjectID(module.groupsIds[i]));
+                                }
+                                //Get the groups associated to the module
+                                this.bdManagement.getClassGroup({_id: {$in: groupsIdsObj}}, groups => {
+                                    if (groups != null && groups.length > 0){
+                                        //Check the current username is professor or at least one of the groups retrieved
+                                        let isProfessor =  false;
+                                        for (let i = 0; i < groups.length; ++i){
+                                            if (groups[i].professors.includes(username)){
+                                                isProfessor = true;
+                                                break;
+                                            }
+                                        }
+                                        if (isProfessor){
+                                            const moment = this.app.get("moment");
+                                            slot.startDateStr = moment(slot.startTime).format("YYYY-MM-DD");
+                                            slot.startTimeStr = moment(slot.startTime).format("HH:mm");
+                                            slot.endDateStr = moment(slot.endTime).format("YYYY-MM-DD");
+                                            slot.endTimeStr = moment(slot.endTime).format("HH:mm");
+                                            slot.groupsIncludedText = "";
+                                            slot.studentsExcludedText = "";
+                                            slot.studentsIncluded = [];
+                                            for (let i = 0; i < groups.length; ++i) {
+                                                if (!slot.groupIds.includes(groups[i]._id.toString())){
+                                                    groups[i].excluded = true;
+                                                } else{
+                                                    for (let e = 0; e < groups[i].students.length; ++e){
+                                                        if (!slot.studentsExcluded.includes(groups[i].students[e]) && !slot.studentsIncluded.includes(groups[i].students[e])){
+                                                            slot.studentsIncluded.push(groups[i].students[e]);
+                                                        }
+                                                    }
+                                                    groups[i].excluded = false;
+                                                }
+                                                groups[i].id = groups[i]._id.toString();
+                                            }
+                                            for (let i = 0; i < slot.studentsExcluded.length; ++i) {
+                                                if (slot.studentsExcludedText === "") {
+                                                    slot.studentsExcludedText += slot.studentsExcluded[i];
+                                                } else {
+                                                    slot.studentsExcludedText += "%$-%5$%-$7-%$-8%$-9%$" + slot.studentsExcluded[i];
+                                                }
+                                            }
+                                            for (let i = 0; i < slot.groupIds.length; ++i) {
+                                                if (slot.groupsIncludedText === "") {
+                                                    slot.groupsIncludedText += slot.groupIds[i];
+                                                } else {
+                                                    slot.groupsIncludedText += "%$-%5$%-$7-%$-8%$-9%$" + slot.groupIds[i];
+                                                }
+                                            }
+                                            slot.urlsText = "";
+                                            for (let i= 0; i < slot.urls.length; ++i){
+                                                if (slot.urlsText === ""){
+                                                    slot.urlsText += slot.urls[i];
+                                                } else {
+                                                    slot.urlsText += "%$-%5$%-$7-%$-8%$-9%$" + slot.urls[i];
+                                                }
+                                            }
+                                            module.groupsJson = JSON.stringify(groups);
+                                            const objSlot = {
+                                                slot: slot,
+                                                module: module,
+                                                groups: groups
+                                            };
+                                            callback(objSlot, "Ok");
+                                        } else{
+                                            callback(null, "No existe ningún slot con ese id");
+                                        }
+                                    } else{
+                                        callback(null, "No existe ningún slot con ese id");
+                                    }
+                                });
+                            } catch (e){
+                                callback(null, "Se ha producido un error inesperado");
+                            }
+                        } else{
+                            callback(null, "No existe ningún slot con ese id");
+                        }
+                    });
+                } else{
+                    callback(null, "No existe ningún slot con ese id");
+                }
+            });
+        }catch (e) {
+            callback(null, "No existe ningún slot con ese id");
+        }
+    },
     getSlots: function (username, callback) {
         this.getModuleGroupsByProfessor(username, function(groupsModule, modules){
             if (groupsModule != null && groupsModule.length > 0 && modules != null && modules.length > 0) {
@@ -198,6 +296,76 @@ module.exports = {
             }
         }.bind(this));
     },
+    validateSlotModification: function(username, postInfo, callback){
+        const slotValidator = require("../validators/slotValidator.js");
+        slotValidator.validateAddSlot(this.app, postInfo, this.bdManagement, username, function (errors, processedResult) {
+            if (errors != null && errors.anyError === 0) {
+                const groupIdsObj = [];
+                for (let i= 0; i < processedResult.groupIds.length; ++i){
+                    groupIdsObj.push(this.bdManagement.mongoPure.ObjectID(processedResult.groupIds[i]));
+                }
+                //Analyze student collisions
+                this.bdManagement.getClassGroup({_id: {$in: groupIdsObj}}, function (groups){
+                    if (groups == null || groups.length === 0){
+                        errors.anyError = 1;
+                        callback(errors, null, true);
+                    } else {
+                        const allStudentsArray = [];
+                        for (let i= 0; i < groups.length; ++i){
+                            allStudentsArray.push(...groups[i].students);
+                        }
+                        const collisions = [];
+                        const studentsToAnalyze = [];
+                        for (let i= 0; i < allStudentsArray.length; ++i){
+                            if (!processedResult.studentsExcluded.includes(allStudentsArray[i])){
+                                studentsToAnalyze.push(allStudentsArray[i]);
+                            }
+                        }
+                        this.getCollisions(studentsToAnalyze, 0, 0, collisions, processedResult.startTime, processedResult.endTime, function (studentCollisions) {
+                            if (studentCollisions != null) {
+                                for (let i= 0; i < studentCollisions.length; ++i){
+                                    if (!processedResult.studentsExcluded.includes(studentCollisions[i].student)){
+                                        processedResult.studentsExcluded.push(studentCollisions[i].student);
+                                    }
+                                }
+                                processedResult.startTime += this.app.get('millisecondsDelayStartSlot'); //To avoid race hazards
+                                if (processedResult.studentsExcluded.length >= allStudentsArray.length){ //If all the students have a collision
+                                    callback(null, studentCollisions, true);
+                                } else {
+                                    try {
+                                        processedResult._id = this.bdManagement.mongoPure.ObjectID(postInfo.slotId);
+                                        this.bdManagement.deleteSlotWithoutNotifications({_id: this.bdManagement.mongoPure.ObjectID(postInfo.slotId)}, resultNumber => {
+                                            if (resultNumber === 1){
+                                                this.bdManagement.addSlot(processedResult, function (result) {
+                                                    if (result != null) {
+                                                        callback(null, studentCollisions, false);
+                                                    } else {
+                                                        errors.anyError = 1;
+                                                        callback(errors, null, true);
+                                                    }
+                                                }.bind(this));
+                                            } else{
+                                                errors.anyError = 1;
+                                                callback(errors, null, true);
+                                            }
+                                        });
+                                    } catch (e){
+                                        errors.anyError = 1;
+                                        callback(errors, null, true);
+                                    }
+                                }
+                            } else {
+                                errors.anyError = 1;
+                                callback(errors, null, true);
+                            }
+                        }.bind(this), postInfo.slotId);
+                    }
+                }.bind(this));
+            } else{
+                callback(errors, null, true);
+            }
+        }.bind(this));
+    },
     validateSlot: function(username, postInfo, callback){
         const slotValidator = require("../validators/slotValidator.js");
         slotValidator.validateAddSlot(this.app, postInfo, this.bdManagement, username, function (errors, processedResult) {
@@ -263,7 +431,7 @@ module.exports = {
             }
         }.bind(this));
     },
-    getCollisions: function(students, index, errorTime, collisions, startTime, endTime, callback){
+    getCollisions: function(students, index, errorTime, collisions, startTime, endTime, callback, slotId){
         const criteriaGroups= {
             students: students[index]
         };
@@ -280,6 +448,11 @@ module.exports = {
                         {$and: [{startTime: {$lte: startTime}}, {endTime: {$lt: endTime}}, {endTime: {$gt: startTime}}]}],
                     studentsExcluded: {$nin: [students[index]]}
                 };
+                try {
+                    if (slotId != null) {
+                        criteriaSlots._id = {$nin: [this.bdManagement.mongoPure.ObjectID(slotId)]};
+                    }
+                } catch (e){}
                 this.bdManagement.getSlot(criteriaSlots, function(slots){
                     if (slots != null && slots.length !== 0){
                         const slotGroupIdsArray = [];
@@ -309,13 +482,13 @@ module.exports = {
                                 if (students.length - 1 === index) {
                                     callback(collisions);
                                 } else {
-                                    this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback);
+                                    this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback, slotId);
                                 }
                             } else{
                                 if (errorTime === 3){
                                     callback(null);
                                 } else {
-                                    this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback);
+                                    this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback, slotId);
                                 }
                             }
                         }.bind(this));
@@ -324,13 +497,13 @@ module.exports = {
                             if (students.length - 1 === index) {
                                 callback(collisions);
                             } else {
-                                this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback);
+                                this.getCollisions(students, ++index, 0, collisions, startTime, endTime, callback, slotId);
                             }
                         } else{
                             if (errorTime === 3){
                                 callback(null);
                             } else {
-                                this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback);
+                                this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback, slotId);
                             }
                         }
                     }
@@ -339,7 +512,7 @@ module.exports = {
                 if (errorTime === 3){
                     callback(null);
                 } else {
-                    this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback);
+                    this.getCollisions(students, index, ++errorTime, collisions, startTime, endTime, callback, slotId);
                 }
             }
         }.bind(this));

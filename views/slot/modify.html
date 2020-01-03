@@ -1,0 +1,186 @@
+{% extends "../base.html" %}
+{% block body %}
+<script src="/pb/js/addSlots.js"></script>
+<div class="container">
+    <h2>Modificar slot</h2>
+    {% if errors and errors.anyError === 1 %}
+        <div class="row">
+            <div class="col-sm-12" style="margin-bottom: 2em;"><span class="text-danger" style="font-weight: bold;">Atención! Hay campos con valores incorrectos o se ha producido algún error</span></div>
+        </div>
+    {% endif %}
+    <form method="post" action="/prf/slot/edit">
+        <div class="form-row">
+            <div class="form-group col-sm-6">
+                <label for="initDate">Fecha inicio</label>
+                <input type="date" name="initDate" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" value="{{obj.slot.startDateStr}}" id="initDate" required />
+                {% if errors and errors.errInitDate != '' %}
+                    <span class="text-danger">{{errors.errInitDate}}</span>
+                {% endif %}
+            </div>
+            <div class="form-group col-sm-6">
+                <label for="initTime">Hora inicio</label>
+                <input type="time" name="initTime" class="form-control" id="initTime" step="60" value="{{obj.slot.startTimeStr}}" required />
+                {% if errors and errors.errInitTime != '' %}
+                    <span class="text-danger">{{errors.errInitTime}}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-sm-6">
+                <label for="endDate">Fecha fin</label>
+                <input type="date" name="endDate" class="form-control" step="1" min="{{date.year}}-{{date.month}}-{{date.day}}" value="{{obj.slot.endDateStr}}" id="endDate" required />
+                {% if errors and errors.errEndDate != '' %}
+                    <span class="text-danger">{{errors.errEndDate}}</span>
+                {% endif %}
+            </div>
+            <div class="form-group col-sm-6">
+                <label for="endTime">Hora fin</label>
+                <input type="time" name="endTime" class="form-control" id="endTime" step="60" value="{{obj.slot.endTimeStr}}" required />
+                {% if errors and errors.errEndTime != '' %}
+                    <span class="text-danger">{{errors.errEndTime}}</span>
+                {% endif %}
+            </div>
+
+
+            <div class="form-group col-sm-12">
+                <label for="description">Descripción:</label>
+                <input type="text" name="description" maxlength="100" class="form-control" id="description" value="{{obj.slot.description}}" required />
+                {% if errors and errors.errDescription != '' %}
+                    <span class="text-danger">{{errors.errDescription}}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="moduleSelect">Asignatura</label>
+                <input type="text" name="moduleSelected" id="moduleSelected" class="form-control" value="{{obj.module.name}}" disabled/>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="moduleSelect" id="moduleSelect" value="{{obj.module._id.toString()}}%%65&4-%.43%%{{obj.module.groupsJson}}" hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="groupSelect">Grupos incluidos</label>
+                <select multiple class="form-control" id="groupSelect">
+                    {% for group in obj.groups %}
+                    {% if group.excluded === false %}
+                    <option value="{{group._id.toString()}}">
+                        {{group.name}}
+                    </option>
+                    {% endif %}
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeGroup()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+                {% if errors and errors.errGroupsIncluded != '' %}
+                <span class="text-danger">{{errors.errGroupsIncluded}}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="groupsIncluded" id="groupsIncludedText" value="{{obj.slot.groupsIncludedText}}" hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="excludedGroups">Grupos excluidos</label>
+                <select multiple class="form-control" id="excludedGroups">
+                    {% for group in obj.groups %}
+                            {% if group.excluded %}
+                                <option value="{{group._id}}">
+                                    {{group.name}}
+                                </option>
+                            {% endif %}
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeExcludedGroup()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <div class="form-check col-sm-3">
+                    {% if obj.slot.listMode === "blacklist" %}
+                    <input class="form-check-input" type="radio" name="listRadio" id="whitelistRadio" value="whitelist">
+                    {% else %}
+                    <input class="form-check-input" type="radio" name="listRadio" id="whitelistRadio" value="whitelist" checked>
+                    {% endif %}
+                    <label class="form-check-label" for="whitelistRadio">Lista blanca</label>
+                </div>
+
+                <div class="form-check col-sm-3">
+                    {% if obj.slot.listMode === "blacklist" %}
+                    <input class="form-check-input" type="radio" name="listRadio" id="blacklistRadio" value="blacklist" checked>
+                    {% else %}
+                    <input class="form-check-input" type="radio" name="listRadio" id="blacklistRadio" value="blacklist">
+                    {% endif %}
+                    <label class="form-check-label" for="blacklistRadio">Lista negra</label>
+                </div>
+
+                {% if errors and errors.errListRadio != '' %}
+                    <span class="text-danger">{{errors.errListRadio}}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label class="form-check-label" for="newUrl">Nueva url:</label>
+                <input type="text" class="form-control" placeholder="http(s)://(www.)dominio.ext" id="newUrl" />
+                <button class="btn btn-primary col-xs-5" type="button" onclick="addUrl()" style="float:right; margin-bottom: 1em;">Añadir url</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="urlsGroup">Lista de Urls</label>
+                <select multiple class="form-control" id="urlsGroup">
+                    {% for url in obj.slot.urls %}
+                    <option value="{{url}}">
+                        {{url}}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeUrls()" style="float:right; margin-bottom: 1em;">Borrar seleccionadas</button>
+                {% if errors and errors.errUrls != '' %}
+                    <span class="text-danger">{{errors.errUrls}}</span>
+                {% endif %}
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="urls" id="urlsText" value="{{obj.slot.urlsText}}" hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="studentsGroup">Estudiantes incluidos</label>
+                <select multiple class="form-control" id="studentsGroup">
+                    {% for student in obj.slot.studentsIncluded %}
+                    <option value="{{student}}">
+                        {{student}}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeStudents()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="studentsExcluded" id="studentsExcludedText" value="{{obj.slot.studentsExcludedText}}" hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <input type="text" name="slotId" id="slotId" value="{{obj.slot._id.toString()}}" hidden />
+            </div>
+
+            <div class="form-group col-sm-12">
+                <label for="excludedGroup">Estudiantes excluidos</label>
+                <select multiple class="form-control" id="excludedGroup">
+                    {% for student in obj.slot.studentsExcluded %}
+                    <option value="{{student}}">
+                        {{student}}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button class="btn btn-primary col-xs-5" type="button" onclick="removeExcluded()" style="float:right; margin-bottom: 1em;">Borrar seleccionados</button>
+                {% if errors and errors.errStudentsExcluded != '' %}
+                    <span class="text-danger">{{errors.errStudentsExcluded}}</span>
+                {% endif %}
+            </div>
+
+            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Modificar Slot</button>
+
+        </div>
+    </form>
+</div>
+<script>initModification();</script>
+{% endblock %}
