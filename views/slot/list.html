@@ -2,7 +2,7 @@
 {% block body %}
 <div class="container">
     <h2>Listado Slots</h2>
-    {% if newSlot !== 1 and newSlot !== -2 and newSlot !== -1 %}
+    {% if newSlot !== 1 and newSlot !== -2 and newSlot !== -1 and newSlot !== -3 %}
     <br/>
     <br/>
     {% endif %}
@@ -21,6 +21,8 @@
         <span class="text-danger">El slot no se ha añadido porque todos los alumnos del mismo ya tienen una restricción en ese horario</span>
         {% elif newSlot === -2 %}
         <span class="text-danger">{{slotDeletions}}</span>
+        {% elif newSlot === -3 %}
+        <span class="text-danger">{{slotModified}}</span>
         {% endif %}
         {% if collisions != null and collisions.length > 0 %}
         <br/>
@@ -31,8 +33,10 @@
             <li class="text-danger">{{collision}}</li>
         </ul>
         {% endfor %}
-        {% if newSlot !== -1 %}
+        {% if newSlot !== -1 and newSlot !== -3 %}
         <span class="text-danger">Nota: L@s alumn@s se han excluido automáticamente, póngase en contacto con l@s profesores y modifique el slot si desea incluirl@s</span>
+        {% elif newSlot === -3 %}
+        <span class="text-danger">Nota: Póngase en contacto con l@s profesores para que los excluyan en sus slots</span>
         {% else %}
         <span class="text-danger">Nota: Póngase en contacto con l@s profesores para que los excluyan en sus slots y vuelva a intentar crearlo</span>
         {% endif %}

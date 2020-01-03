@@ -354,6 +354,11 @@ module.exports = {
             });
         }, callbackFunction);
     },
+    deleteSlotWithoutNotifications: function (slotCriteria, callbackFunction) {
+        this.deleteValueFromCollection(slotCriteria, 'slots', (cbFunction, result) => {
+            cbFunction(result.result.n);
+        }, callbackFunction);
+    },
     deleteNotifications: function (notificationCriteria, callbackFunction) {
         const mongo = this.getMongoClientObject();
         mongo.connect(function(err) {

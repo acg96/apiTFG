@@ -51,11 +51,11 @@
 
             <div class="form-group col-sm-12">
                 <label for="moduleSelect">Asignatura</label>
-                <input type="text" name="moduleSelect" id="moduleSelect" class="form-control" value="{{obj.module.name}}" disabled/>
+                <input type="text" name="moduleSelected" id="moduleSelected" class="form-control" value="{{obj.module.name}}" disabled/>
             </div>
 
             <div class="form-group col-sm-12">
-                <input type="text" name="groupsAssociated" id="groupsAssociated" value="{{obj.module._id.toString()}}%%65-4-%.43%%{{obj.module.groupsJson}}" hidden />
+                <input type="text" name="moduleSelect" id="moduleSelect" value="{{obj.module._id.toString()}}%%65&4-%.43%%{{obj.module.groupsJson}}" hidden />
             </div>
 
             <div class="form-group col-sm-12">
@@ -177,7 +177,7 @@
                 {% endif %}
             </div>
 
-            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Añadir Slot</button>
+            <button class="btn btn-success col-xs-12" style="margin-top: 2em; margin-bottom: 2em;" type="submit">Modificar Slot</button>
 
         </div>
     </form>

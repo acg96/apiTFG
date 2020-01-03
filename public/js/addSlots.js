@@ -36,8 +36,8 @@ function removeUrls(){
 }
 
 function initModification(){
-    const moduleInfoString = $('#groupsAssociated').val();
-    const arraySelected = moduleInfoString.split("%%65-4-%.43%%");
+    const moduleInfoString = $('#moduleSelect').val();
+    const arraySelected = moduleInfoString.split("%%65&4-%.43%%");
     groups = JSON.parse(arraySelected[1]);
     groups.sort((a, b) => {
         if (a.name < b.name){

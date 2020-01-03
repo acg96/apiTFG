@@ -66,10 +66,15 @@ module.exports = function (app, logger, professorService) {
             if (slotDeletions != null){
                 newSlot = -2;
             }
+            const slotModified = req.session.slotModified;
+            if (req.session.slotModified != null){
+                req.session.slotModified = null;
+                newSlot = -3;
+            }
             req.session.collisions = null;
             req.session.noAdded = null;
             req.session.slotDeletions = null;
-            res.render('slot/list.html', {username: req.session.username, role: req.session.role, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
+            res.render('slot/list.html', {username: req.session.username, role: req.session.role, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions, slotModified: slotModified});
         });
     });
 
@@ -121,12 +126,42 @@ module.exports = function (app, logger, professorService) {
                         hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
                         minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                     };
-                    res.render('slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult});
+                    if (req.session.modifySlotErrors != null){
+                        const errors = req.session.modifySlotErrors;
+                        req.session.modifySlotErrors = null;
+                        res.render('slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult, errors: errors});
+                    } else{
+                        res.render('slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult});
+                    }
                 }
             });
         } else{
             res.redirect("/prf/slot/list");
         }
+    });
+
+    app.post("/prf/slot/edit", function (req, res) {
+        const postInfo= req.body;
+        if (postInfo.moduleSelect == null){ //Used when no module is sent
+            postInfo["moduleSelect"]= "";
+        }
+        professorService.validateSlotModification(req.session.username, postInfo, (errors, collisions, noAdded) => {
+            if (errors == null){
+                if (!noAdded) {
+                    logger.info("Slot with id " + postInfo.slotId + " modified by user " + req.session.username + " - IP: " + res.ipReal);
+                } else{
+                    logger.info("Error when trying to modify the slot with id " + postInfo.slotId + ". User: " + req.session.username + " - IP: " + res.ipReal);
+                }
+                req.session.collisions = collisions;
+                req.session.noAdded = noAdded;
+                req.session.slotModified = !noAdded ? "El slot se ha modificado correctamente" : "El slot no se ha modificado porque todos los alumnos tienen ya una restricción marcada en ese periodo";
+                res.redirect("/prf/slot/list");
+            } else {
+                req.session.modifySlotErrors = errors;
+                logger.info("Error when trying to modify the slot with id " + postInfo.slotId + ". User: " + req.session.username + " - IP: " + res.ipReal);
+                res.redirect("/prf/slot/edit/" + postInfo.slotId);
+            }
+        });
     });
 
     app.post("/prf/slot/add", function (req, res) {
