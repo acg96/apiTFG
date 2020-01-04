@@ -5,3 +5,4 @@ npm-debug.log
 .idea/
 .git
 package-lock.json
+tmp/

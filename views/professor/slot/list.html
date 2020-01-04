@@ -1,0 +1,88 @@
+{% extends "../../base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Listado Slots</h2>
+    {% if newSlot !== 1 and newSlot !== -2 and newSlot !== -1 and newSlot !== -3 %}
+    <br/>
+    <br/>
+    {% endif %}
+    <div id="modalView" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">x</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+    <script src="/pb/js/modifySlots.js"></script>
+    <div class="table-responsive">
+        {% if newSlot === 1 %}
+        <span class="text-danger">Slot añadido correctamente</span>
+        {% elif newSlot === -1 %}
+        <span class="text-danger">El slot no se ha añadido porque todos los alumnos del mismo ya tienen una restricción en ese horario</span>
+        {% elif newSlot === -2 %}
+        <span class="text-danger">{{slotDeletions}}</span>
+        {% elif newSlot === -3 %}
+        <span class="text-danger">{{slotModified}}</span>
+        {% endif %}
+        {% if collisions != null and collisions.length > 0 %}
+        <br/>
+        <br/>
+        <span class="text-danger">Se han producido las siguientes colisiones:</span>
+        {% for collision in collisions %}
+        <ul>
+            <li class="text-danger">{{collision}}</li>
+        </ul>
+        {% endfor %}
+        {% if newSlot !== -1 and newSlot !== -3 %}
+        <span class="text-danger">Nota: L@s alumn@s se han excluido automáticamente, póngase en contacto con l@s profesores y modifique el slot si desea incluirl@s</span>
+        {% elif newSlot === -3 %}
+        <span class="text-danger">Nota: Póngase en contacto con l@s profesores para que los excluyan en sus slots</span>
+        {% else %}
+        <span class="text-danger">Nota: Póngase en contacto con l@s profesores para que los excluyan en sus slots y vuelva a intentar crearlo</span>
+        {% endif %}
+        <br/>
+        <br/>
+        {% endif %}
+
+        <div>
+            <table class="table table-hover" id="tableSlots">
+                <thead>
+                <tr>
+                    <th style="width: 23%;">Slot</th>
+                    <th style="width: 10%;">Asignatura</th>
+                    <th style="width: 13%;">Comienzo</th>
+                    <th style="width: 13%;">Fin</th>
+                    <th style="width: 9%;">Modo de restricción</th>
+                    <th style="width: 10%;">Autor</th>
+                    <th style="width: 10%;"></th>
+                    <th style="width: 6%;"></th>
+                    <th style="width: 6%;"></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for slot in slotList %}
+                <tr>
+                    <td>{{slot.description}}</td>
+                    <td>{{slot.moduleName}}</td>
+                    <td data-sort="{{slot.startTimeMS}}">{{slot.startTime}}</td>
+                    <td data-sort="{{slot.endTimeMS}}">{{slot.endTime}}</td>
+                    <td>{{slot.listMode}}</td>
+                    <td>{{slot.author}}</td>
+                    <td><a href="#" onclick="openModal('details-{{slot._id}}')">Ver detalles</a>
+                        <input type="text" id="input-{{slot._id}}" value="{{slot.stringSlot}}" hidden/>
+                    </td>
+                    {% if slot.future %}
+                    <td><a href="/prf/slot/edit/{{slot._id}}">Modificar</a></td>
+                    <td><a href="#" onclick="openModal('delete-{{slot._id}}')">Eliminar</a></td>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

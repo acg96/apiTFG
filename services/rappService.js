@@ -1,14 +1,12 @@
 module.exports = {
     app: null,
     bdManagement: null,
-    initBD: null, //TODO
-    init: function(app, bdManagement, initBD){
+    init: function(app, bdManagement){
         this.app= app;
         this.bdManagement= bdManagement;
-        this.initBD= initBD; //TODO
     },
     checkUserExists: function(username, role, callback){
-        var userCheck = {
+        const userCheck = {
             username: username,
             role: role
         };
@@ -19,12 +17,5 @@ module.exports = {
                 callback(true);
             }
         });
-    },
-    resetBBDD: function(){ //TODO
-        this.bdManagement.resetMongo(function (result){
-            if (result != null) {
-                this.initBD.generateData();
-            }
-        }.bind(this));
     }
-}
+};
