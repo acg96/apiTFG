@@ -49,6 +49,9 @@ const actionCodeTranslation={
 };
 app.set('actionCodeTranslation', actionCodeTranslation);
 
+const allCollectionsBaseNames= ["users", "groups", "notifications", "modules", "slots"];
+app.set('collectionBaseNames', allCollectionsBaseNames);
+
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');

@@ -56,7 +56,8 @@ module.exports = {
     getSpecifiedSlot: function (username, slotId, callback){
         try {
             this.bdManagement.getSlot({_id: this.bdManagement.mongoPure.ObjectID(slotId)}, slots => {
-                if (slots != null && slots.length === 1){
+                //Check it retrieves one slot and its end is after the current moment
+                if (slots != null && slots.length === 1 && slots[0].endTime > this.app.get("currentTimeWithSeconds")().valueOf()){
                     //Get the module associated
                     const slot = slots[0];
                     this.bdManagement.getModule({groupsIds: {$in: slot.groupIds}}, modules => {
@@ -297,74 +298,87 @@ module.exports = {
         }.bind(this));
     },
     validateSlotModification: function(username, postInfo, callback){
-        const slotValidator = require("../validators/slotValidator.js");
-        slotValidator.validateAddSlot(this.app, postInfo, this.bdManagement, username, function (errors, processedResult) {
-            if (errors != null && errors.anyError === 0) {
-                const groupIdsObj = [];
-                for (let i= 0; i < processedResult.groupIds.length; ++i){
-                    groupIdsObj.push(this.bdManagement.mongoPure.ObjectID(processedResult.groupIds[i]));
-                }
-                //Analyze student collisions
-                this.bdManagement.getClassGroup({_id: {$in: groupIdsObj}}, function (groups){
-                    if (groups == null || groups.length === 0){
-                        errors.anyError = 1;
-                        callback(errors, null, true);
-                    } else {
-                        const allStudentsArray = [];
-                        for (let i= 0; i < groups.length; ++i){
-                            allStudentsArray.push(...groups[i].students);
-                        }
-                        const collisions = [];
-                        const studentsToAnalyze = [];
-                        for (let i= 0; i < allStudentsArray.length; ++i){
-                            if (!processedResult.studentsExcluded.includes(allStudentsArray[i])){
-                                studentsToAnalyze.push(allStudentsArray[i]);
+        try {
+            const slotIdMongoObj = this.bdManagement.mongoPure.ObjectID(postInfo.slotId);
+            this.bdManagement.getSlot({_id: slotIdMongoObj}, slots => {
+                //Check it retrieves one slot and its end is after the current moment
+                if (slots != null && slots.length === 1 && slots[0].endTime > this.app.get("currentTimeWithSeconds")().valueOf()) {
+                    const slotValidator = require("../validators/slotValidator.js");
+                    slotValidator.validateAddSlot(this.app, postInfo, this.bdManagement, username, function (errors, processedResult) {
+                        if (errors != null && errors.anyError === 0) {
+                            const groupIdsObj = [];
+                            for (let i= 0; i < processedResult.groupIds.length; ++i){
+                                groupIdsObj.push(this.bdManagement.mongoPure.ObjectID(processedResult.groupIds[i]));
                             }
-                        }
-                        this.getCollisions(studentsToAnalyze, 0, 0, collisions, processedResult.startTime, processedResult.endTime, function (studentCollisions) {
-                            if (studentCollisions != null) {
-                                for (let i= 0; i < studentCollisions.length; ++i){
-                                    if (!processedResult.studentsExcluded.includes(studentCollisions[i].student)){
-                                        processedResult.studentsExcluded.push(studentCollisions[i].student);
-                                    }
-                                }
-                                processedResult.startTime += this.app.get('millisecondsDelayStartSlot'); //To avoid race hazards
-                                if (processedResult.studentsExcluded.length >= allStudentsArray.length){ //If all the students have a collision
-                                    callback(null, studentCollisions, true);
+                            //Analyze student collisions
+                            this.bdManagement.getClassGroup({_id: {$in: groupIdsObj}}, function (groups){
+                                if (groups == null || groups.length === 0){
+                                    errors.anyError = 1;
+                                    callback(errors, null, true);
                                 } else {
-                                    try {
-                                        processedResult._id = this.bdManagement.mongoPure.ObjectID(postInfo.slotId);
-                                        this.bdManagement.deleteSlotWithoutNotifications({_id: this.bdManagement.mongoPure.ObjectID(postInfo.slotId)}, resultNumber => {
-                                            if (resultNumber === 1){
-                                                this.bdManagement.addSlot(processedResult, function (result) {
-                                                    if (result != null) {
-                                                        callback(null, studentCollisions, false);
-                                                    } else {
+                                    const allStudentsArray = [];
+                                    for (let i= 0; i < groups.length; ++i){
+                                        allStudentsArray.push(...groups[i].students);
+                                    }
+                                    const collisions = [];
+                                    const studentsToAnalyze = [];
+                                    for (let i= 0; i < allStudentsArray.length; ++i){
+                                        if (!processedResult.studentsExcluded.includes(allStudentsArray[i])){
+                                            studentsToAnalyze.push(allStudentsArray[i]);
+                                        }
+                                    }
+                                    this.getCollisions(studentsToAnalyze, 0, 0, collisions, processedResult.startTime, processedResult.endTime, function (studentCollisions) {
+                                        if (studentCollisions != null) {
+                                            for (let i= 0; i < studentCollisions.length; ++i){
+                                                if (!processedResult.studentsExcluded.includes(studentCollisions[i].student)){
+                                                    processedResult.studentsExcluded.push(studentCollisions[i].student);
+                                                }
+                                            }
+                                            processedResult.startTime += this.app.get('millisecondsDelayStartSlot'); //To avoid race hazards
+                                            if (processedResult.studentsExcluded.length >= allStudentsArray.length){ //If all the students have a collision
+                                                callback(null, studentCollisions, true);
+                                            } else {
+                                                processedResult._id = slotIdMongoObj;
+                                                this.bdManagement.deleteSlotWithoutNotifications({_id: slotIdMongoObj}, resultNumber => {
+                                                    if (resultNumber === 1){
+                                                        this.bdManagement.addSlot(processedResult, function (result) {
+                                                            if (result != null) {
+                                                                callback(null, studentCollisions, false);
+                                                            } else {
+                                                                errors.anyError = 1;
+                                                                callback(errors, null, true);
+                                                            }
+                                                        }.bind(this));
+                                                    } else{
                                                         errors.anyError = 1;
                                                         callback(errors, null, true);
                                                     }
-                                                }.bind(this));
-                                            } else{
-                                                errors.anyError = 1;
-                                                callback(errors, null, true);
+                                                });
                                             }
-                                        });
-                                    } catch (e){
-                                        errors.anyError = 1;
-                                        callback(errors, null, true);
-                                    }
+                                        } else {
+                                            errors.anyError = 1;
+                                            callback(errors, null, true);
+                                        }
+                                    }.bind(this), postInfo.slotId);
                                 }
-                            } else {
-                                errors.anyError = 1;
-                                callback(errors, null, true);
-                            }
-                        }.bind(this), postInfo.slotId);
-                    }
-                }.bind(this));
-            } else{
-                callback(errors, null, true);
-            }
-        }.bind(this));
+                            }.bind(this));
+                        } else{
+                            callback(errors, null, true);
+                        }
+                    }.bind(this));
+                } else{
+                    const errors = {
+                        anyError: 1
+                    };
+                    callback(errors, null, true);
+                }
+            });
+        }catch(e){
+            const errors = {
+              anyError: 1
+            };
+            callback(errors, null, true);
+        }
     },
     validateSlot: function(username, postInfo, callback){
         const slotValidator = require("../validators/slotValidator.js");

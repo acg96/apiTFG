@@ -74,13 +74,13 @@ module.exports = function (app, logger, professorService) {
             req.session.collisions = null;
             req.session.noAdded = null;
             req.session.slotDeletions = null;
-            res.render('slot/list.html', {username: req.session.username, role: req.session.role, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions, slotModified: slotModified});
+            res.render('professor/slot/list.html', {username: req.session.username, role: req.session.role, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions, slotModified: slotModified});
         });
     });
 
     app.get('/prf/report/list', function (req, res) {
         professorService.getReportList(req.session.username, (slotsList, notificationList) => {
-            res.render('report/list.html', {username: req.session.username, role: req.session.role, slotsList: slotsList, notificationsList: JSON.stringify(notificationList)});
+            res.render('professor/report/list.html', {username: req.session.username, role: req.session.role, slotsList: slotsList, notificationsList: JSON.stringify(notificationList)});
         });
     });
 
@@ -94,7 +94,7 @@ module.exports = function (app, logger, professorService) {
             minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
         };
         professorService.getSlotModulesAndGroups(req.session.username, (adaptedGroups) => {
-            res.render('slot/add.html', {username: req.session.username, role: req.session.role, date: dateObject, groups: adaptedGroups});
+            res.render('professor/slot/add.html', {username: req.session.username, role: req.session.role, date: dateObject, groups: adaptedGroups});
         });
     });
 
@@ -129,9 +129,9 @@ module.exports = function (app, logger, professorService) {
                     if (req.session.modifySlotErrors != null){
                         const errors = req.session.modifySlotErrors;
                         req.session.modifySlotErrors = null;
-                        res.render('slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult, errors: errors});
+                        res.render('professor/slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult, errors: errors});
                     } else{
-                        res.render('slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult});
+                        res.render('professor/slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult});
                     }
                 }
             });
@@ -190,7 +190,7 @@ module.exports = function (app, logger, professorService) {
                     minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                 };
                 logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + res.ipReal);
-                res.render('slot/add.html', {username: req.session.username, role: req.session.role, date: dateObject, groups: adaptedGroups, errors: errors});
+                res.render('professor/slot/add.html', {username: req.session.username, role: req.session.role, date: dateObject, groups: adaptedGroups, errors: errors});
             }
         });
     });

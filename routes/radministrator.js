@@ -47,8 +47,6 @@ module.exports = function (app, logger, administratorService) {
             const objsBackupList = [];
             //Order the dates from major to minor
             dateMsStringList.sort((a, b) => {
-                const aInt = parseFloat(a);
-                const bInt = parseFloat(b);
                 return b - a;
             });
             for (let i= 0; i < dateMsStringList.length; ++i){
@@ -78,8 +76,6 @@ module.exports = function (app, logger, administratorService) {
             const objsBackupList = [];
             //Order the dates from major to minor
             dateMsStringList.sort((a, b) => {
-                const aInt = parseFloat(a);
-                const bInt = parseFloat(b);
                 return b - a;
             });
             for (let i= 0; i < dateMsStringList.length; ++i){
