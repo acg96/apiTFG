@@ -1,7 +1,17 @@
 {
-  "name": "TFG_API_REST",
-  "description": "API REST OF MY TFG",
+  "name": "fyp_application_backend",
+  "description": "Web application backend used on my final year project to the University of Oviedo",
   "version": "2.0.0",
+  "author": {
+    "name": "Andres Casillas Garcia",
+    "email": "UO244499@uniovi.es"
+  },
+  "license": "MIT",
+  "main": "app.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/acg96/apiTFG.git"
+  },
   "dependencies": {
     "body-parser": "^1.18.3",
     "csvtojson": "^2.0.10",
