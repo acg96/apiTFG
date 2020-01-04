@@ -170,7 +170,7 @@ module.exports = {
             this.bdManagement.renameAllCollections(result => {
                 if (result){
                     //Restore the requested backup
-                    const allCollectionsBaseNames= ["users", "groups", "notifications", "modules", "slots"];
+                    const allCollectionsBaseNames= this.app.get('collectionBaseNames');
                     const allCollectionsToChange= [];
                     for (let i= 0; i < allCollectionsBaseNames.length; ++i){
                         allCollectionsToChange.push(allCollectionsBaseNames[i] + backupIdentificator);
@@ -303,7 +303,7 @@ module.exports = {
     deleteBackup: function(backupIdentificator, callback){
         if (backupIdentificator != null && backupIdentificator.trim() !== ""){
             //Delete the requested backup
-            const allCollectionsBaseNames= ["users", "groups", "notifications", "modules", "slots"];
+            const allCollectionsBaseNames= this.app.get('collectionBaseNames');
             const allCollectionsToErase= [];
             for (let i= 0; i < allCollectionsBaseNames.length; ++i){
                 allCollectionsToErase.push(allCollectionsBaseNames[i] + backupIdentificator);
@@ -318,7 +318,7 @@ module.exports = {
     getBackupsList: function(callback){
         this.bdManagement.getListOfCollections(collectionNames => {
             if (collectionNames != null){
-                const collectionBaseNames = ["users", "groups", "notifications", "modules", "slots"];
+                const collectionBaseNames = this.app.get('collectionBaseNames');
                 const backupsMsDates = [];
                 for (let i= 0; i < collectionNames.length; ++i){
                     for (let e= 0; e < collectionBaseNames.length; ++e) {

@@ -80,7 +80,7 @@ module.exports = {
         });
     },
     renameAllCollections: function(callback){
-        const collectionNames= ["users", "groups", "notifications", "modules", "slots"];
+        const collectionNames= this.app.get('collectionBaseNames');
         this.renameCertainCollections(collectionNames, resultRemaining => {
             callback(resultRemaining);
         });
@@ -265,7 +265,7 @@ module.exports = {
     },
     renameCertainCollections: function(collectionNames, callback){
         let mongo = this.getMongoClientObject();
-        const allCollections= ["users", "groups", "notifications", "modules", "slots"];
+        const allCollections= this.app.get('collectionBaseNames');
         mongo.connect(function(err) {
             if (err){
                 callback(false);
