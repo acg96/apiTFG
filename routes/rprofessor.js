@@ -1,12 +1,27 @@
-module.exports = function (app, logger, swig, professorService) {
+module.exports = function (app, logger, professorService) {
     app.get('/prf/slot/list', function (req, res) {
         const date= app.get('currentTimeWithSeconds')(); //Use seconds because the startTime has a delay of 10 seconds
         const moment = app.get("moment");
         professorService.getSlots(req.session.username, slots => {
             const adaptedSlots= [];
             for (let i= 0; i < slots.length; ++i){
+                const studentsIncluded= [];
+                let groupNames= "";
+                for (let e= 0; e < slots[i].groupsObj.length; ++e){
+                    if (groupNames === ""){
+                        groupNames += slots[i].groupsObj[e].name;
+                    } else{
+                        groupNames += ',' + slots[i].groupsObj[e].name;
+                    }
+                    for (let j= 0; j < slots[i].groupsObj[e].studentsIncluded.length; ++j){
+                        if (!studentsIncluded.includes(slots[i].groupsObj[e].studentsIncluded[j])){
+                            studentsIncluded.push(slots[i].groupsObj[e].studentsIncluded[j]);
+                        }
+                    }
+                }
                 const stringSlot = {
-                    groupName: slots[i].groupName,
+                    groupNames: groupNames,
+                    moduleName: slots[i].moduleObj.name,
                     description: slots[i].description,
                     startTime: moment(slots[i].startTime).format("DD MMM YYYY HH:mm"),
                     endTime: moment(slots[i].endTime).format("DD MMM YYYY HH:mm"),
@@ -14,10 +29,10 @@ module.exports = function (app, logger, swig, professorService) {
                     author: slots[i].author,
                     urls: slots[i].urls,
                     studentsExcluded: slots[i].studentsExcluded,
-                    studentsIncluded: slots[i].studentsIncluded
+                    studentsIncluded: studentsIncluded
                 };
                 const tempSlot = {
-                    groupName: slots[i].groupName,
+                    moduleName: slots[i].moduleObj.name,
                     description: slots[i].description,
                     startTime: moment(slots[i].startTime).format("DD MMM YYYY HH:mm"),
                     endTime: moment(slots[i].endTime).format("DD MMM YYYY HH:mm"),
@@ -25,20 +40,12 @@ module.exports = function (app, logger, swig, professorService) {
                     author: slots[i].author,
                     _id: slots[i]._id.toString(),
                     startTimeMS: slots[i].startTime,
+                    endTimeMS: slots[i].endTime,
                     future: date.valueOf() < slots[i].endTime,
                     stringSlot: JSON.stringify(stringSlot)
                 };
                 adaptedSlots.push(tempSlot);
             }
-            adaptedSlots.sort((a, b) => {
-                if (a.startTimeMS > b.startTimeMS){
-                    return -1;
-                } else if (a.startTimeMS < b.startTimeMS){
-                    return 1;
-                } else{
-                    return 0;
-                }
-            });
             let newSlot = 0;
             const stringCollisionsArray= [];
             const collisions= req.session.collisions;
@@ -46,7 +53,7 @@ module.exports = function (app, logger, swig, professorService) {
             const slotDeletions= req.session.slotDeletions;
             if (collisions != null && collisions.length > 0){
                 for (let i= 0; i < collisions.length; ++i) {
-                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para el grupo " + collisions[i].groupName;
+                    const tempString = "La/El alumn@ " + collisions[i].student + " tiene ya una restricción en ese horario marcada por " + collisions[i].author + " para la asignatura " + collisions[i].moduleName;
                     stringCollisionsArray.push(tempString);
                 }
             }
@@ -59,18 +66,21 @@ module.exports = function (app, logger, swig, professorService) {
             if (slotDeletions != null){
                 newSlot = -2;
             }
+            const slotModified = req.session.slotModified;
+            if (req.session.slotModified != null){
+                req.session.slotModified = null;
+                newSlot = -3;
+            }
             req.session.collisions = null;
             req.session.noAdded = null;
             req.session.slotDeletions = null;
-            const response = swig.renderFile('views/slot/list.html', {username: req.session.username, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions});
-            res.send(response);
+            res.render('professor/slot/list.html', {username: req.session.username, role: req.session.role, slotList: adaptedSlots, newSlot: newSlot, collisions: stringCollisionsArray, slotDeletions: slotDeletions, slotModified: slotModified});
         });
     });
 
     app.get('/prf/report/list', function (req, res) {
-        professorService.getReportList(req.session.username, (groupsWithName, groupIdArray, finalHashmap) => {
-            const response = swig.renderFile('views/report/list.html', {username: req.session.username, groupList: groupsWithName, groupIds: groupIdArray, notificationsHashMap: JSON.stringify(finalHashmap)});
-            res.send(response);
+        professorService.getReportList(req.session.username, (slotsList, notificationList) => {
+            res.render('professor/report/list.html', {username: req.session.username, role: req.session.role, slotsList: slotsList, notificationsList: JSON.stringify(notificationList)});
         });
     });
 
@@ -83,9 +93,8 @@ module.exports = function (app, logger, swig, professorService) {
             hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
             minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
         };
-        professorService.getSlotGroups(req.session.username, (adaptedGroups) => {
-            const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups});
-            res.send(response);
+        professorService.getSlotModulesAndGroups(req.session.username, (adaptedGroups) => {
+            res.render('professor/slot/add.html', {username: req.session.username, role: req.session.role, date: dateObject, groups: adaptedGroups});
         });
     });
 
@@ -101,18 +110,72 @@ module.exports = function (app, logger, swig, professorService) {
         }
     });
 
+    app.get("/prf/slot/edit/:id", function (req, res) {
+        const id= req.params.id;
+        if (id != null){
+            professorService.getSpecifiedSlot(req.session.username, id, (objResult, strResult) => {
+                if (objResult == null){
+                    req.session.slotDeletions= strResult;
+                    res.redirect("/prf/slot/list");
+                } else{
+                    const date= app.get('currentTime')();
+                    const dateObject= {
+                        month: (date.month() + 1).toString().length === 2 ? (date.month() + 1).toString() : "0" + (date.month() + 1).toString(),
+                        day: date.date().toString().length === 2 ? date.date().toString() : "0" + date.date().toString(),
+                        year: date.year().toString(),
+                        hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
+                        minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
+                    };
+                    if (req.session.modifySlotErrors != null){
+                        const errors = req.session.modifySlotErrors;
+                        req.session.modifySlotErrors = null;
+                        res.render('professor/slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult, errors: errors});
+                    } else{
+                        res.render('professor/slot/modify.html', {username: req.session.username, role: req.session.role, date: dateObject, obj: objResult});
+                    }
+                }
+            });
+        } else{
+            res.redirect("/prf/slot/list");
+        }
+    });
+
+    app.post("/prf/slot/edit", function (req, res) {
+        const postInfo= req.body;
+        if (postInfo.moduleSelect == null){ //Used when no module is sent
+            postInfo["moduleSelect"]= "";
+        }
+        professorService.validateSlotModification(req.session.username, postInfo, (errors, collisions, noAdded) => {
+            if (errors == null){
+                if (!noAdded) {
+                    logger.info("Slot with id " + postInfo.slotId + " modified by user " + req.session.username + " - IP: " + res.ipReal);
+                } else{
+                    logger.info("Error when trying to modify the slot with id " + postInfo.slotId + ". User: " + req.session.username + " - IP: " + res.ipReal);
+                }
+                req.session.collisions = collisions;
+                req.session.noAdded = noAdded;
+                req.session.slotModified = !noAdded ? "El slot se ha modificado correctamente" : "El slot no se ha modificado porque todos los alumnos tienen ya una restricción marcada en ese periodo";
+                res.redirect("/prf/slot/list");
+            } else {
+                req.session.modifySlotErrors = errors;
+                logger.info("Error when trying to modify the slot with id " + postInfo.slotId + ". User: " + req.session.username + " - IP: " + res.ipReal);
+                res.redirect("/prf/slot/edit/" + postInfo.slotId);
+            }
+        });
+    });
+
     app.post("/prf/slot/add", function (req, res) {
         const postInfo= req.body;
-        if (postInfo.groupSelect == null){ //Used when no group was selected
-            postInfo["groupSelect"]= "";
+        if (postInfo.moduleSelect == null){ //Used when no module was selected
+            postInfo["moduleSelect"]= "";
         }
 
         professorService.validateSlot(req.session.username, postInfo, (adaptedGroups, errors, collisions, noAdded) => {
             if (adaptedGroups == null && errors == null){
                 if (!noAdded) {
-                    logger.info("Slot created by user " + req.session.username + " - IP: " + req.ip);
+                    logger.info("Slot created by user " + req.session.username + " - IP: " + res.ipReal);
                 } else{
-                    logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
+                    logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + res.ipReal);
                 }
                 req.session.collisions = collisions;
                 req.session.noAdded = noAdded;
@@ -126,9 +189,8 @@ module.exports = function (app, logger, swig, professorService) {
                     hour: date.hour().toString().length === 2 ? date.hour().toString() : "0" + date.hour().toString(),
                     minutes: date.minute().toString().length === 2 ? date.minute().toString() : "0" + date.minute().toString()
                 };
-                logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + req.ip);
-                const response = swig.renderFile('views/slot/add.html', {username: req.session.username, date: dateObject, groups: adaptedGroups, errors: errors});
-                res.send(response);
+                logger.info("Error when trying to create a slot. User: " + req.session.username + " - IP: " + res.ipReal);
+                res.render('professor/slot/add.html', {username: req.session.username, role: req.session.role, date: dateObject, groups: adaptedGroups, errors: errors});
             }
         });
     });

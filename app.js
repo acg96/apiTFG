@@ -1,19 +1,28 @@
 // Modules and globals
 const express = require('express');
+const fileUpload = require('express-fileupload');
 const app = express();
+app.use(fileUpload({
+    useTempFiles : true,
+    tempFileDir : '/tmp/'}));
 const loggerLib = require('log4js');
 const logger = loggerLib.getLogger("apiTFG");
 logger.level = 'all';
 const bodyParser = require('body-parser');
+const csvToJson = require('csvtojson');
 app.set('tokenTime', 2700000); //Used to force the session or token expires at 45min after the beginning
 
 //***Start administration web****
-const swig = require('swig');
+const nunjucks = require('nunjucks');
+nunjucks.configure('views', {
+    autoescape: true,
+    express: app
+});
 const expressSession = require('express-session');
-//when https will be activated set property secure: true TODO
 app.use(expressSession({
     secret: 'lp#2S-9)8e.$u(PL#7.-.$O)y23$-.8Nmp9$-,Po#U2;K)Sn.',
     resave: false,
+    secure: true,
     saveUninitialized: false,
     cookie: {
         httpOnly: false,
@@ -21,10 +30,11 @@ app.use(expressSession({
         secure: false
     }
 }));
-app.use(express.static('public'));
+app.use('/pb', express.static('public'));
 //****End administration web****
 
 const actionCodeTranslation={
+    "1132": "Señal de vida de extensión",
     "1133": "Comienzo de slot",
     "1134": "Inicio de sesión",
     "1135": "Extensión desinstalada",
@@ -39,6 +49,9 @@ const actionCodeTranslation={
 };
 app.set('actionCodeTranslation', actionCodeTranslation);
 
+const allCollectionsBaseNames= ["users", "groups", "notifications", "modules", "slots"];
+app.set('collectionBaseNames', allCollectionsBaseNames);
+
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
@@ -46,12 +59,11 @@ const jwt = require('jsonwebtoken');
 app.set('jwt', jwt);
 app.set('moment', moment);
 const bdManagement = require("./modules/bdManagement.js");
-const initBD = require("./modules/initBD.js");
+app.set('db', "mongodb+srv://admin:sdi@tiendamusica-s0nh9.mongodb.net/tfg?retryWrites=true&w=majority");
+app.set('dbName', 'tfg');
 bdManagement.init(app, mongo);
-initBD.init(app, bdManagement, logger);
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-app.set('db', 'mongodb://admin:sdi@tiendamusica-shard-00-00-s0nh9.mongodb.net:27017,tiendamusica-shard-00-01-s0nh9.mongodb.net:27017,tiendamusica-shard-00-02-s0nh9.mongodb.net:27017/tfg?ssl=true&replicaSet=tiendamusica-shard-0&authSource=admin&retryWrites=true');
 app.set('port', 7991);
 
 //Get current time without ms and s using moment library
@@ -81,21 +93,30 @@ app.set('millisecondsDelayStartSlot', 10000); //To avoid race hazards on the sta
 app.set('passKey', 'lfr.;LS24$-pO23(1Smn,#');
 app.set('crypto', crypto);
 
+//LDAP configuration
+app.set('useLDAP', false); //If it's set to 'false' the ldap service it's not used
+const fs= require('fs');
+const rLdapConnectionService= require("./services/rldapConnectionService.js");
+rLdapConnectionService.init(app, fs);
+
 //Services
 const userApiService= require("./services/rusersapiService.js");
-userApiService.init(app, bdManagement);
+userApiService.init(app, bdManagement, rLdapConnectionService);
 const rAppService= require("./services/rappService.js");
-rAppService.init(app, bdManagement, initBD);
+rAppService.init(app, bdManagement);
 const rStudentApiService= require("./services/rstudentapiService.js");
 rStudentApiService.init(app, bdManagement);
 const rUserService= require("./services/ruserService.js");
-rUserService.init(app, bdManagement);
+rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
+const rAdministratorService= require("./services/radministratorService.js");
+rAdministratorService.init(app, bdManagement, csvToJson);
 
 // router actions
 const routerActions = express.Router();
 routerActions.use(function(req, res, next) {
+    res.ipReal = req.headers["x-real-ip"];
     const urlRequested = req.originalUrl;
     const info = "Access requested to " + urlRequested;
     logger.info(info);
@@ -110,13 +131,13 @@ routerUserToken.use(function (req, res, next) { // get the token
     if (token != null) {// verify token
         jwt.verify(token, app.get("tokenKey")(), function (err, infoToken) {
             if (err || (app.get('currentTime')().valueOf() / 1000 - infoToken.time) > app.get('tokenTime')/1000) { //45min token expiration time
-                logger.info("Token provided invalid or expired - IP address: " + req.ip);
+                logger.info("Token provided invalid or expired - IP address: " + res.ipReal);
                 res.status(403); // Forbidden
                 res.json({access: false, error: 'Invalid or expired token'});
             } else {
                 //check role is valid
                 if (infoToken.role !== "student") {
-                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    logger.info("Token role provided invalid - IP address: " + res.ipReal);
                     res.status(403); // Forbidden
                     res.json({access: false, message: 'Token role invalid'});
                 }
@@ -127,10 +148,10 @@ routerUserToken.use(function (req, res, next) { // get the token
                         res.user = infoToken.user;
                         res.role = infoToken.role;
                         res.ips = infoToken.ips;
-                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + res.ipReal);
                         next();
                     } else{
-                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        logger.info("Token provided manipulated - IP address: " + res.ipReal);
                         res.status(403); // Forbidden
                         res.json({access: false, message: 'Token manipulated'});
                     }
@@ -138,7 +159,7 @@ routerUserToken.use(function (req, res, next) { // get the token
             }
         });
     } else {
-        logger.info("Token provided invalid - IP address: " + req.ip);
+        logger.info("Token provided invalid - IP address: " + res.ipReal);
         res.status(403); // Forbidden
         res.json({access: false, message: 'Token invalid'});
     }
@@ -152,14 +173,14 @@ routerNotificationToken.use(function (req, res, next) { // get the token
     if (token != null) {// verify token
         jwt.verify(token, app.get("tokenKey")(), function (err, infoToken) {
             if (err) {
-                logger.info("Token provided invalid or expired - IP address: " + req.ip);
+                logger.info("Token provided invalid or expired - IP address: " + res.ipReal);
                 res.user = "NoTokenProvided";
                 res.ips = [];
                 next();
             } else {
                 //check role is valid
                 if (infoToken.role !== "student") {
-                    logger.info("Token role provided invalid - IP address: " + req.ip);
+                    logger.info("Token role provided invalid - IP address: " + res.ipReal);
                     res.user = "NoTokenProvided";
                     res.ips = [];
                     next();
@@ -171,10 +192,10 @@ routerNotificationToken.use(function (req, res, next) { // get the token
                         res.user = infoToken.user;
                         res.role = infoToken.role;
                         res.ips = infoToken.ips;
-                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + req.ip);
+                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + res.ipReal);
                         next();
                     } else{
-                        logger.info("Token provided manipulated - IP address: " + req.ip);
+                        logger.info("Token provided manipulated - IP address: " + res.ipReal);
                         res.user = "NoTokenProvided";
                         res.ips = [];
                         next();
@@ -198,10 +219,10 @@ routerRoleUserProfessor.use(function(req, res, next) {
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
     } else{
-        if (role === "professor" && user.trim() !== "") {
+        if ((role === "professor" || role === "administrator") && user.trim() !== "") {
             next();
         } else {
-            logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + req.ip);
+            logger.info("The user " + user + " has requested access with a corrupted session - IP address: " + res.ipReal);
             req.session.username= null;
             req.session.role= null;
             res.redirect("/");
@@ -218,7 +239,7 @@ routerWebAdminNotLoggedIn.use(function(req, res, next) {
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
         next();
     } else{
-        logger.info("The user " + user + " being logged in has requested access to login page - IP address: " + req.ip);
+        logger.info("The user " + user + " being logged in has requested access to login page - IP address: " + res.ipReal);
         res.redirect("/");
     }
 });
@@ -230,39 +251,69 @@ routerWebAdminBeingLoggedIn.use(function(req, res, next) {
     const user= req.session.username;
     const role= req.session.role;
     if (user == null || role == null || typeof user !== "string" || typeof role !== "string"){
-        logger.info("A user not being logged in has requested access to restricted areas - IP address: " + req.ip);
+        logger.info("A user not being logged in has requested access to restricted areas - IP address: " + res.ipReal);
         res.redirect("/login");
     } else{
         next();
     }
 });
 app.use('/prf/*', routerWebAdminBeingLoggedIn);
+app.use('/adm/*', routerWebAdminBeingLoggedIn);
 app.use('/logout', routerWebAdminBeingLoggedIn);
+
+//Router controlling the access to restricted areas of the administration web just for professors
+const routerWebAdminBeingLoggedInProfessor = express.Router();
+routerWebAdminBeingLoggedInProfessor.use(function(req, res, next) {
+    const user= req.session.username;
+    const role= req.session.role;
+    if (role !== "professor"){
+        logger.info("The user " + user + " being logged in has requested access to professor's resources not being allowed - IP address: " + res.ipReal);
+        res.redirect("/");
+    } else{
+        next();
+    }
+});
+app.use('/prf/*', routerWebAdminBeingLoggedInProfessor);
+
+//Router controlling the access to restricted areas of the administration web just for administrators
+const routerWebAdminBeingLoggedInAdministrator = express.Router();
+routerWebAdminBeingLoggedInAdministrator.use(function(req, res, next) {
+    const user= req.session.username;
+    const role= req.session.role;
+    if (role !== "administrator"){
+        logger.info("The user " + user + " being logged in has requested access to administrator's resources not being allowed - IP address: " + res.ipReal);
+        res.redirect("/");
+    } else{
+        next();
+    }
+});
+app.use('/adm/*', routerWebAdminBeingLoggedInAdministrator);
 
 //Routes
 require("./routes/rusersapi.js")(app, logger, userApiService);
 require("./routes/rstudentapi.js")(app, rStudentApiService, logger);
-require("./routes/rapp.js")(app, logger, bdManagement, initBD, swig);
-require("./routes/ruser.js")(app, logger, rUserService, swig);
-require("./routes/rprofessor.js")(app, logger, swig, rProfessorService);
+require("./routes/rapp.js")(app);
+require("./routes/ruser.js")(app, logger, rUserService);
+require("./routes/rprofessor.js")(app, logger, rProfessorService);
+require("./routes/radministrator.js")(app, logger, rAdministratorService);
 
 // When a url not exists
 app.use(function(req, res) {
-    logger.info("URL not found - IP: " + req.ip);
+    logger.info("URL not found - IP: " + res.ipReal);
     res.status(404);
     res.json({message: 'url not found'});
 });
 
 
 // Error management
-app.use(function (err, req, res, next) {
-    logger.info("Error " + err + " - IP: " + req.ip);
+app.use(function (err, req, res) {
+    logger.info("Error " + err + " - IP: " + res.ipReal);
     res.status(500);
     res.json({message: 'unexpected error'});
 });
 
 
 // Run server
-app.listen(app.get('port'), function () {
+app.listen(app.get('port'), "localhost", function () {
     logger.info("Server active on port " + app.get('port'));
 });
