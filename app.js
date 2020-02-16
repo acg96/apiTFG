@@ -35,7 +35,7 @@ app.use('/pb', express.static('public'));
 
 //****Start DB cleansing
 const propertiesReader = require('properties-reader');
-app.set('defaultDaysDbCleansing', 30);
+app.set('defaultDaysDbCleansing', 24);
 app.set('daysDbCleansing', app.get('defaultDaysDbCleansing'));
 app.set('propertiesFilePath', "config.properties");
 //****End DB cleansing

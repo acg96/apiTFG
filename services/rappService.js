@@ -24,7 +24,7 @@ module.exports = {
         try {
             const propertiesFile = this.propertiesReader(this.app.get('propertiesFilePath'));
             const daysDbCleansing= propertiesFile.get('defaultDaysDbCleansing');
-            if (daysDbCleansing == null || !Number.isInteger(daysDbCleansing) || daysDbCleansing < 0){ //If the file is corrupted
+            if (daysDbCleansing == null || !Number.isInteger(daysDbCleansing) || daysDbCleansing < 0 || daysDbCleansing > 24){ //If the file is corrupted
                 const fs = require('fs');
                 fs.unlinkSync(this.app.get('propertiesFilePath'));
                 throw Error("Config file corrupted");
@@ -51,6 +51,10 @@ module.exports = {
         }
     },
     runDbCleansingAliveSignals: function(){
-        
+        if (this.app.get('daysDbCleansing') > 0) {
+            this.app.set('dbCleansingAliveSignalsProgrammedFunction', setInterval(() => {
+                //Remove all alive signals leaving at least the more recent one received for each machine TODO
+            }, this.app.get('daysDbCleansing') * 24 * 60 * 60 * 1000));
+        }
     }
 };
