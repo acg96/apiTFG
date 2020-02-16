@@ -33,6 +33,13 @@ app.use(expressSession({
 app.use('/pb', express.static('public'));
 //****End administration web****
 
+//****Start DB cleansing
+const propertiesReader = require('properties-reader');
+app.set('defaultDaysDbCleansing', 30);
+app.set('daysDbCleansing', app.get('defaultDaysDbCleansing'));
+app.set('propertiesFilePath', "config.properties");
+//****End DB cleansing
+
 const actionCodeTranslation={
     "1132": "Señal de vida de extensión",
     "1133": "Comienzo de slot",
@@ -103,7 +110,7 @@ rLdapConnectionService.init(app, fs);
 const userApiService= require("./services/rusersapiService.js");
 userApiService.init(app, bdManagement, rLdapConnectionService);
 const rAppService= require("./services/rappService.js");
-rAppService.init(app, bdManagement);
+rAppService.init(app, bdManagement, propertiesReader);
 const rStudentApiService= require("./services/rstudentapiService.js");
 rStudentApiService.init(app, bdManagement);
 const rUserService= require("./services/ruserService.js");
@@ -314,6 +321,16 @@ app.use(function (err, req, res) {
 
 
 // Run server
-app.listen(app.get('port'), "localhost", function () {
+const server= app.listen(app.get('port'), "localhost", function () {
     logger.info("Server active on port " + app.get('port'));
+    rAppService.createOrCheckConfigFileExists((res, valueDbCleansingDays) => {
+        if (res){
+            app.set('daysDbCleansing', valueDbCleansingDays);
+            logger.info("Config file checked. Timer to clean the alive signals set to " + valueDbCleansingDays);
+            rAppService.runDbCleansingAliveSignals();
+        } else{
+            logger.info("Server stopped due to error checking config file");
+            server.close();
+        }
+    });
 });
