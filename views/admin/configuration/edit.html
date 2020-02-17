@@ -17,7 +17,7 @@
     <form method="post" action="/adm/conf/edit">
         <div class="form-row">
             <div class="form-group col-sm-12">
-                <label for="cleansingDays">Proceso de limpieza en días</label>
+                <label for="cleansingDays">Proceso de limpieza en días [0-24]</label>
                 <input type="number" name="cleansingDays" class="form-control" min="0" max="24" step="1" value="{{configuration.cleansingDays}}" id="cleansingDays" />
                 {% if errors and errors.errCleansingDays != '' %}
                     <span class="text-danger">{{errors.errCleansingDays}}</span>
