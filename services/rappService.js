@@ -23,7 +23,7 @@ module.exports = {
     createOrCheckConfigFileExists: function(callback){
         try {
             const propertiesFile = this.propertiesReader(this.app.get('propertiesFilePath'));
-            const daysDbCleansing= propertiesFile.get('defaultDaysDbCleansing');
+            const daysDbCleansing= propertiesFile.get('daysDbCleansing');
             if (daysDbCleansing == null || !Number.isInteger(daysDbCleansing) || daysDbCleansing < 0 || daysDbCleansing > 24){ //If the file is corrupted
                 const fs = require('fs');
                 fs.unlinkSync(this.app.get('propertiesFilePath'));
@@ -35,10 +35,10 @@ module.exports = {
             fs.writeFile(this.app.get('propertiesFilePath'),"", err => {
                if (!err){
                    const propertiesFile = new this.propertiesReader(this.app.get('propertiesFilePath'));
-                   propertiesFile.set('defaultDaysDbCleansing', this.app.get('defaultDaysDbCleansing'));
+                   propertiesFile.set('daysDbCleansing', this.app.get('defaultDaysDbCleansing'));
                    propertiesFile.save(this.app.get('propertiesFilePath'), (err, data) => {
                        if (!err) {
-                           const daysDbCleansing= propertiesFile.get('defaultDaysDbCleansing');
+                           const daysDbCleansing= propertiesFile.get('daysDbCleansing');
                            callback(true, daysDbCleansing);
                        } else{
                            callback(false);

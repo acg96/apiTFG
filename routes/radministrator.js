@@ -36,7 +36,13 @@ module.exports = function (app, logger, administratorService) {
                 if (cleansingDaysInputValue === app.get("daysDbCleansing")){ //If it's the same value
                     res.redirect("/adm/conf/edit");
                 } else{
-                    //TODO load the new configuration and notice the user
+                    administratorService.loadNewConfigurationDbCleansing(cleansingDaysInputValue, correct => {
+                        if (correct){
+                            res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, correct: true, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+                        } else{
+                            res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, errors: {anyError: 1, errCleansingDays: ""}, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+                        }
+                    });
                 }
             } else {
                 res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, errors: {anyError: 1, errCleansingDays: "El valor debe estar entre 0 y 24 ambos incluídos"}, configuration: {cleansingDays: app.get("daysDbCleansing")}});

@@ -112,7 +112,7 @@ rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
 const rAdministratorService= require("./services/radministratorService.js");
-rAdministratorService.init(app, bdManagement, csvToJson);
+rAdministratorService.init(app, bdManagement, csvToJson, propertiesReader);
 
 //****Start DB cleansing
 app.set('defaultDaysDbCleansing', 24);
@@ -130,6 +130,12 @@ app.set('configureFunctionCleansingAliveSignals', (server) => {
             logger.info("Server stopped due to error checking config file");
             server.close();
         }
+    });
+});
+app.set('startNewConfigurationCleansingAliveSignals', () => {
+    logger.info("Config file checked. Timer to clean the alive signals set to " + app.get("daysDbCleansing"));
+    rAppService.runDbCleansingAliveSignals(deletedAliveSignals => {
+        logger.info("Executed automated process to delete alive signals. Total removed: " + deletedAliveSignals);
     });
 });
 //****End DB cleansing
