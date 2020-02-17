@@ -53,8 +53,61 @@ module.exports = {
     runDbCleansingAliveSignals: function(){
         if (this.app.get('daysDbCleansing') > 0) {
             this.app.set('dbCleansingAliveSignalsProgrammedFunction', setInterval(() => {
-                //Remove all alive signals leaving at least the more recent one received for each machine TODO
+                //Remove all alive signals leaving at least the more recent one received for each machine
+                this.getMaxDateAliveSignalIds(maxSignalIds => {
+                    if (maxSignalIds.length > 0) {
+                        this.bdManagement.deleteNotifications({slotId: "-2", _id: {$nin: maxSignalIds}}, res => {
+                            
+                            console.log(res);
+                        });
+                    }
+                });
             }, this.app.get('daysDbCleansing') * 24 * 60 * 60 * 1000));
         }
+    },
+    getMaxDateAliveSignalIds: function(callback){
+        this.bdManagement.getNotifications({slotId: "-2"}, signalsList => {
+            if (signalsList != null){
+                const signalsArray = [];
+                const signalsObjArray = [];
+                for (let i = 0; i < signalsList.length; ++i){
+                    let intIps= "";
+                    signalsList[i].intIps.sort((a, b) => a - b);
+                    for (let j= 0; j < signalsList[i].intIps.length; ++j){
+                        if (j === 0){
+                            intIps+= signalsList[i].intIps[j];
+                        } else{
+                            intIps+= ", " + signalsList[i].intIps[j];
+                        }
+                    }
+                    const notificationObj = {
+                        actionTimeMS: signalsList[i].actionTime,
+                        idAliveSignal: signalsList[i]._id.toString()
+                    };
+                    const currentExtIp = signalsList[i].requestExtIp === "::1" ? "localhost" : signalsList[i].requestExtIp === null ? "localhost" : signalsList[i].requestExtIp.replace("::ffff:", "");
+                    const currentName = currentExtIp.replace(/\./g, "") + "-" + intIps.replace(/ /g, "").replace(/\./g, "").replace(/,/g, "");
+                    if (!signalsArray.includes(currentName)){
+                        signalsArray.push(currentName);
+                        const signalObj = {
+                            signalName: currentName,
+                            msMajorDate: notificationObj.actionTimeMS,
+                            idMajorDate: notificationObj.idAliveSignal
+                        };
+                        signalsObjArray.push(signalObj);
+                    } else{
+                        const resultArray = signalsObjArray.filter(currentSignal => currentSignal.signalName === currentName);
+                        resultArray[0].msMajorDate = resultArray[0].msMajorDate < notificationObj.actionTimeMS ? notificationObj.actionTimeMS : resultArray[0].msMajorDate;
+                        resultArray[0].idMajorDate = resultArray[0].msMajorDate < notificationObj.actionTimeMS ? notificationObj.idAliveSignal : resultArray[0].idMajorDate;
+                    }
+                }
+                const aliveSignalIds = [];
+                for (let i= 0; i < signalsObjArray.length; ++i){
+                    aliveSignalIds.push(this.bdManagement.mongoPure.ObjectID(signalsObjArray[i].idMajorDate));
+                }
+                callback(aliveSignalIds);
+            } else{
+                callback([]);
+            }
+        });
     }
 };
