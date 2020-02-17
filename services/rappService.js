@@ -50,19 +50,23 @@ module.exports = {
             });
         }
     },
-    runDbCleansingAliveSignals: function(){
+    runDbCleansingAliveSignals: function(callback){
         if (this.app.get('daysDbCleansing') > 0) {
-            this.app.set('dbCleansingAliveSignalsProgrammedFunction', setInterval(() => {
+            const dbCleansingAliveSignalsProgrammedFunction = setInterval(() => {
                 //Remove all alive signals leaving at least the more recent one received for each machine
                 this.getMaxDateAliveSignalIds(maxSignalIds => {
                     if (maxSignalIds.length > 0) {
-                        this.bdManagement.deleteNotifications({slotId: "-2", _id: {$nin: maxSignalIds}}, res => {
-                            
-                            console.log(res);
-                        });
+                        this.bdManagement.deleteNotifications({slotId: "-2", _id: {$nin: maxSignalIds}}, (res)=>{callback(res)});
+                    } else{
+                        callback(0);
                     }
                 });
-            }, this.app.get('daysDbCleansing') * 24 * 60 * 60 * 1000));
+            }, this.app.get('daysDbCleansing') * 24 * 60 * 60 * 1000);
+            this.app.set('removeProgrammedDbCleansing', () => { //Set a function to call when it's needed to stop the interval
+                clearInterval(dbCleansingAliveSignalsProgrammedFunction);
+            });
+        } else{
+            callback(0);
         }
     },
     getMaxDateAliveSignalIds: function(callback){
@@ -96,8 +100,10 @@ module.exports = {
                         signalsObjArray.push(signalObj);
                     } else{
                         const resultArray = signalsObjArray.filter(currentSignal => currentSignal.signalName === currentName);
-                        resultArray[0].msMajorDate = resultArray[0].msMajorDate < notificationObj.actionTimeMS ? notificationObj.actionTimeMS : resultArray[0].msMajorDate;
-                        resultArray[0].idMajorDate = resultArray[0].msMajorDate < notificationObj.actionTimeMS ? notificationObj.idAliveSignal : resultArray[0].idMajorDate;
+                        const msCurrentMajorDateAux = resultArray[0].msMajorDate;
+                        const currentIdMajorDateAux = resultArray[0].idMajorDate;
+                        resultArray[0].msMajorDate = msCurrentMajorDateAux < notificationObj.actionTimeMS ? notificationObj.actionTimeMS : msCurrentMajorDateAux;
+                        resultArray[0].idMajorDate = msCurrentMajorDateAux < notificationObj.actionTimeMS ? notificationObj.idAliveSignal : currentIdMajorDateAux;
                     }
                 }
                 const aliveSignalIds = [];

@@ -2,6 +2,7 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const app = express();
+const propertiesReader = require('properties-reader');
 app.use(fileUpload({
     useTempFiles : true,
     tempFileDir : '/tmp/'}));
@@ -32,13 +33,6 @@ app.use(expressSession({
 }));
 app.use('/pb', express.static('public'));
 //****End administration web****
-
-//****Start DB cleansing
-const propertiesReader = require('properties-reader');
-app.set('defaultDaysDbCleansing', 24);
-app.set('daysDbCleansing', app.get('defaultDaysDbCleansing'));
-app.set('propertiesFilePath', "config.properties");
-//****End DB cleansing
 
 const actionCodeTranslation={
     "1132": "Señal de vida de extensión",
@@ -119,6 +113,26 @@ const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
 const rAdministratorService= require("./services/radministratorService.js");
 rAdministratorService.init(app, bdManagement, csvToJson);
+
+//****Start DB cleansing
+app.set('defaultDaysDbCleansing', 24);
+app.set('daysDbCleansing', app.get('defaultDaysDbCleansing'));
+app.set('propertiesFilePath', "config.properties");
+app.set('configureFunctionCleansingAliveSignals', (server) => {
+    rAppService.createOrCheckConfigFileExists((res, valueDbCleansingDays) => {
+        if (res){
+            app.set('daysDbCleansing', valueDbCleansingDays);
+            logger.info("Config file checked. Timer to clean the alive signals set to " + valueDbCleansingDays);
+            rAppService.runDbCleansingAliveSignals(deletedAliveSignals => {
+                logger.info("Executed automated process to delete alive signals. Total removed: " + deletedAliveSignals);
+            });
+        } else{
+            logger.info("Server stopped due to error checking config file");
+            server.close();
+        }
+    });
+});
+//****End DB cleansing
 
 // router actions
 const routerActions = express.Router();
@@ -323,14 +337,7 @@ app.use(function (err, req, res) {
 // Run server
 const server= app.listen(app.get('port'), "localhost", function () {
     logger.info("Server active on port " + app.get('port'));
-    rAppService.createOrCheckConfigFileExists((res, valueDbCleansingDays) => {
-        if (res){
-            app.set('daysDbCleansing', valueDbCleansingDays);
-            logger.info("Config file checked. Timer to clean the alive signals set to " + valueDbCleansingDays);
-            rAppService.runDbCleansingAliveSignals();
-        } else{
-            logger.info("Server stopped due to error checking config file");
-            server.close();
-        }
-    });
+    app.get('configureFunctionCleansingAliveSignals')(server);
 });
+
+app.set('serverObject', server);
