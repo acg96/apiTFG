@@ -25,6 +25,10 @@ module.exports = function (app, logger, administratorService) {
         });
     });
 
+    app.get('/adm/conf/edit', function (req, res) {
+        res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+    });
+
     app.get('/adm/signal-report/list', function (req, res) {
         administratorService.getSignalReportList(signalsList => {
             res.render('admin/signalReport/list.html', {username: req.session.username, role: req.session.role, signals: signalsList});
