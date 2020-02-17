@@ -1,7 +1,7 @@
 {
   "name": "fyp_application_backend",
   "description": "Web application backend used on my final year project to the University of Oviedo",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": {
     "name": "Andres Casillas Garcia",
     "email": "UO244499@uniovi.es"
@@ -23,6 +23,7 @@
     "log4js": "^4.1.0",
     "moment": "^2.24.0",
     "mongodb": "^3.3.3",
-    "nunjucks": "^3.2.0"
+    "nunjucks": "^3.2.0",
+    "properties-reader": "^1.0.0"
   }
 }

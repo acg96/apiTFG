@@ -1,6 +1,6 @@
 # Web application backend FYP
 Web application backend used on my final year project to the University of Oviedo
-Current version: 2.0.0
+Current version: 2.1.0
 
 **The MIT License**
 
