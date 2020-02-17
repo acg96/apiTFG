@@ -2,6 +2,7 @@
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const app = express();
+const propertiesReader = require('properties-reader');
 app.use(fileUpload({
     useTempFiles : true,
     tempFileDir : '/tmp/'}));
@@ -103,7 +104,7 @@ rLdapConnectionService.init(app, fs);
 const userApiService= require("./services/rusersapiService.js");
 userApiService.init(app, bdManagement, rLdapConnectionService);
 const rAppService= require("./services/rappService.js");
-rAppService.init(app, bdManagement);
+rAppService.init(app, bdManagement, propertiesReader);
 const rStudentApiService= require("./services/rstudentapiService.js");
 rStudentApiService.init(app, bdManagement);
 const rUserService= require("./services/ruserService.js");
@@ -111,7 +112,33 @@ rUserService.init(app, bdManagement, rLdapConnectionService);
 const rProfessorService= require("./services/rprofessorService.js");
 rProfessorService.init(app, bdManagement);
 const rAdministratorService= require("./services/radministratorService.js");
-rAdministratorService.init(app, bdManagement, csvToJson);
+rAdministratorService.init(app, bdManagement, csvToJson, propertiesReader);
+
+//****Start DB cleansing
+app.set('defaultDaysDbCleansing', 24);
+app.set('daysDbCleansing', app.get('defaultDaysDbCleansing'));
+app.set('propertiesFilePath', "config.properties");
+app.set('configureFunctionCleansingAliveSignals', (server) => {
+    rAppService.createOrCheckConfigFileExists((res, valueDbCleansingDays) => {
+        if (res){
+            app.set('daysDbCleansing', valueDbCleansingDays);
+            logger.info("Config file checked. Timer to clean the alive signals set to " + valueDbCleansingDays);
+            rAppService.runDbCleansingAliveSignals(deletedAliveSignals => {
+                logger.info("Executed automated process to delete alive signals. Total removed: " + deletedAliveSignals);
+            });
+        } else{
+            logger.info("Server stopped due to error checking config file");
+            server.close();
+        }
+    });
+});
+app.set('startNewConfigurationCleansingAliveSignals', () => {
+    logger.info("Config file checked. Timer to clean the alive signals set to " + app.get("daysDbCleansing"));
+    rAppService.runDbCleansingAliveSignals(deletedAliveSignals => {
+        logger.info("Executed automated process to delete alive signals. Total removed: " + deletedAliveSignals);
+    });
+});
+//****End DB cleansing
 
 // router actions
 const routerActions = express.Router();
@@ -314,6 +341,9 @@ app.use(function (err, req, res) {
 
 
 // Run server
-app.listen(app.get('port'), "localhost", function () {
+const server= app.listen(app.get('port'), "localhost", function () {
     logger.info("Server active on port " + app.get('port'));
+    app.get('configureFunctionCleansingAliveSignals')(server);
 });
+
+app.set('serverObject', server);

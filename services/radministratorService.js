@@ -2,10 +2,56 @@ module.exports = {
     app: null,
     bdManagement: null,
     csvToJson: null,
-    init: function (app, bdManagement, csvToJson) {
+    propertiesReader: null,
+    init: function (app, bdManagement, csvToJson, propertiesReader) {
         this.app = app;
         this.bdManagement = bdManagement;
         this.csvToJson = csvToJson;
+        this.propertiesReader = propertiesReader;
+    },
+    loadNewConfigurationDbCleansing: function(newValue, callback){
+        try {
+            const propertiesFile =  new this.propertiesReader(this.app.get('propertiesFilePath'));
+            const daysDbCleansing= propertiesFile.get('daysDbCleansing');
+            if (daysDbCleansing == null || !Number.isInteger(daysDbCleansing) || daysDbCleansing < 0 || daysDbCleansing > 24){ //If the file is corrupted
+                const fs = require('fs');
+                fs.unlinkSync(this.app.get('propertiesFilePath'));
+                throw Error("Config file corrupted");
+            }
+            propertiesFile.set('daysDbCleansing', newValue);
+            propertiesFile.save(this.app.get('propertiesFilePath'), (err, data) => {
+                if (!err) { //Reprogram the new interval
+                    const daysDbCleansing= propertiesFile.get('daysDbCleansing');
+                    this.app.set("daysDbCleansing", daysDbCleansing);
+                    this.app.get('removeProgrammedDbCleansing')(); //Stop the current interval
+                    this.app.get('startNewConfigurationCleansingAliveSignals')();
+                    callback(true);
+                } else{
+                    callback(false);
+                }
+            });
+        }catch(e){ //If file not exists
+            const fs = require('fs');
+            fs.writeFile(this.app.get('propertiesFilePath'),"", err => {
+                if (!err){
+                    const propertiesFile = new this.propertiesReader(this.app.get('propertiesFilePath'));
+                    propertiesFile.set('daysDbCleansing', newValue);
+                    propertiesFile.save(this.app.get('propertiesFilePath'), (err, data) => {
+                        if (!err) { //Reprogram the new interval
+                            const daysDbCleansing= propertiesFile.get('daysDbCleansing');
+                            this.app.set("daysDbCleansing", daysDbCleansing);
+                            this.app.get('removeProgrammedDbCleansing')(); //Stop the current interval
+                            this.app.get('startNewConfigurationCleansingAliveSignals')();
+                            callback(true);
+                        } else{
+                            callback(false);
+                        }
+                    });
+                } else{
+                    callback(false);
+                }
+            });
+        }
     },
     getJsonFromCsv: function (filePath, callback){
         this.csvToJson({

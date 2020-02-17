@@ -25,6 +25,33 @@ module.exports = function (app, logger, administratorService) {
         });
     });
 
+    app.get('/adm/conf/edit', function (req, res) {
+        res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+    });
+
+    app.post('/adm/conf/edit', function (req, res) {
+        try { //Check it is an integer value and show an error if not
+            let cleansingDaysInputValue = parseInt(req.body.cleansingDays);
+            if (cleansingDaysInputValue != null && cleansingDaysInputValue >= 0 && cleansingDaysInputValue <= 24) {
+                if (cleansingDaysInputValue === app.get("daysDbCleansing")){ //If it's the same value
+                    res.redirect("/adm/conf/edit");
+                } else{
+                    administratorService.loadNewConfigurationDbCleansing(cleansingDaysInputValue, correct => {
+                        if (correct){
+                            res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, correct: true, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+                        } else{
+                            res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, errors: {anyError: 1, errCleansingDays: ""}, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+                        }
+                    });
+                }
+            } else {
+                res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, errors: {anyError: 1, errCleansingDays: "El valor debe estar entre 0 y 24 ambos incluídos"}, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+            }
+        }catch(e){
+            res.render('admin/configuration/edit.html', {username: req.session.username, role: req.session.role, errors: {anyError: 1, errCleansingDays: "El valor debe ser un entero entre 0 y 24 ambos incluídos"}, configuration: {cleansingDays: app.get("daysDbCleansing")}});
+        }
+    });
+
     app.get('/adm/signal-report/list', function (req, res) {
         administratorService.getSignalReportList(signalsList => {
             res.render('admin/signalReport/list.html', {username: req.session.username, role: req.session.role, signals: signalsList});
