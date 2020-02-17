@@ -1,7 +1,7 @@
 {
   "name": "fyp_application_backend",
   "description": "Web application backend used on my final year project to the University of Oviedo",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": {
     "name": "Andres Casillas Garcia",
     "email": "UO244499@uniovi.es"
