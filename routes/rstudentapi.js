@@ -23,10 +23,6 @@ module.exports = function (app, rStudentApiService, logger) {
         * cod. 1137 -> Extension installed
         * cod. 1138 -> Extension enabled
         * cod. 1139 -> Visit disallowed page
-        * cod. 1140 -> Own extension uninstalled
-        * cod. 1141 -> Own extension disabled
-        * cod. 1142 -> Pivot extension disabled
-        * cod. 1143 -> Pivot extension uninstalled
         */
         const username= res.user;
         const ipRequest= res.ipReal;

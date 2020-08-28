@@ -43,10 +43,6 @@ const actionCodeTranslation={
     "1137": "Extensión instalada",
     "1138": "Extensión habilitada",
     "1139": "Página no permitida",
-    "1140": "EyeSecure desinstalada",
-    "1141": "EyeSecure deshabilitada",
-    "1142": "Extensión pivote deshabilitada",
-    "1143": "Extensión pivote desinstalada",
 };
 app.set('actionCodeTranslation', actionCodeTranslation);
 
@@ -60,7 +56,7 @@ const jwt = require('jsonwebtoken');
 app.set('jwt', jwt);
 app.set('moment', moment);
 const bdManagement = require("./modules/bdManagement.js");
-app.set('db', "mongodb+srv://admin:sdi@tiendamusica-s0nh9.mongodb.net/tfg?retryWrites=true&w=majority");
+app.set('db', "mongodb://username:password@localhost:27017/tfg?authSource=admin");
 app.set('dbName', 'tfg');
 bdManagement.init(app, mongo);
 app.use(bodyParser.json());
@@ -150,48 +146,6 @@ routerActions.use(function(req, res, next) {
     next();
 });
 app.use("/*", routerActions);
-
-// routerUserToken
-const routerUserToken = express.Router();
-routerUserToken.use(function (req, res, next) { // get the token
-    const token = req.get('uInfo') || req.body.uInfo || req.query.uInfo;
-    if (token != null) {// verify token
-        jwt.verify(token, app.get("tokenKey")(), function (err, infoToken) {
-            if (err || (app.get('currentTime')().valueOf() / 1000 - infoToken.time) > app.get('tokenTime')/1000) { //45min token expiration time
-                logger.info("Token provided invalid or expired - IP address: " + res.ipReal);
-                res.status(403); // Forbidden
-                res.json({access: false, error: 'Invalid or expired token'});
-            } else {
-                //check role is valid
-                if (infoToken.role !== "student") {
-                    logger.info("Token role provided invalid - IP address: " + res.ipReal);
-                    res.status(403); // Forbidden
-                    res.json({access: false, message: 'Token role invalid'});
-                }
-
-                //check user exists
-                rAppService.checkUserExists(infoToken.user, infoToken.role, result => {
-                    if (result){
-                        res.user = infoToken.user;
-                        res.role = infoToken.role;
-                        res.ips = infoToken.ips;
-                        logger.info("User " + infoToken.user + " logged in with token - IP address: " + res.ipReal);
-                        next();
-                    } else{
-                        logger.info("Token provided manipulated - IP address: " + res.ipReal);
-                        res.status(403); // Forbidden
-                        res.json({access: false, message: 'Token manipulated'});
-                    }
-                });
-            }
-        });
-    } else {
-        logger.info("Token provided invalid - IP address: " + res.ipReal);
-        res.status(403); // Forbidden
-        res.json({access: false, message: 'Token invalid'});
-    }
-});
-app.use('/api/std/*', routerUserToken);
 
 // routerNotificationToken
 const routerNotificationToken = express.Router();
